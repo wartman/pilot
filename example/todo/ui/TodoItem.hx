@@ -13,6 +13,8 @@ class TodoItem extends StatefulWidget {
 
   @:prop var todo:Todo;
   @:prop var store:Store;
+  // `editing` is a `@:state`, so it will rerender the view
+  // every time we change it. We could also call `patch()` manually.
   @:state var editing:Bool = false;
 
   override function build():VNode {
@@ -38,7 +40,7 @@ class TodoItem extends StatefulWidget {
             },
           #end
           save: value -> {
-            store.updateTodo(todo, value);
+            todo.content = value;
             editing = false;
           }
         })

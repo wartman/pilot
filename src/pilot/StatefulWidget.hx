@@ -17,7 +17,7 @@ class StatefulWidget implements Widget {
 
     public function render():VNode {
       _pilot_vnode = build();
-      _pilot_vnode.hooks.attach = _pilot_attached;
+      _pilot_vnode.hooks.attach = attached;
       _pilot_vnode.hooks.detach = _pilot_detached;
       return _pilot_vnode;
     }
@@ -26,11 +26,6 @@ class StatefulWidget implements Widget {
       if (_pilot_vnode == null) return;
       if (_pilot_vnode.node == null) return;
       _pilot_vnode.node.patch(render());
-    }
-
-    final function _pilot_attached(vnode:VNode) {
-      _pilot_vnode = vnode;
-      attached(_pilot_vnode);
     }
 
     final function _pilot_detached() {
