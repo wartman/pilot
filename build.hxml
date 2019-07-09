@@ -1,0 +1,6 @@
+-cp src
+-cp example
+-dce full
+-D analyzer-optimize
+-main TodoApp
+-js dist/assets/app.js
