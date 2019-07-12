@@ -312,7 +312,9 @@ class Differ {
     if (key == 'key') return;
     if (key.startsWith('on')) {
       var event = key.substr(2).toLowerCase();
-      node.removeEventListener(event, oldValue);
+      if (oldValue != null) {
+        node.removeEventListener(event, oldValue);
+      }
       if (newValue != null) {
         node.addEventListener(event, newValue);
       }

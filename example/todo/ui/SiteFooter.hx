@@ -1,5 +1,6 @@
 package todo.ui;
 
+import pilot.Style;
 import pilot.StatelessWidget;
 import pilot.VNode;
 import pilot.VNode.h;
@@ -12,12 +13,62 @@ class SiteFooter extends StatelessWidget {
 
   override function build():VNode {
     return h('footer', {
-      className: 'footer'
+      className: Style.create({
+        color: '#777',
+        padding: '10px 15px',
+        height: '20px',
+        'text-align': 'center',
+        'border-top': '1px solid #e6e6e6',
+        '&:before': {
+          content: '""',
+          position: 'absolute',
+          right: 0,
+          bottom: 0,
+          left: 0,
+          height: '50px',
+          overflow: 'hidden',
+          'box-shadow': '0 1px 1px rgba(0, 0, 0, 0.2),
+                      0 8px 0 -3px #f6f6f6,
+                      0 9px 1px -3px rgba(0, 0, 0, 0.2),
+                      0 16px 0 -6px #f6f6f6,
+                      0 17px 2px -6px rgba(0, 0, 0, 0.2)',
+        }
+      })
     }, [
-      h('span', { className: 'todo-count' }, [
-        remaining()
-      ]),
-      h('ul', { className: 'filters' }, [
+      h('span', { 
+        className: Style.create({
+          float: 'left',
+	        'text-align': 'left',
+        })
+      }, [ remaining() ]),
+      h('ul', { 
+        className: Style.create({
+          margin: 0,
+          padding: 0,
+          'list-style': 'none',
+          position: 'absolute',
+          right: 0,
+          left: 0,
+
+          li: {
+            display: 'inline',
+            a: {
+              color: 'inherit',
+              margin: '3px',
+              padding: '3px 7px',
+              'text-decoration': 'none',
+              border: '1px solid transparent',
+              'border-radius': '3px',
+              '&:hover': {
+                'border-color': 'rgba(175, 47, 47, 0.1)',
+              },
+              '&.selected': {
+                'border-color': 'rgba(175, 47, 47, 0.2)',
+              }
+            }
+          }
+        })
+      }, [
         h('li', {}, [
           h('a', { 
             href: '#all',
