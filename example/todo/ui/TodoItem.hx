@@ -84,7 +84,13 @@ class TodoItem extends StatefulWidget {
             display: 'block'
           },
 
-        })
+        }),
+        if (todo.complete) Style.create({
+          label: {
+            color: '#d9d9d9',
+            'text-decoration': 'line-through',
+          }
+        }) else null
       ],
       child: switch editing {
         case true: h('li', {
@@ -133,6 +139,7 @@ class TodoItem extends StatefulWidget {
           //   #end
           // }),
           new Toggle({
+            type: One,
             checked: todo.complete,
             onClick: e -> switch todo.complete {
               case true: store.markPending(todo);

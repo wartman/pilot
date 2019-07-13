@@ -96,7 +96,17 @@ class SiteFooter extends StatelessWidget {
             #end
           }, [ 'Complete' ])
         ])
-      ])
+      ]),
+      h('button', {
+        className: Style.create({
+          float: 'right',
+          position: 'relative',
+          'line-height': '20px',
+          'text-decoration': 'none',
+          cursor: 'pointer',
+        }),
+        onClick: e -> store.clearCompleted(),
+      }, [ 'Clear completed' ])
     ]);
   }
 

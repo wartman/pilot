@@ -16,6 +16,7 @@ abstract Style(String) to String {
 
   public static function compose(classes:Array<Style>) {
     return switch classes
+      .filter(s -> s != null)
       .map(c -> c.trim())
       .filter(c -> c != null && c != '')
       .join(' ') {

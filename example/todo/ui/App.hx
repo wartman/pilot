@@ -15,25 +15,13 @@ abstract App(VNode) to VNode {
           margin: '130px auto 40px auto',
           position: 'relative',
           'box-shadow': '0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1)',
+          
           input: {
             '&::input-placeholder': {
               'font-style': 'italic',
               'font-weight': 300,
               color: '#e6e6e6',
             }
-          },
-
-          h1: {
-            position: 'absolute',
-            top: '-155px',
-            width: '100%',
-            'font-size': '100px',
-            'font-weight': 100,
-            'text-align': 'center',
-            color: 'rgba(175, 47, 47, 0.15)',
-            '-webkit-text-rendering': 'optimizeLegibility',
-            '-moz-text-rendering': 'optimizeLegibility',
-            'text-rendering': 'optimizeLegibility',
           },
 
           button: {
@@ -53,11 +41,12 @@ abstract App(VNode) to VNode {
           },
 
         })
-      }, [
+      }, ([
         new SiteHeader({ store: props.store }),
-        new TodoList({ store: props.store }),
-        new SiteFooter({ store: props.store })
-      ]),
+      ]:Array<VNode>).concat( if (props.store.getTodos().length > 0) [
+          new TodoList({ store: props.store }),
+          new SiteFooter({ store: props.store }) 
+      ] else [])),
       h('footer', { 
         className: Style.create({
           margin: '65px auto 0',

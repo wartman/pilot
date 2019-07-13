@@ -16,12 +16,12 @@ class StyleBuilder {
   
   @:persistent static var content:Map<String, String> = [];
   static var registered:Bool = false;
-  static var prev:String; 
+  static var ran:Array<String> = []; 
 
   public static function create(expr:Expr, global:Bool = false) {
     if (!registered && !Context.defined('display')) {
       registered = true;
-      prev = null;
+      reset();
       Context.onAfterGenerate(() -> {
         if (!Context.defined('display')) write();
       });
@@ -31,31 +31,27 @@ class StyleBuilder {
     var name = getId();
 
     switch expr.expr {
-      case EBlock(_):
-      case EObjectDecl(decls):
-        // Hopefully this is all we'll need to ensure multiple
-        // `Style`s can be created per type.
-        //
-        // I want to think of a more elegent method, but this Works
-        // for now.
-        if (decls.length >= 0) {
-          if (prev == type) {
-            content.set(type, [
-              content.get(type),
-              parse('.${name}', decls, global)
-            ].join('\n'));
-          } else {
-            content.set(type, parse('.${name}', decls, global));
-          }
-        }
+      case EObjectDecl(decls) if (decls.length >= 0):
+        add(type, parse('.${name}', decls, global));
+      case EBlock(_) | EObjectDecl(_):
       default:
         Context.error('Should be an object', expr.pos);
     }
 
-    // Used to persist multiple styles per type?
-    // This seems like a bit of a silly way to do it, but.
-    prev = type;
     return macro $v{name};
+  }
+
+  static function add(type:String, value:String) {
+    if (ran.indexOf(type) > -1) {
+      content.set(type, [ content.get(type), value ].join('\n'));
+      return;
+    }
+    ran.push(type);
+    content.set(type, value);
+  }
+
+  static function reset() {
+    ran = [];
   }
 
   static function parse(name:String, rules:Array<ObjectField>, global:Bool) {

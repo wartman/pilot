@@ -318,7 +318,9 @@ class Differ {
       if (newValue != null) {
         node.addEventListener(event, newValue);
       }
-    } else if (!isSvg && key != 'list' && node.hasField(key)) {
+    } else if (!isSvg && key != 'list' && node.getProperty(key) != null) {
+      // This seems a bit fishy -- we may want to use a method other than
+      // `Reflect` :/
       node.setProperty(key, newValue == null ? '' : newValue );
     } else if (newValue == null || newValue == false) {
       var el:Element = cast node;

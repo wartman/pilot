@@ -13,15 +13,31 @@ class Store {
   var todos:Array<Todo> = [];
   final build:(store:Store)->VNode;
   public var filter:VisibleTodos = VisibleAll;
+  
+  var _allSelected:Bool = null;
+  public var allSelected(get, never):Bool;
+  public function get_allSelected() {
+    if (_allSelected != null) return _allSelected;
+    if (visibleTodos.length == 0) {
+      _allSelected = false;
+      return _allSelected;
+    }
+    _allSelected = visibleTodos.filter(t -> !t.complete).length == 0;
+    return _allSelected;
+  }
+
+  var _visibleTodos:Array<Todo> = null;
   public var visibleTodos(get, never):Array<Todo>;
   inline function get_visibleTodos() {
-    var filtered = switch filter {
-      case VisibleAll: todos;
-      case VisibleCompleted: todos.filter(todo -> todo.complete);
-      case VisiblePending: todos.filter(todo -> !todo.complete);
-    }
+    if (_visibleTodos != null) return _visibleTodos;
+    var filtered = todos.copy();
     filtered.reverse();
-    return filtered;
+    _visibleTodos = switch filter {
+      case VisibleAll: filtered;
+      case VisibleCompleted: filtered.filter(todo -> todo.complete);
+      case VisiblePending: filtered.filter(todo -> !todo.complete);
+    }
+    return _visibleTodos;
   }
   public var remainingTodos(get, never):Int;
   inline function get_remainingTodos() return todos.filter(todo -> !todo.complete).length;
@@ -35,6 +51,8 @@ class Store {
     }
     
     public function update() {
+      _visibleTodos = null;
+      _allSelected = null;
       node.patch(build(this));
     }
 
@@ -47,6 +65,10 @@ class Store {
       Sys.print(build(this).render());
     }
   #end
+
+  public function getTodos() {
+    return todos;
+  }
 
   public function addTodo(todo:Todo) {
     todos.push(todo);
@@ -68,6 +90,16 @@ class Store {
     update();
   }
 
+  public function markAllComplete() {
+    for (todo in visibleTodos) todo.complete = true;
+    update();
+  }
+
+  public function markAllPending() {
+    for (todo in visibleTodos) todo.complete = false;
+    update();
+  }
+
   public function markComplete(todo:Todo) {
     if (todo.complete) return;
     todo.complete = true;
@@ -77,6 +109,15 @@ class Store {
   public function markPending(todo:Todo) {
     if (!todo.complete) return;
     todo.complete = false;
+    update();
+  }
+
+  public function clearCompleted() {
+    var toRemove = visibleTodos.filter(t -> t.complete);
+    if (toRemove.length == 0) return;
+    for (t in toRemove) {
+      todos.remove(t);
+    }
     update();
   }
 
