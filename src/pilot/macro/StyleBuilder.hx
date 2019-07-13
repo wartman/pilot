@@ -99,7 +99,7 @@ class StyleBuilder {
   static function write() {
     var root = Sys.getCwd();
     var outDir = Compiler.getOutput();
-    var outName:String = Context.definedValue('pilot-style-name');
+    var outName:String = Context.definedValue('pilot-css');
     if (outName == null) outName = 'app';
     if (outDir.extension() != '') {
       outDir = outDir.directory();

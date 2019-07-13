@@ -41,6 +41,9 @@ abstract App(VNode) to VNode {
           },
 
         })
+      // This following bit is kinda ugly, no?
+      //
+      // Hmm.
       }, ([
         new SiteHeader({ store: props.store }),
       ]:Array<VNode>).concat( if (props.store.getTodos().length > 0) [
