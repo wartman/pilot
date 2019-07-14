@@ -14,14 +14,14 @@ abstract Style(String) to String {
     return macro @:pos(rules.pos) new pilot.Style(${name});
   }
 
-  public static function compose(classes:Array<Style>) {
+  public static function compose(classes:Array<Style>):Style {
     return switch classes
       .filter(s -> s != null)
       .map(c -> c.trim())
       .filter(c -> c != null && c != '')
       .join(' ') {
       case '': null;
-      case c: c;
+      case c: new Style(c);
     }
   }
 
