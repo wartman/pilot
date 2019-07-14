@@ -15,6 +15,7 @@ using haxe.macro.Tools;
 class StyleBuilder {
   
   @:persistent static var content:Map<String, String> = [];
+  static final ucase:EReg = ~/[A-Z]/g;
   static var registered:Bool = false;
   static var ran:Array<String> = []; 
 
@@ -59,7 +60,7 @@ class StyleBuilder {
     var subStyles = [];
     for (rule in rules) switch rule.expr.expr {
       case EConst(CString(s)) | EConst(CInt(s)):
-        out.push('${rule.field}: ${s}');
+        out.push('${prepareKey(rule.field)}: ${s}');
       case EObjectDecl(decls):
         if (decls.length == 0) continue;
         var ruleName = global 
@@ -106,6 +107,16 @@ class StyleBuilder {
     }
     outDir = Path.join([outDir, outName]).withExtension('css');
     File.saveContent(outDir, [ for (k => v in content) v ].join('\n'));
+  }
+
+  static function prepareKey(key:String) {
+    return [ for (i in 0...key.length)
+      if (ucase.match(key.charAt(i))) {
+        '-' + key.charAt(i).toLowerCase();
+      } else {
+        key.charAt(i);
+      } 
+    ].join('');
   }
 
 }

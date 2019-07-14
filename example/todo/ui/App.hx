@@ -14,12 +14,12 @@ abstract App(VNode) to VNode {
           background: '#fff',
           margin: '130px auto 40px auto',
           position: 'relative',
-          'box-shadow': '0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1)',
+          boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1)',
           
           input: {
             '&::input-placeholder': {
-              'font-style': 'italic',
-              'font-weight': 300,
+              fontStyle: 'italic',
+              fontWeight: 300,
               color: '#e6e6e6',
             }
           },
@@ -29,13 +29,13 @@ abstract App(VNode) to VNode {
             padding: 0,
             border: 0,
             background: 'none',
-            'font-size': '100%',
-            'vertical-align': 'baseline',
-            'font-family': 'inherit',
-            'font-weight': 'inherit',
+            fontSize: '100%',
+            verticalAlign: 'baseline',
+            fontFamily: 'inherit',
+            fontWeight: 'inherit',
             color: 'inherit',
-            '-webkit-appearance': 'none',
             appearance: 'none',
+            '-webkit-appearance': 'none',
             '-webkit-font-smoothing': 'antialiased',
             '-moz-osx-font-smoothing': 'grayscale',
           },
@@ -54,18 +54,18 @@ abstract App(VNode) to VNode {
         className: Style.create({
           margin: '65px auto 0',
           color: '#bfbfbf',
-          'font-size': '10px',
-          'text-shadow': '0 1px 0 rgba(255, 255, 255, 0.5)',
-          'text-align': 'center',
+          fontSize: '10px',
+          textShadow: '0 1px 0 rgba(255, 255, 255, 0.5)',
+          textAlign: 'center',
           p: {
-            'line-height': 1
+            lineHeight: 1
           },
           a: {
             color: 'inherit',
-            'text-decoration': 'none',
-            'font-weight': 400,
+            textDecoration: 'none',
+            fontWeight: 400,
             '&:hover': {
-              'text-decoration': 'underline',
+              textDecoration: 'underline',
             },
           },
         }) 
