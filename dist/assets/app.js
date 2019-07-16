@@ -143,10 +143,10 @@ var TodoApp = function() { };
 TodoApp.__name__ = true;
 TodoApp.main = function() {
 	new todo_data_Store(function(store) {
-		var props = { className : "_c_HVymbyskFZlJlniUslI7"};
+		var props = { className : "_c_mwsEhldkEBIoSCM1N1A0"};
 		var props_store = store;
 		var children = [pilot__$VNode_VNode_$Impl_$._new({ name : "todos", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
-		var children1 = [pilot__$VNode_VNode_$Impl_$._new({ name : "h1", props : { className : "_c_4OpftfpQgnqe6qjpVqUM"}, children : children != null ? children : []}),new todo_ui_TodoInput({ inputClass : "new-todo", value : "", save : function(value) {
+		var children1 = [pilot__$VNode_VNode_$Impl_$._new({ name : "h1", props : { className : "_c_VH12YwxgnYXrM2EqFuXw"}, children : children != null ? children : []}),new todo_ui_TodoInput({ inputClass : "new-todo", value : "", save : function(value) {
 			props_store.addTodo(new todo_data_Todo(value));
 			return;
 		}}).render()];
@@ -154,8 +154,8 @@ TodoApp.main = function() {
 		var children3;
 		if(store.getTodos().length > 0) {
 			var store1 = store;
-			var props1 = { className : "_c_7HEvvMpB5xcgi8hjR5Mp"};
-			var props2 = { type : "_c_eMIajhVeIEbyew5lZXbY", checked : store1.get_allSelected(), id : "toggle-all", onClick : function(e) {
+			var props1 = { className : "_c_QgiwO6u766SNJS1FP4wO"};
+			var props2 = { type : "_c_USlPAYq3IlBVNlXQrnyX", checked : store1.get_allSelected(), id : "toggle-all", onClick : function(e) {
 				if(store1.get_allSelected() == true) {
 					store1.markAllPending();
 				} else {
@@ -163,10 +163,10 @@ TodoApp.main = function() {
 				}
 				return;
 			}};
-			var children31 = pilot__$VNode_VNode_$Impl_$._new({ name : "input", props : { type : "checkbox", className : props2.type, checked : props2.checked, id : props2.id, onClick : props2.onClick}, children : []});
-			var children11 = [pilot__$VNode_VNode_$Impl_$._new({ name : "Toggle All", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
-			var children32 = pilot__$VNode_VNode_$Impl_$._new({ name : "label", props : { htmlFor : "toggle-all"}, children : children11 != null ? children11 : []});
-			var props3 = { className : "_c_8Ydlsy5wCqxTNzZyOHTt"};
+			var children4 = pilot__$VNode_VNode_$Impl_$._new({ name : "input", props : { type : "checkbox", className : props2.type, checked : props2.checked, id : props2.id, onClick : props2.onClick}, children : []});
+			var children5 = [pilot__$VNode_VNode_$Impl_$._new({ name : "Toggle All", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
+			var children6 = pilot__$VNode_VNode_$Impl_$._new({ name : "label", props : { htmlFor : "toggle-all"}, children : children5 != null ? children5 : []});
+			var props3 = { className : "_c_aRDkV7HMTG2l8AvqzksJ"};
 			var _g = [];
 			var _g1 = 0;
 			var _g2;
@@ -195,25 +195,25 @@ TodoApp.main = function() {
 				_g2 = store1._visibleTodos;
 			}
 			while(_g1 < _g2.length) _g.push(new todo_ui_TodoItem({ todo : _g2[_g1++], store : store1}).render());
-			var children33 = [children31,children32,pilot__$VNode_VNode_$Impl_$._new({ name : "ul", props : props3, children : _g != null ? _g : []})];
-			children3 = [pilot__$VNode_VNode_$Impl_$._new({ name : "div", props : props1, children : children33 != null ? children33 : []}),new todo_ui_SiteFooter({ store : store}).render()];
+			var children7 = [children4,children6,pilot__$VNode_VNode_$Impl_$._new({ name : "ul", props : props3, children : _g != null ? _g : []})];
+			children3 = [pilot__$VNode_VNode_$Impl_$._new({ name : "div", props : props1, children : children7 != null ? children7 : []}),new todo_ui_SiteFooter({ store : store}).render()];
 		} else {
 			children3 = [];
 		}
-		var children4 = children2.concat(children3);
-		var children5 = pilot__$VNode_VNode_$Impl_$._new({ name : "div", props : props, children : children4 != null ? children4 : []});
-		var children6 = [pilot__$VNode_VNode_$Impl_$._new({ name : "Double-click to edit a todo.", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
-		var children7 = pilot__$VNode_VNode_$Impl_$._new({ name : "p", props : { }, children : children6 != null ? children6 : []});
-		var children8 = pilot__$VNode_VNode_$Impl_$._new({ name : "Written by ", props : { }, type : pilot_VNodeType.VNodeText, node : null});
-		var children9 = [pilot__$VNode_VNode_$Impl_$._new({ name : "wartman", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
-		var children10 = [children8,pilot__$VNode_VNode_$Impl_$._new({ name : "a", props : { href : "https://github.com/wartman"}, children : children9 != null ? children9 : []})];
-		var children12 = pilot__$VNode_VNode_$Impl_$._new({ name : "p", props : { }, children : children10 != null ? children10 : []});
-		var children13 = pilot__$VNode_VNode_$Impl_$._new({ name : "Part of ", props : { }, type : pilot_VNodeType.VNodeText, node : null});
-		var children14 = [pilot__$VNode_VNode_$Impl_$._new({ name : "TodoMVC", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
-		var children15 = [children13,pilot__$VNode_VNode_$Impl_$._new({ name : "a", props : { href : "http://todomvc.com"}, children : children14 != null ? children14 : []})];
-		var children16 = [children7,children12,pilot__$VNode_VNode_$Impl_$._new({ name : "p", props : { }, children : children15 != null ? children15 : []})];
-		var children17 = [children5,pilot__$VNode_VNode_$Impl_$._new({ name : "footer", props : { className : "_c_egp6C0g1CFjghViCU1Cl"}, children : children16 != null ? children16 : []})];
-		return pilot__$VNode_VNode_$Impl_$._new({ name : "div", props : { id : "root"}, children : children17 != null ? children17 : []});
+		var children8 = children2.concat(children3);
+		var children9 = pilot__$VNode_VNode_$Impl_$._new({ name : "div", props : props, children : children8 != null ? children8 : []});
+		var children10 = [pilot__$VNode_VNode_$Impl_$._new({ name : "Double-click to edit a todo.", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
+		var children11 = pilot__$VNode_VNode_$Impl_$._new({ name : "p", props : { }, children : children10 != null ? children10 : []});
+		var children12 = pilot__$VNode_VNode_$Impl_$._new({ name : "Written by ", props : { }, type : pilot_VNodeType.VNodeText, node : null});
+		var children13 = [pilot__$VNode_VNode_$Impl_$._new({ name : "wartman", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
+		var children14 = [children12,pilot__$VNode_VNode_$Impl_$._new({ name : "a", props : { href : "https://github.com/wartman"}, children : children13 != null ? children13 : []})];
+		var children15 = pilot__$VNode_VNode_$Impl_$._new({ name : "p", props : { }, children : children14 != null ? children14 : []});
+		var children16 = pilot__$VNode_VNode_$Impl_$._new({ name : "Part of ", props : { }, type : pilot_VNodeType.VNodeText, node : null});
+		var children17 = [pilot__$VNode_VNode_$Impl_$._new({ name : "TodoMVC", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
+		var children18 = [children16,pilot__$VNode_VNode_$Impl_$._new({ name : "a", props : { href : "http://todomvc.com"}, children : children17 != null ? children17 : []})];
+		var children19 = [children11,children15,pilot__$VNode_VNode_$Impl_$._new({ name : "p", props : { }, children : children18 != null ? children18 : []})];
+		var children20 = [children9,pilot__$VNode_VNode_$Impl_$._new({ name : "footer", props : { className : "_c_aEeiL3RRMZjXbTyYfwQT"}, children : children19 != null ? children19 : []})];
+		return pilot__$VNode_VNode_$Impl_$._new({ name : "div", props : { id : "root"}, children : children20 != null ? children20 : []});
 	},window.document.getElementById("root")).update();
 };
 var js__$Boot_HaxeError = function(val) {
@@ -890,7 +890,7 @@ todo_ui_SiteFooter.prototype = $extend(pilot_StatelessWidget.prototype,{
 	build: function() {
 		var _gthis = this;
 		var children = [this.remaining()];
-		var children1 = pilot__$VNode_VNode_$Impl_$._new({ name : "span", props : { className : "_c_oIZrcuMAdmsYnFjj5cKt"}, children : children != null ? children : []});
+		var children1 = pilot__$VNode_VNode_$Impl_$._new({ name : "span", props : { className : "_c_jtLWrBsrMDBDZwVhVszf"}, children : children != null ? children : []});
 		var props = { href : "#all", className : this._pilot_props.store.filter == todo_data_VisibleTodos.VisibleAll ? "filter selected" : "filter", onClick : function(e) {
 			_gthis.setFilter(e,todo_data_VisibleTodos.VisibleAll);
 			return;
@@ -912,14 +912,14 @@ todo_ui_SiteFooter.prototype = $extend(pilot_StatelessWidget.prototype,{
 		var children8 = [pilot__$VNode_VNode_$Impl_$._new({ name : "Complete", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
 		var children9 = [pilot__$VNode_VNode_$Impl_$._new({ name : "a", props : props2, children : children8 != null ? children8 : []})];
 		var children10 = [children4,children7,pilot__$VNode_VNode_$Impl_$._new({ name : "li", props : { }, children : children9 != null ? children9 : []})];
-		var children11 = pilot__$VNode_VNode_$Impl_$._new({ name : "ul", props : { className : "_c_CeRctLDRQ44Fehn10hmm"}, children : children10 != null ? children10 : []});
-		var props3 = { className : "_c_oeIBmfG51xDwFLy8nMsM", onClick : function(e3) {
+		var children11 = pilot__$VNode_VNode_$Impl_$._new({ name : "ul", props : { className : "_c_ZOacf8GNnOs0fyiP8ScR"}, children : children10 != null ? children10 : []});
+		var props3 = { className : "_c_fTICmGFhDwpLGvo4cQPc", onClick : function(e3) {
 			_gthis._pilot_props.store.clearCompleted();
 			return;
 		}};
 		var children12 = [pilot__$VNode_VNode_$Impl_$._new({ name : "Clear completed", props : { }, type : pilot_VNodeType.VNodeText, node : null})];
 		var children13 = [children1,children11,pilot__$VNode_VNode_$Impl_$._new({ name : "button", props : props3, children : children12 != null ? children12 : []})];
-		return pilot__$VNode_VNode_$Impl_$._new({ name : "footer", props : { className : "_c_cnDlJ7lvTIpX2jErVcrQ"}, children : children13 != null ? children13 : []});
+		return pilot__$VNode_VNode_$Impl_$._new({ name : "footer", props : { className : "_c_X8TIdVzLsmHWWquKF3Ao"}, children : children13 != null ? children13 : []});
 	}
 	,remaining: function() {
 		var _g = this._pilot_props.store.todos.filter(function(todo1) {
@@ -962,7 +962,7 @@ todo_ui_TodoInput.prototype = $extend(pilot_StatelessWidget.prototype,{
 			}
 			return;
 		}}, children : []})];
-		return pilot__$StyledWidget_StyledWidget_$Impl_$._new({ compose : ["_c_6PIe2WTIiWUb1tBHB0ex"], child : pilot__$VNode_VNode_$Impl_$._new({ name : "div", props : { className : "todo-input"}, children : children != null ? children : []})});
+		return pilot__$StyledWidget_StyledWidget_$Impl_$._new({ compose : ["_c_coRPGZJCneVlE8iI0fP6"], child : pilot__$VNode_VNode_$Impl_$._new({ name : "div", props : { className : "todo-input"}, children : children != null ? children : []})});
 	}
 	,attached: function(vnode) {
 		if(vnode.node != null) {
@@ -989,14 +989,14 @@ todo_ui_TodoItem.__super__ = pilot_StatefulWidget;
 todo_ui_TodoItem.prototype = $extend(pilot_StatefulWidget.prototype,{
 	build: function() {
 		var _gthis = this;
-		var tmp = ["_c_vVKeC6XR1uWJ6bXYzQT4",this._pilot_props.todo.complete ? "_c_qxEQPCzQ5Lx7OVaToljF" : null];
+		var tmp = ["_c_RBuzmKo8f2hsxKroaWFG",this._pilot_props.todo.complete ? "_c_Y1P5FPSIk07O42vxdqty" : null];
 		var tmp1;
 		switch(this._pilot_props.editing) {
 		case false:
 			var props = { key : this._pilot_props.todo.id, id : "Todo-" + this._pilot_props.todo.id, className : "todo-item", onDblClick : function(e) {
 				return _gthis.set_editing(true);
 			}};
-			var props1 = { type : "_c_R6WH6Eu1nUwoQyF6rMAp", checked : this._pilot_props.todo.complete, onClick : function(e1) {
+			var props1 = { type : "_c_XaGs0nQ7unBdvLLasNCz", checked : this._pilot_props.todo.complete, onClick : function(e1) {
 				switch(_gthis._pilot_props.todo.complete) {
 				case false:
 					_gthis._pilot_props.store.markComplete(_gthis._pilot_props.todo);

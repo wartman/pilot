@@ -17,8 +17,8 @@ class SiteFooter extends StatelessWidget {
         color: '#777',
         padding: '10px 15px',
         height: '20px',
-        'text-align': 'center',
-        'border-top': '1px solid #e6e6e6',
+        textAlign: 'center',
+        borderTop: '1px solid #e6e6e6',
         '&:before': {
           content: '""',
           position: 'absolute',
@@ -27,11 +27,11 @@ class SiteFooter extends StatelessWidget {
           left: 0,
           height: '50px',
           overflow: 'hidden',
-          'box-shadow': '0 1px 1px rgba(0, 0, 0, 0.2),
-                      0 8px 0 -3px #f6f6f6,
-                      0 9px 1px -3px rgba(0, 0, 0, 0.2),
-                      0 16px 0 -6px #f6f6f6,
-                      0 17px 2px -6px rgba(0, 0, 0, 0.2)',
+          boxShadow: '0 1px 1px rgba(0, 0, 0, 0.2),
+            0 8px 0 -3px #f6f6f6,
+            0 9px 1px -3px rgba(0, 0, 0, 0.2),
+            0 16px 0 -6px #f6f6f6,
+            0 17px 2px -6px rgba(0, 0, 0, 0.2)',
         }
       })
     }, [
@@ -45,7 +45,7 @@ class SiteFooter extends StatelessWidget {
         className: Style.create({
           margin: 0,
           padding: 0,
-          'list-style': 'none',
+          listStyle: 'none',
           position: 'absolute',
           right: 0,
           left: 0,
@@ -56,14 +56,14 @@ class SiteFooter extends StatelessWidget {
               color: 'inherit',
               margin: '3px',
               padding: '3px 7px',
-              'text-decoration': 'none',
+              textDecoration: 'none',
               border: '1px solid transparent',
-              'border-radius': '3px',
+              borderRadius: '3px',
               '&:hover': {
-                'border-color': 'rgba(175, 47, 47, 0.1)',
+                borderColor: 'rgba(175, 47, 47, 0.1)',
               },
               '&.selected': {
-                'border-color': 'rgba(175, 47, 47, 0.2)',
+                borderColor: 'rgba(175, 47, 47, 0.2)',
               }
             }
           }
@@ -101,8 +101,8 @@ class SiteFooter extends StatelessWidget {
         className: Style.create({
           float: 'right',
           position: 'relative',
-          'line-height': '20px',
-          'text-decoration': 'none',
+          lineHeight: '20px',
+          textDecoration: 'none',
           cursor: 'pointer',
         }),
         onClick: e -> store.clearCompleted(),

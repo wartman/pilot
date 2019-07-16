@@ -1,11 +1,14 @@
 import pilot.Style;
 import todo.ui.App;
 import todo.data.Store;
+import todo.ui.Color;
 
 class TodoApp {
   
+  public static var color = '#4d4d4d';
+
   public static function main() {
-    Style.global({
+    Style.global({ 
       'html, body': {
         margin: 0,
         padding: 0,
@@ -13,8 +16,8 @@ class TodoApp {
       body: {
         font: '14px "Helvetica Neue", Helvetica, Arial, sans-serif',
         'line-height': '1.4em',
-        background: '#f5f5f5',
-        color: '#4d4d4d',
+        background: Color.secondary,
+        color: Color.primary,
         'min-width': '230px',
         'max-width': '550px',
         margin: '0 auto',
