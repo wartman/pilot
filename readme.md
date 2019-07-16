@@ -18,6 +18,11 @@ import pilot.StatelessWidget;
 import pilot.VNode;
 import pilot.Style;
 
+class Colors {
+  public static final red = 'red';
+  public static final blue = 'blue';
+}
+
 // Styles are compiled to css and output alongside your compiled
 // code. You can change its destination by defining `pilot-css`
 // in your build `hxml`.
@@ -29,7 +34,11 @@ import pilot.Style;
 // loops and `Widget#build`, as we'll see in a second.
 enum abstract ButtonType(Style) to Style {
   var Primary = Style.create({
-    background: 'red'
+    // Note that you can pass static final properties to Style rules!
+    // This opens up a bit of configuration, with the limitation that
+    // (again) the property must be static, final and either a string
+    // or an int.
+    background: Colors.red
   });
   var Secondary = Style.create({
     background: 'gray'
