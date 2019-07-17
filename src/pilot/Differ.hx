@@ -282,7 +282,7 @@ class Differ {
       case VNodeText:
         Browser.document.createTextNode(vnode.name);
       case VNodeElement if (isSvg || vnode.name == 'svg'):
-        Browser.document.createElementNS('"http://www.w3.org/2000/svg', vnode.name);
+        Browser.document.createElementNS('http://www.w3.org/2000/svg', vnode.name);
       case VNodeFragment:
         Browser.document.createDocumentFragment();
       default:
