@@ -17,18 +17,15 @@ class StyleBuilder {
   
   @:persistent static var content:Map<String, String> = [];
   static final ucase:EReg = ~/[A-Z]/g;
-  static var registered:Bool = false;
   static var ran:Array<String> = []; 
 
-  public static function create(expr:Expr, global:Bool = false) {
-    if (!registered && !Context.defined('display')) {
-      registered = true;
-      reset();
-      Context.onAfterGenerate(() -> {
-        if (!Context.defined('display')) write();
-      });
+  public static function use() {
+    if (!Context.defined('display') && !Context.defined('pilot-skip')) {
+      Context.onAfterGenerate(() -> write());
     }
+  }
 
+  public static function create(expr:Expr, global:Bool = false) {
     var type = Context.getLocalType().toString();
     var name = getId();
 
@@ -36,6 +33,7 @@ class StyleBuilder {
       case EObjectDecl(decls) if (decls.length >= 0):
         add(type, parse('.${name}', decls, global));
       case EBlock(_) | EObjectDecl(_):
+        // Empty -- should skip.
       default:
         Context.error('Should be an object', expr.pos);
     }
@@ -50,10 +48,6 @@ class StyleBuilder {
     }
     ran.push(type);
     content.set(type, value);
-  }
-
-  static function reset() {
-    ran = [];
   }
 
   static function parse(name:String, rules:Array<ObjectField>, global:Bool) {
@@ -152,8 +146,9 @@ class StyleBuilder {
     function rand(from:Int, to:Int):Int {
       return from + Math.floor((to - from) * Math.random());
     }
+    var prefix = Context.defined('pilot-prefix') ? Context.definedValue('pilot-prefix') : '_';
     var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return '_c_' + [ for (i in 0...20) chars.charAt(rand(0, chars.length - 1)) ].join('');
+    return prefix + [ for (i in 0...5) chars.charAt(rand(0, chars.length - 1)) ].join('');
   }
 
   static function write() {
@@ -164,7 +159,7 @@ class StyleBuilder {
     if (outDir.extension() != '') {
       outDir = outDir.directory();
     }
-    outDir = Path.join([outDir, outName]).withExtension('css');
+    outDir = Path.join([outDir, outName.trim()]).withExtension('css');
     File.saveContent(outDir, [ for (k => v in content) v ].join('\n'));
   }
 

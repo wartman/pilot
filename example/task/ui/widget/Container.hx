@@ -49,7 +49,7 @@ abstract Container(VNode) to VNode {
     child:VNode
   }) {
     this = new StyledWidget({
-      compose: [ 
+      style: [ 
         props.type, 
         props.style,
         props.background,

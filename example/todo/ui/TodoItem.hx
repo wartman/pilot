@@ -21,7 +21,7 @@ class TodoItem extends StatefulWidget {
 
   override function build():VNode {
     return new StyledWidget({
-      compose: [
+      style: [
         Style.create({
           position: 'relative',
           'font-size': '24px',

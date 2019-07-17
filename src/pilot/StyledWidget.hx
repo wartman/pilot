@@ -4,15 +4,15 @@ using Reflect;
 
 abstract StyledWidget(VNode) to VNode {
 
-  public function new(props:{
-    compose:Array<Style>,
+  public inline function new(props:{
+    style:Style,
     child:VNode
   }) {
     this = props.child;
     if (this.props.hasField('className')) {
-      props.compose.push(new Style(this.props.field('className')));
+      props.style = props.style.add(new Style(this.props.field('className')));
     }
-    this.props.setField('className', Style.compose(props.compose));
+    this.props.setField('className', props.style);
   }
 
 }

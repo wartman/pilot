@@ -1,6 +1,13 @@
+extraParams.hxml
+
 -cp src
 -cp example
 -dce full
 -D analyzer-optimize
+
+# These aren't required, but just for an example:
+-D pilot-prefix=todo-
+-D pilot-css=app
+
 -main TodoApp
 -js dist/assets/app.js
