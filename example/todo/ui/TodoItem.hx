@@ -112,7 +112,6 @@ class TodoItem extends StatefulWidget {
             #if js
               onAttached: () -> {
                 function clickOffListener(e) {
-                  trace('click');
                   editing = false;
                   Browser.window.removeEventListener('click', clickOffListener);
                 }

@@ -312,11 +312,12 @@ class Differ {
     if (key == 'key') return;
     if (key.startsWith('on')) {
       var event = key.substr(2).toLowerCase();
-      if (oldValue != null) {
-        node.removeEventListener(event, oldValue);
-      }
-      if (newValue != null) {
-        node.addEventListener(event, newValue);
+      var listener = getListener(node);
+      getHandlers(node).setField(event, newValue);
+      if (newValue == null) {
+        node.removeEventListener(event, listener);
+      } else if (oldValue == null) {
+        node.addEventListener(event, listener);
       }
     } else if (!isSvg && key != 'list' && node.getProperty(key) != null) {
       // This seems a bit fishy -- we may want to use a method other than
@@ -331,6 +332,29 @@ class Differ {
       if (key == 'htmlFor') key = 'for';
       el.setAttribute(key, newValue);
     }
+  }
+
+  // The following all feel super hacky, but they seem to work.
+  // This is to get around a problem where events aren't removed
+  // correctly, but there may be a better way.
+
+  static inline function listener(node:Node, event:js.html.Event) {
+    var cb:(e:js.html.Event)->Void = node.field('__handlers').field(event.type);
+    if (cb != null) cb(event);
+  }
+
+  static inline function getListener(node:Node) {
+    if (node.field('__listener') == null) {
+      node.setField('__listener', listener.bind(node));
+    }
+    return node.field('__listener');
+  }
+
+  static inline function getHandlers(node:Node):Dynamic {
+    if (node.field('__handlers') == null) {
+      node.setField('__handlers', {});
+    }
+    return node.field('__handlers');
   }
 
 }
