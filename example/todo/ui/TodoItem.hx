@@ -76,6 +76,12 @@ class TodoItem extends StatefulWidget {
 
             '&:after': {
               content: '"x"'
+            },
+
+            '@media (max-width: 430px)': {
+              '&': {
+                display: 'block'
+              }
             }
 
           },

@@ -115,12 +115,12 @@ class StyleBuilder {
 
       case EObjectDecl(decls):
         if (decls.length == 0) continue;
-        var ruleName = global 
-          ? rule.field
-          : rule.field.indexOf('&') > -1
-            ? rule.field.replace('&', name)
-            : '${name} ${rule.field}';
-        subStyles.push(parse(ruleName, decls, false));
+        var selector = parseSelector(name, rule.field, global);
+        if (selector.startsWith('@')) {
+          subStyles.push('${selector} {\n' + parse(name, decls, global) + '\n}');
+        } else {
+          subStyles.push(parse(selector, decls, false));
+        }
 
       default:
         Context.error('Invalid rule', rule.expr.pos);
@@ -192,6 +192,22 @@ class StyleBuilder {
 
     // If not found, assume local or full type path.
     return name;
+  }
+
+  static function parseSelector(parent:String, selector:String, isGlobal:Bool) {
+    if (selector.contains('@')) {
+      return selector.trim();
+    }
+
+    if (!isGlobal) {
+      if (selector.contains('&')) {
+        selector = selector.replace('&', parent);
+      } else {
+        selector = '${parent} ${selector}';
+      }
+    }
+
+    return selector;
   }
 
 }
