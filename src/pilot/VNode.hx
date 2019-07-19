@@ -99,6 +99,7 @@ abstract VNode(VNodeOptions) {
     if (impl.children == null) {
       this.children = [];
     }
+    this.children = this.children.filter(c -> c != null);
     if (impl.props.hasField('key')) {
       this.key = impl.props.field('key');
       this.props.deleteField('key');

@@ -4,6 +4,7 @@ import haxe.DynamicAccess;
 import js.Browser;
 import js.html.Node;
 import js.html.Element;
+import js.html.Event;
 import pilot.VNode;
 
 using StringTools;
@@ -334,18 +335,12 @@ class Differ {
     }
   }
 
-  // The following all feel super hacky, but they seem to work.
-  // This is to get around a problem where events aren't removed
-  // correctly, but there may be a better way.
-
-  static inline function listener(node:Node, event:js.html.Event) {
-    var cb:(e:js.html.Event)->Void = node.field('__handlers').field(event.type);
-    if (cb != null) cb(event);
-  }
-
   static inline function getListener(node:Node) {
     if (node.field('__listener') == null) {
-      node.setField('__listener', listener.bind(node));
+      node.setField('__listener', function (event:Event) {
+        var cb:(e:Event)->Void = node.field('__handlers').field(event.type);
+        if (cb != null) cb(event);
+      });
     }
     return node.field('__listener');
   }
