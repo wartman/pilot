@@ -300,6 +300,8 @@ class Differ {
         Browser.document.createElementNS('http://www.w3.org/2000/svg', vnode.name);
       case VNodeElement | VNodeRecycled:
         Browser.document.createElement(vnode.name);
+      case VNodePlaceholder:
+        Browser.document.createComment('');
     }
 
     for (key => value in (vnode.props:DynamicAccess<Dynamic>)) {

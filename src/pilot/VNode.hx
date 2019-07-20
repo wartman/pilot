@@ -11,6 +11,7 @@ enum VNodeType {
   VNodeText;
   VNodeRecycled;
   VNodeFragment;
+  VNodePlaceholder;
 }
 
 abstract VNodeKey(String) from String to String {
@@ -52,6 +53,14 @@ abstract VNode(VNodeOptions) {
       #if js
         node: node
       #end
+    });
+  }
+
+  static public inline function placeholder() {
+    return new VNode({
+      name: '[placeholder]',
+      props: {},
+      type: VNodePlaceholder
     });
   }
 
