@@ -36,6 +36,11 @@ class Differ {
     newVNode:VNode,
     isSvg:Bool
   ) {
+
+    if (oldVNode != null) {
+      newVNode = doWillPatchHook(oldVNode, newVNode);
+    }
+    
     if (oldVNode == newVNode) {
     } else if (
       oldVNode != null
@@ -242,16 +247,23 @@ class Differ {
     parent.removeChild(vnode.node);
   }
 
-  static function doDetachHook(vnode:VNode) {
+  static inline function doDetachHook(vnode:VNode) {
     if (vnode.hooks.detach != null) {
       vnode.hooks.detach();
     }
   }
 
-  static function doAttachHook(vnode:VNode) {
+  static inline function doAttachHook(vnode:VNode) {
     if (vnode.hooks.attach != null && vnode.node != null) {
       vnode.hooks.attach(vnode);
     }
+  }
+
+  static inline function doWillPatchHook(vnode:VNode, newVNode:VNode) {
+    if (vnode.hooks.willPatch != null) {
+      return vnode.hooks.willPatch(newVNode);
+    }
+    return newVNode;
   }
 
   static function getKey(?vnode:VNode) {
@@ -282,11 +294,11 @@ class Differ {
     var node = switch vnode.type {
       case VNodeText:
         Browser.document.createTextNode(vnode.name);
-      case VNodeElement if (isSvg || vnode.name == 'svg'):
-        Browser.document.createElementNS('http://www.w3.org/2000/svg', vnode.name);
       case VNodeFragment:
         Browser.document.createDocumentFragment();
-      default:
+      case VNodeElement if (isSvg || vnode.name == 'svg'):
+        Browser.document.createElementNS('http://www.w3.org/2000/svg', vnode.name);
+      case VNodeElement | VNodeRecycled:
         Browser.document.createElement(vnode.name);
     }
 

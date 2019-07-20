@@ -34,7 +34,8 @@ typedef VNodeOptions = {
   #if js
     ?hooks: {
       ?attach:(vnode:VNode)->Void,
-      ?detach:()->Void
+      ?detach:()->Void,
+      ?willPatch:(newVNode:VNode)->VNode,
     },
     ?node:Node
   #end
