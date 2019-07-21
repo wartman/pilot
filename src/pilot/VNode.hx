@@ -29,6 +29,7 @@ abstract VNodeKey(String) from String to String {
 typedef VNodeOptions = {
   name:String,
   props:{},
+  ?style:Style,
   ?type:VNodeType,
   ?children:Array<VNode>,
   ?key:VNodeKey,
@@ -113,6 +114,13 @@ abstract VNode(VNodeOptions) {
     if (impl.props.hasField('key')) {
       this.key = impl.props.field('key');
       this.props.deleteField('key');
+    }
+    if (impl.style != null) {
+      if (impl.props.hasField('className')) {
+        this.props.setField('className', [ impl.style, impl.props.field('className') ].join(' '));
+      } else {
+        this.props.setField('className', impl.style);
+      }
     }
     #if js
       if (impl.hooks == null) {

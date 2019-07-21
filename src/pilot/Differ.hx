@@ -244,6 +244,9 @@ class Differ {
 
   static function detachNode(parent:Node, vnode:VNode) {
     doDetachHook(vnode);
+    if (!parent.contains(vnode.node)) {
+      return;
+    }
     parent.removeChild(vnode.node);
   }
 
