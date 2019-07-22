@@ -24,7 +24,7 @@ abstract SiteHeader(VNode) to VNode {
           '-webkit-text-rendering': 'optimizeLegibility',
           '-moz-text-rendering': 'optimizeLegibility',
           'text-rendering': 'optimizeLegibility',
-        })
+        }, 'todo-header-title')
       }, [ 'todos' ]),
       new TodoInput({
         inputClass: 'new-todo',

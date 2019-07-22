@@ -25,9 +25,13 @@ class StyleBuilder {
     }
   }
 
-  public static function create(expr:Expr, global:Bool = false) {
+  public static function create(expr:Expr, ?className:ExprOf<String>, global:Bool = false) {
     var type = Context.getLocalType().toString();
-    var name = getId();
+    var name = className == null ? getId() : switch className.expr {
+      case EConst(CString(s)): s;
+      case EConst(CIdent('null')): getId();
+      default: Context.error('Classname must be a string', className.pos);
+    };
 
     switch expr.expr {
       case EObjectDecl(decls) if (decls.length >= 0):
