@@ -15,21 +15,26 @@ using haxe.macro.TypeTools;
 
 class StyleBuilder {
   
-  @:persistent static var content:Map<String, String> = [];
+  @:persistent static public var content:Map<String, String> = [];
   static final ucase:EReg = ~/[A-Z]/g;
   static var ran:Array<String> = []; 
 
   public static function use() {
-    if (!Context.defined('display') && !Context.defined('pilot-skip')) {
+    if (
+      Context.defined('pilot-css')
+      && !Context.defined('display') 
+      && !Context.defined('pilot-skip')
+    ) {
       Context.onAfterGenerate(() -> write());
     }
   }
 
   public static function create(expr:Expr, ?className:ExprOf<String>, global:Bool = false) {
     var type = Context.getLocalType().toString();
-    var name = className == null ? getId() : switch className.expr {
+    var id = getId();
+    var name = className == null ? id : switch className.expr {
       case EConst(CString(s)): s;
-      case EConst(CIdent('null')): getId();
+      case EConst(CIdent('null')): id;
       default: Context.error('Classname must be a string', className.pos);
     };
 
@@ -41,6 +46,18 @@ class StyleBuilder {
       default:
         Context.error('Should be an object', expr.pos);
     }
+
+    var clsName = id.replace('-', '_');
+    var cls = 'pilot.styles.${clsName}'.replace('-', '_');
+    Context.defineModule(cls, [
+      macro class $clsName {
+        public static final name:String = $v{id};
+        static function __init__() {
+          pilot.StyleProvider.addGlobalStyle($v{content.get(type)});
+        }
+      }
+    ]);
+    Compiler.keep(cls);
 
     return macro $v{name};
   }

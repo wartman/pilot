@@ -7,7 +7,7 @@ extraParams.hxml
 
 # These aren't required, but just for an example:
 -D pilot-prefix=todo-
--D pilot-css=app
+# -D pilot-css=app
 
 -main TodoApp
 -js dist/assets/app.js

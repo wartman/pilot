@@ -1,7 +1,5 @@
 package pilot;
 
-using StringTools;
-
 abstract Style(String) to String {
 
   @:from public inline static function ofArray(styles:Array<Style>):Style {
