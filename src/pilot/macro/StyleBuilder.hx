@@ -47,19 +47,18 @@ class StyleBuilder {
         Context.error('Should be an object', expr.pos);
     }
 
-    var clsName = id.replace('-', '_');
-    var cls = 'pilot.styles.${clsName}'.replace('-', '_');
+    var clsName = id.replace('-', '_').toUpperCase();
+    var cls = 'pilot.styles.${clsName}';
     Context.defineModule(cls, [
       macro class $clsName {
-        public static final name:String = $v{id};
-        static function __init__() {
-          pilot.StyleProvider.addGlobalStyle($v{content.get(type)});
+        @:keep public static inline final name:String = $v{id};
+        public static function __init__() {
+          pilot.StyleProvider.addGlobalStyle($v{content.get(type)}); 
         }
       }
     ]);
-    Compiler.keep(cls);
 
-    return macro $v{name};
+    return macro $p{[ 'pilot', 'styles', clsName, 'name' ]};
   }
 
   static function add(type:String, value:String) {

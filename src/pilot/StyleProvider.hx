@@ -16,9 +16,12 @@ class StyleProvider implements Widget {
 
   static var initialized:Bool = false;
   static var styleEl:js.html.StyleElement;
-  static var globalStyles:Array<String> = [];
+  static var globalStyles:Array<String>;
 
   public static function addGlobalStyle(style:String) {
+    if (globalStyles == null) {
+      globalStyles = [];
+    }
     globalStyles.push(style);
   }
 
