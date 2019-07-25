@@ -10,7 +10,7 @@ abstract Style(String) to String {
     pilot.macro.StyleBuilder.create(rules, null, true);
     return macro null;
   }
-  
+
   public static macro function create(rules, ?className:haxe.macro.Expr.ExprOf<String>) {
     var name = pilot.macro.StyleBuilder.create(rules, className);
     return macro @:pos(rules.pos) new pilot.Style(${name});

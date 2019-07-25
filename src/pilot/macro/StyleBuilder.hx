@@ -49,16 +49,23 @@ class StyleBuilder {
 
     var clsName = id.replace('-', '_').toUpperCase();
     var cls = 'pilot.styles.${clsName}';
-    Context.defineModule(cls, [
-      macro class $clsName {
-        @:keep public static inline final name:String = $v{id};
-        public static function __init__() {
-          pilot.StyleProvider.addGlobalStyle($v{content.get(type)}); 
+    var abs:TypeDefinition = {
+      // meta: { name: ':keep', pos: Context.currentPos() },
+      name: clsName,
+      pack: [ 'pilot', 'styles' ],
+      kind: TDAbstract(macro:String, [], [macro:String]),
+      fields: (macro class {
+        @:keep public static final rules = $v{content.get(type)};
+        public inline function new() {
+          this = $v{id};
         }
-      }
-    ]);
+      }).fields,
+      pos: Context.currentPos()
+    };
+    Context.defineType(abs);
+    // Context.defineModule(cls, [ abs ]);
 
-    return macro $p{[ 'pilot', 'styles', clsName, 'name' ]};
+    return macro new pilot.styles.$clsName();
   }
 
   static function add(type:String, value:String) {
