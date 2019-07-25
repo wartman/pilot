@@ -38,7 +38,7 @@ class SiteFooter extends StatelessWidget {
             height: '50px'
           }
         }
-      })
+      }, 'site-footer')
     }, [
       h('span', { 
         className: Style.create({

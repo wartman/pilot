@@ -23,15 +23,6 @@ class Colors {
   public static final blue = 'blue';
 }
 
-// Styles are compiled to css and output alongside your compiled
-// code. You can change its destination by defining `pilot-css`
-// in your build `hxml`.
-//
-// It's important to note that these styles will NOT be present
-// in the compiled code. Instead, calls to `Style.create` are 
-// replaced with a String that points to a class in the generated
-// css file. This means it's safe to use `Style.create` inside of
-// loops and `Widget#build`, as we'll see in a second.
 enum abstract ButtonType(Style) to Style {
   var Primary = Style.create({
     // Note that you can pass static final properties to Style rules!
@@ -80,3 +71,17 @@ ideal).
 
 Ideally this will be good for prototyping or small projects! 
 We'll see.
+
+Styles
+------
+
+Styles can either be injected when the app is started or extracted 
+into an external file. This is still something I'm thinking about, 
+but, for now, you'll need to use `pilot.StyleProvider` when booting
+your app to inject styles. If you define `pilot-css=some-name` in 
+your hxml, a `css` file will be created alongside your compiled code
+(and `pilot.StyleProvider` will not need to be used).
+
+This is still a bit clunky and needs some more work -- specifically,
+it would be nice to allow for different `StyleSheets` and themes
+using the inject method.

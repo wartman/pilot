@@ -15,8 +15,19 @@ using haxe.macro.TypeTools;
 
 class StyleBuilder {
   
+  @:persistent static public var content:Map<String, String> = [];
   static final ucase:EReg = ~/[A-Z]/g;
-  static var ran:Array<String> = [];
+  static var ran:Array<String> = []; 
+
+  public static function use() {
+    if (
+      Context.defined('pilot-css')
+      && !Context.defined('display') 
+      && !Context.defined('pilot-skip')
+    ) {
+      Context.onAfterGenerate(() -> write());
+    }
+  }
 
   public static function create(expr:Expr, ?className:ExprOf<String>, global:Bool = false) {
     var type = Context.getLocalType().toString();
@@ -29,32 +40,45 @@ class StyleBuilder {
 
     var rules = switch expr.expr {
       case EObjectDecl(decls) if (decls.length >= 0):
-        parse('.${name}', decls, global);
+        add(type, parse('.${name}', decls, global));
       case EBlock(_) | EObjectDecl(_):
-        '';
         // Empty -- should skip.
+        '';
       default:
         Context.error('Should be an object', expr.pos);
         '';
     }
 
-    var clsName = id.replace('-', '_').toUpperCase();
-    var cls = 'pilot.styles.${clsName}';
-    var abs:TypeDefinition = {
-      name: clsName,
-      pack: [ 'pilot', 'styles' ],
-      kind: TDAbstract(macro:String, [], [macro:String]),
-      fields: (macro class {
-        @:keep public static final rules = pilot.StyleSheet.getInstance().add($v{rules});
-        public inline function new() {
-          this = $v{name};
-        }
-      }).fields,
-      pos: Context.currentPos()
-    };
-    Context.defineType(abs);
+    if (!Context.defined('pilot-css')) {
+      var clsName = id.replace('-', '_').toUpperCase();
+      var cls = 'pilot.styles.${clsName}';
+      var abs:TypeDefinition = {
+        name: clsName,
+        pack: [ 'pilot', 'styles' ],
+        kind: TDAbstract(macro:String, [], [macro:String]),
+        fields: (macro class {
+          @:keep public static final rules = pilot.StyleSheet.getInstance().add($v{rules});
+          public inline function new() {
+            this = $v{name};
+          }
+        }).fields,
+        pos: Context.currentPos()
+      };
+      Context.defineType(abs);
+      return macro new pilot.styles.$clsName();
+    } else {
+      return macro $v{name};
+    }
+  }
 
-    return macro new pilot.styles.$clsName();
+  static function add(type:String, value:String):String {
+    if (ran.indexOf(type) > -1) {
+      content.set(type, [ content.get(type), value ].join('\n'));
+      return value;
+    }
+    ran.push(type);
+    content.set(type, value);
+    return value;
   }
 
   static function parse(name:String, rules:Array<ObjectField>, global:Bool) {
@@ -156,6 +180,18 @@ class StyleBuilder {
     var prefix = Context.defined('pilot-prefix') ? Context.definedValue('pilot-prefix') : '_';
     var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     return prefix + [ for (i in 0...5) chars.charAt(rand(0, chars.length - 1)) ].join('');
+  }
+
+  static function write() {
+    var root = Sys.getCwd();
+    var outDir = Compiler.getOutput();
+    var outName:String = Context.definedValue('pilot-css');
+    if (outName == null) outName = 'app';
+    if (outDir.extension() != '') {
+      outDir = outDir.directory();
+    }
+    outDir = Path.join([outDir, outName.trim()]).withExtension('css');
+    File.saveContent(outDir, [ for (k => v in content) v ].join('\n'));
   }
 
   static function prepareKey(key:String) {
