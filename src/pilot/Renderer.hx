@@ -22,6 +22,8 @@ class Renderer {
           + '</${vnode.name}>';
       case VNodeFragment:
         [ for (child in vnode.children) render(child) ].join('');
+      case VNodePlaceholder:
+        '';
       case VNodeText:
         vnode.name.htmlEscape(true);
       // todo: allow for unescaped HTML.
