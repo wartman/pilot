@@ -4,12 +4,12 @@ abstract StyleProvider(VNode) to VNode {
   
   public inline function new(props:{
     child:VNode,
-    ?manager:StyleSheet
+    ?theme:StyleSheet
   }) {
-    if (props.manager == null) {
-      props.manager = StyleSheet.getInstance();
+    if (props.theme == null) {
+      props.theme = StyleSheet.getInstance();
     }
-    props.manager.inject();
+    props.theme.inject();
     this = props.child;
   }
 

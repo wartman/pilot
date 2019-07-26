@@ -19,14 +19,43 @@ class Differ {
     node = patchNode(
       node,
       node,
-      node.field('__vnode') != null 
-        ? node.field('__vnode')
+      getNodeVNode(node) != null 
+        ? getNodeVNode(node)
         : recycleNode(node),
       vnode,
       false
     );
-    node.setField('__vnode', vnode);
+    setNodeVNode(node, vnode);
     return vnode;
+  }
+
+  /**
+    This method will update a VNode rather than returning a new one,
+    which is needed for subPatching.
+  **/
+  public static function subPatch(vnode:VNode, newVNode:VNode) {
+    patchNode(
+      vnode.node,
+      vnode.node,
+      vnode,
+      newVNode,
+      false
+    );
+    vnode.name = newVNode.name;
+    vnode.key = newVNode.key;
+    vnode.style = newVNode.style;
+    vnode.props = newVNode.props;
+    vnode.children = newVNode.children;
+    vnode.type = newVNode.type;
+    vnode.hooks = newVNode.hooks;
+  }
+
+  public inline static function setNodeVNode(node:Node, vnode:VNode) {
+    node.setField('__vnode', vnode);
+  }
+
+  public inline static function getNodeVNode(node:Node) {
+    return node.field('__vnode');
   }
 
   static function patchNode(
@@ -163,7 +192,7 @@ class Differ {
           newKey = getKey(newVChildren[newHead]);
 
           if (
-            newKeyed.get(oldKey) != null
+            newKeyed.get(oldKey)
             || (newKey != null && newKey == getKey(oldVChildren[oldHead + 1]))
           ) {
             if (oldKey == null) {
@@ -197,7 +226,7 @@ class Differ {
               newKeyed.set(newKey, true);
               oldHead++;
             } else {
-              if ((tmpVChild = keyed[newKey]) != null) {
+              if ((tmpVChild = keyed.get(newKey)) != null) {
                 patchNode(
                   node,
                   node.insertBefore(
@@ -355,7 +384,7 @@ class Differ {
   static inline function getListener(node:Node) {
     if (node.field('__listener') == null) {
       node.setField('__listener', function (event:Event) {
-        var cb:(e:Event)->Void = node.field('__handlers').field(event.type);
+        var cb:(e:Event)->Void = getHandlers(node).field(event.type);
         if (cb != null) cb(event);
       });
     }
