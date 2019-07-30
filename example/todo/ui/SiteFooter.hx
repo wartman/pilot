@@ -5,7 +5,7 @@ import pilot.StatelessWidget;
 import pilot.VNode;
 import pilot.VNode.h;
 import todo.data.Store;
-import todo.data.VisibleTodos;
+import todo.data.VisibleTodos; 
 
 class SiteFooter extends StatelessWidget {
 
@@ -33,11 +33,22 @@ class SiteFooter extends StatelessWidget {
             0 16px 0 -6px #f6f6f6,
             0 17px 2px -6px rgba(0, 0, 0, 0.2)',
         },
-        '@media (max-width: 430px)': {
-          '&': {
+        media: {
+          query: {
+            and: {
+              maxWidth: '430px'
+            },
+            type: 'screen',
+          },
+          style: {
             height: '50px'
           }
-        }
+        },
+        // '@media (max-width: 430px)': {
+        //   '&': {
+        //     height: '50px'
+        //   }
+        // }
       }, 'site-footer')
     }, [
       h('span', { 

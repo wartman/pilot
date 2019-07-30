@@ -2,6 +2,7 @@ package task.ui.widget;
 
 import pilot.VNode;
 import pilot.Style;
+import task.ui.widget.Container;
 
 enum abstract ButtonType(Style) to Style {
   

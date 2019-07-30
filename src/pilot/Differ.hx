@@ -283,6 +283,9 @@ class Differ {
     if (vnode.hooks.detach != null) {
       vnode.hooks.detach();
     }
+    for (child in vnode.children) {
+      doDetachHook(child);
+    }
   }
 
   static inline function doAttachHook(vnode:VNode) {

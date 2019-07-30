@@ -76,12 +76,7 @@ Styles
 ------
 
 Styles can either be injected when the app is started or extracted 
-into an external file. This is still something I'm thinking about, 
-but, for now, you'll need to use `pilot.StyleProvider` when booting
-your app to inject styles. If you define `pilot-css=some-name` in 
-your hxml, a `css` file will be created alongside your compiled code
-(and `pilot.StyleProvider` will not need to be used).
-
-This is still a bit clunky and needs some more work -- specifically,
-it would be nice to allow for different `StyleSheets` and themes
-using the inject method.
+into an external file. If you define `pilot-css=some-name` in 
+your hxml, a `css` file will be created alongside your compiled 
+code. By default, styles will be injected into the `<head>` when the 
+app boots.

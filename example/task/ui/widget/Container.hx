@@ -3,6 +3,7 @@ package task.ui.widget;
 import pilot.Style;
 import pilot.VNode;
 import pilot.StyledWidget;
+import task.ui.core.Color;
 
 enum abstract ContainerType(Style) to Style {
   
@@ -27,7 +28,7 @@ enum abstract ContainerType(Style) to Style {
 enum abstract ContainerBackground(Style) to Style {
   
   var BgPrimary = Style.create({
-    background: '#e2e2e2',
+    background: Color.primary,
   });
 
   var BgOffset = Style.create({

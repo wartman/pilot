@@ -78,11 +78,10 @@ class TodoItem extends StatefulWidget {
               content: '"x"'
             },
 
-            '@media (max-width: 430px)': {
-              '&': {
-                display: 'block'
-              }
-            }
+            media: {
+              query: { maxWidth: '430px' },
+              style: { display: 'block' }
+            },
 
           },
 

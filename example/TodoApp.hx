@@ -1,5 +1,4 @@
 import pilot.Style;
-import pilot.StyleProvider;
 import todo.ui.App;
 import todo.data.Store;
 import todo.ui.Color;
@@ -32,9 +31,7 @@ class TodoApp {
     });
     #if js
       var store = new Store(
-        store -> new StyleProvider({
-          child: new App({ store: store })
-        }),
+        store -> new App({ store: store }),
         js.Browser.document.getElementById('root')
       );
       store.update();
