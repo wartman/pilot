@@ -49,7 +49,7 @@ class StyleBuilder {
         '';
     }
 
-    if (!Context.defined('pilot-css')) {
+    if (!Context.defined('pilot-css') && !Context.defined('pilot-skip')) {
       var clsName = id.replace('-', '_').toUpperCase();
       var cls = 'pilot.styles.${clsName}';
       var abs:TypeDefinition = {
@@ -103,9 +103,9 @@ class StyleBuilder {
           } else {
             subStyles.push(parse(selector, decls, false));
           }
-        
-        case EArrayDecl(decls):
-          for (d in decls) out.push(parseRule(name, rule.field, d, global));
+
+        case EBinop(OpAdd, e1, e2):
+          for (e in [e1, e2]) out.push(parseRule(name, rule.field, e, global));
 
         default:
           out.push(parseRule(name, rule.field, rule.expr, global));
@@ -137,8 +137,12 @@ class StyleBuilder {
     var mediaBody:String = null;
 
     function parseMediaQuery(expr:Expr) return switch expr.expr {
-      case EArrayDecl(defs):
-        [ for (d in defs) parseMediaQuery(d) ].join(', ');
+      case EBinop(OpAdd | OpAnd | OpBoolAnd, e1, e2):
+        [ for (d in [ e1, e2 ]) parseMediaQuery(d) ].join(' and ');
+
+      case EBinop(OpOr | OpBoolOr, e1, e2):
+        [ for (d in [ e1, e2 ]) parseMediaQuery(d) ].join(' or ');
+
       case EObjectDecl(fields): 
         var q = [ for (f in fields) switch f.field {
           case 'type': switch f.expr.expr {
@@ -156,20 +160,24 @@ class StyleBuilder {
           else 0;
         });
         q.join(' ');
+        
       default: Context.error('Invalid media query', expr.pos);
     }
 
     function parseMediaScopedRules(expr:Expr) return switch expr.expr {
       case EObjectDecl(fields): parse(name, fields, global);
-      case EArrayDecl(decls): 
-        [ for (d in decls) parseMediaScopedRules(expr) ].join('\n');
+      case EBinop(OpAdd, e1, e2): 
+        [ for (d in [ e1, e2 ]) parseMediaScopedRules(expr) ].join('\n');
       default: Context.error('Invalid media rules', expr.pos);
     }
 
     switch expr.expr {
-      case EArrayDecl(decls): 
-        return [ for (d in decls) parseMedia(name, d, global) ].join('/n');
-      
+      case EBinop(OpAdd, e1, e2):
+        return [ 
+          parseMedia(name, e1, global),
+          parseMedia(name, e2, global) 
+        ].join('\n');
+
       case EObjectDecl(fields): for (f in fields) switch f.field {
         case 'query': mediaQuery = parseMediaQuery(f.expr);
         case 'style': mediaBody = parseMediaScopedRules(f.expr);

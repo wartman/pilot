@@ -50,9 +50,26 @@ class MyButton extends StatelessWidget {
         type,
         Style.create({
           padding: '1em',
-          'font-size': '1em',
-          'border-radius': '.5em',
-          outline: 'none'
+          fontSize: '1em',
+          borderRadius: '.5em',
+          outline: 'none',
+          
+          // An arbitrary example of media queries:
+          media: {
+            query: { type: 'screen', and: { maxWidth: '700px' } },
+            style: { display: block }
+          } + { // Use `+` to define several media rules
+            
+            // the `&` or `&&` operators can also be used to
+            // join media queries. You can use `|` or `||` as well,
+            // which compile to `or`.
+            query: { type: 'screen' } & { minWidth: '700px' },
+            
+            style: { display: 'none' }
+          }
+        } + {
+          // `+` can be used to join rules together.
+          fontSize: '1em'
         })
       ]),
       #if js

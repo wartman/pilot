@@ -11,7 +11,7 @@ abstract Style(String) to String {
     return macro null;
   }
 
-  public static macro function create(rules, ?className:haxe.macro.Expr.ExprOf<String>) {
+  public static macro function create(rules:haxe.macro.Expr.ExprOf<Dynamic>, ?className:haxe.macro.Expr.ExprOf<String>) {
     var name = pilot.macro.StyleBuilder.create(rules, className);
     return macro @:pos(rules.pos) new pilot.Style(${name});
   }
