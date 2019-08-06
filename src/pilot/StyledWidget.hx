@@ -1,18 +1,15 @@
 package pilot;
 
-using Reflect;
+using pilot.Style;
 
+@:deprecated('Use `pilot.Style.applyStyle` instead')
 abstract StyledWidget(VNode) to VNode {
 
   public inline function new(props:{
     style:Style,
     child:VNode
   }) {
-    this = props.child;
-    if (this.props.hasField('className')) {
-      props.style = props.style.add(new Style(this.props.field('className')));
-    }
-    this.props.setField('className', props.style);
+    this = props.child.applyStyle(props.style);
   }
 
 }

@@ -24,6 +24,14 @@ abstract Style(String) to String {
     return name == '' ? null : new Style(name);
   }
 
+  public inline static function applyStyle(vnode:VNode, style:Style) {
+    vnode.style = compose([
+      vnode.style,
+      style
+    ]);
+    return vnode;
+  }
+
   public inline function new(name:String) {
     this = name;
   }
@@ -33,6 +41,11 @@ abstract Style(String) to String {
       case [ null, v ] | [ v, null ]: v;
       case [ a, b ]: '$a $b';
     });
+  }
+
+  @:op(a + b)
+  public inline function opAdd(b:Style):Style {
+    return compose([ new Style(this), b ]);
   }
 
 }
