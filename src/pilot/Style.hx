@@ -36,16 +36,12 @@ abstract Style(String) to String {
     this = name;
   }
 
+  @:op(a + b)
   public inline function add(style:Style) {
     return new Style(switch [ this, (style:String) ] {
       case [ null, v ] | [ v, null ]: v;
       case [ a, b ]: '$a $b';
     });
-  }
-
-  @:op(a + b)
-  public inline function opAdd(b:Style):Style {
-    return compose([ new Style(this), b ]);
   }
 
 }
