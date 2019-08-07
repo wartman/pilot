@@ -13,7 +13,7 @@ class StatefulWidget implements Widget {
 
   #if js
     
-    var _pilot_vnode:VNode;
+    @:noCompletion var _pilot_vnode:VNode;
 
     public function render():VNode {
       _pilot_vnode = build();
