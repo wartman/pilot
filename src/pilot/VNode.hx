@@ -102,6 +102,22 @@ abstract VNode(VNodeOptions) {
     return fragment(value);
   }
 
+  public var style(get, set):Style;
+
+  function get_style() {
+    return this.style;
+  }
+
+  function set_style(style:Style) {
+    if (this.props.hasField('className')) {
+      this.props.setField('className', [ style, this.props.field('className') ].join(' '));
+    } else {
+      this.props.setField('className', style);
+    }
+    this.style = Style.compose([ this.style, style ]);
+    return style;
+  }
+
   public function new(impl:VNodeOptions) {
     this = impl;
     if (impl.type == null) {
