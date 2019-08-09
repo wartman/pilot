@@ -28,7 +28,7 @@ abstract VNodeKey(String) from String to String {
 
 typedef VNodeOptions = {
   name:String,
-  props:{},
+  ?props:{},
   ?style:Style,
   ?type:VNodeType,
   ?children:Array<VNode>,
@@ -122,6 +122,9 @@ abstract VNode(VNodeOptions) {
     this = impl;
     if (impl.type == null) {
       this.type = VNodeElement;
+    }
+    if (impl.props == null) {
+      impl.props = {};
     }
     if (impl.children == null) {
       this.children = [];

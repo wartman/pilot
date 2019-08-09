@@ -23,7 +23,7 @@ class Differ {
         ? getNodeVNode(node)
         : recycleNode(node),
       vnode,
-      false
+      vnode.name == 'svg'
     );
     setNodeVNode(node, vnode);
     return vnode;
@@ -39,7 +39,7 @@ class Differ {
       vnode.node,
       vnode,
       newVNode,
-      false
+      vnode.name == 'svg'
     );
     vnode.name = newVNode.name;
     vnode.key = newVNode.key;
@@ -101,7 +101,7 @@ class Differ {
       var oldTail = oldVChildren.length - 1;
       var newTail = newVChildren.length - 1;
 
-      isSvg = isSvg || newVNode.name == 'svg';
+      isSvg =  isSvg || newVNode.name == 'svg';
 
       for (k => _ in merge(oldVProps, newVProps)) {
         switch k {
@@ -326,12 +326,14 @@ class Differ {
   }
 
   static function createNode(vnode:VNode, isSvg:Bool):Node {
+    if (vnode.name == 'svg') isSvg = true;
+
     var node = switch vnode.type {
       case VNodeText:
         Browser.document.createTextNode(vnode.name);
       case VNodeFragment:
         Browser.document.createDocumentFragment();
-      case VNodeElement if (isSvg || vnode.name == 'svg'):
+      case VNodeElement if (isSvg):
         Browser.document.createElementNS('http://www.w3.org/2000/svg', vnode.name);
       case VNodeElement | VNodeRecycled:
         Browser.document.createElement(vnode.name);
