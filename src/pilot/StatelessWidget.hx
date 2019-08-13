@@ -10,8 +10,23 @@ class StatelessWidget implements Widget {
   public function render():VNode {
     var vnode = build();
     #if js
-      vnode.hooks.attach = attached;
-      vnode.hooks.detach = detached;
+
+      var attachHook = vnode.hooks.attach;
+      vnode.hooks.attach = attachHook == null 
+        ? attached
+        : vnode -> {
+          attachHook(vnode);
+          attached(vnode);
+        };
+        
+      var detachHook = vnode.hooks.detach;
+      vnode.hooks.detach = detachHook == null 
+        ? detached
+        : () -> {
+          detachHook();
+          detached();
+        };
+
     #end
     return vnode;
   }
