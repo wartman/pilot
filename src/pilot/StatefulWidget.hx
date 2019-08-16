@@ -14,6 +14,7 @@ class StatefulWidget implements Widget {
   #if js
     
     @:noCompletion var _pilot_vnode:VNode;
+    @:noCompletion var _pilot_patching:Bool = false;
 
     public function render():VNode {
       _pilot_vnode = build();
@@ -38,14 +39,21 @@ class StatefulWidget implements Widget {
     }
 
     public function patch() {
+      if (_pilot_patching) {
+        return;
+      }
       if (
         _pilot_vnode == null
         || _pilot_vnode.node == null
       ) return;
-      _pilot_vnode.subPatch(build());
+      _pilot_patching = true;
+      js.Browser.window.requestAnimationFrame(_ -> {
+        _pilot_vnode.subPatch(build());
+        _pilot_patching = false;
+      });
     }
 
-    final function _pilot_detached() {
+    @:noCompletion final function _pilot_detached() {
       _pilot_vnode = null;
       detached();
     }
