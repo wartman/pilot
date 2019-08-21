@@ -127,9 +127,9 @@ abstract VNode(VNodeOptions) {
       impl.props = {};
     }
     if (impl.children == null) {
-      this.children = [];
+      impl.children = [];
     }
-    this.children = this.children.filter(c -> c != null);
+    this.children = impl.children.filter(c -> c != null);
     if (impl.props.hasField('key')) {
       this.key = impl.props.field('key');
       this.props.deleteField('key');

@@ -19,9 +19,9 @@ class TodoInput extends StatelessWidget {
   #end
 
   override function build():VNode {
-    return new StyledWidget({
+    return new VNode({
+      name: 'div',
       style: Style.create({
-        
         input: {
           position: 'relative',
           margin: 0,
@@ -44,10 +44,9 @@ class TodoInput extends StatelessWidget {
           border: 'none',
           background: 'rgba(0, 0, 0, 0.003)',
           'box-shadow': 'inset 0 -2px 1px rgba(0,0,0,0.03)',
-        },
-
-      }, 'todo-input'),
-      child: h('div', { className: 'todo-input' }, [
+        }
+      }),
+      children: [
         h('input', {
           className: inputClass,
           value: value,
@@ -64,7 +63,7 @@ class TodoInput extends StatelessWidget {
             }
           #end
         })
-      ])
+      ]
     });
   }
 

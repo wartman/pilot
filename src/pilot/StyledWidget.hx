@@ -2,9 +2,9 @@ package pilot;
 
 using pilot.Style;
 
-@:deprecated('Use `pilot.Style.applyStyle` instead')
 abstract StyledWidget(VNode) to VNode {
 
+  @:deprecated('Use `pilot.Style.applyStyle` instead')
   public inline function new(props:{
     style:Style,
     child:VNode

@@ -86,9 +86,11 @@ abstract Toggle(VNode) to VNode {
   }) {
     this = new VNode({
       name: 'input',
+      style: [
+        props.type
+      ],
       props: {
         type: 'checkbox',
-        className: props.type,
         checked: props.checked,
         id: props.id,
         #if js

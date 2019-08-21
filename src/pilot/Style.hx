@@ -1,5 +1,8 @@
 package pilot;
 
+using StringTools;
+using Lambda;
+
 abstract Style(String) to String {
 
   @:from public inline static function ofArray(styles:Array<Style>):Style {
@@ -17,18 +20,11 @@ abstract Style(String) to String {
   }
 
   public inline static function compose(styles:Array<Style>):Style {
-    var name = styles
-      .filter((s:String) -> s != null && s != '')
-      .join(' ');
-    
-    return name == '' ? null : new Style(name);
+    return styles.fold((ret, value:Style) -> value.add(ret), new Style(''));
   }
 
-  public inline static function applyStyle(vnode:VNode, style:Style) {
-    vnode.style = compose([
-      vnode.style,
-      style
-    ]);
+  public inline static function applyStyle(vnode:VNode, style:Style):VNode {
+    vnode.style = compose([ vnode.style, style ]);
     return vnode;
   }
 
@@ -37,10 +33,11 @@ abstract Style(String) to String {
   }
 
   @:op(a + b)
-  public inline function add(style:Style) {
+  public inline function add(style:Style):Style {
     return new Style(switch [ this, (style:String) ] {
       case [ null, v ] | [ v, null ]: v;
-      case [ a, b ]: '$a $b';
+      case [ a, b ] if (!a.contains(b)): '$a $b';
+      default: this;
     });
   }
 
