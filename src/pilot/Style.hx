@@ -8,17 +8,7 @@ abstract Style(String) to String {
   @:from public inline static function ofArray(styles:Array<Style>):Style {
     return compose(styles);
   }
-
-  public static macro function global(rules) {
-    pilot.macro.StyleBuilder.create(rules, null, true);
-    return macro null;
-  }
-
-  public static macro function create(rules:haxe.macro.Expr.ExprOf<Dynamic>, ?className:haxe.macro.Expr.ExprOf<String>) {
-    var name = pilot.macro.StyleBuilder.create(rules, className);
-    return macro @:pos(rules.pos) new pilot.Style(${name});
-  }
-
+  
   public inline static function compose(styles:Array<Style>):Style {
     return styles.fold((ret, value:Style) -> value.add(ret), new Style(''));
   }

@@ -51,19 +51,16 @@ class StyleBuilder {
 
     if (!Context.defined('pilot-css') && !Context.defined('pilot-skip')) {
       var clsName = id.replace('-', '_').toUpperCase();
-      var cls = 'pilot.styles.${clsName}';
-      var abs:TypeDefinition = {
-        name: clsName,
-        pack: [ 'pilot', 'styles' ],
-        kind: TDAbstract(macro:String, [], [macro:String]),
-        fields: (macro class {
-          @:keep public static final rules = pilot.StyleManager.getInstance().add($v{rules});
-          public inline function new() this = $v{name};
-        }).fields,
-        pos: Context.currentPos()
-      };
-      Context.defineType(abs);
-      return macro new pilot.styles.$clsName();
+      var tp:TypePath = { pack: [], name: clsName };
+      var cls = macro class $clsName {
+        public static inline final name = $v{name};
+        @:keep public static final id = pilot.StyleManager.define($v{name}, () -> $v{rules});
+        // public static final inst = new $tp();
+        // function new() {}
+        // public final name = $v{name};
+      }
+      Context.defineType(cls);
+      return macro $i{clsName}.name;
     } else {
       return macro $v{name};
     }

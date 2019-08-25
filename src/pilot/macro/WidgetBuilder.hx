@@ -12,8 +12,13 @@ class WidgetBuilder {
   static final propsMeta = [ ':prop', ':property' ];
   static final stateMeta = [ ':state' ];
 
-  public static function build(options:{ stateful:Bool }) {
+  public static function build(options:{ 
+    stateful:Bool,
+    styled:Bool, 
+  }) {
     var fields = Context.getBuildFields();
+    var cls = Context.getLocalClass().get();
+    var clsName = cls.pack.concat([ cls.name ]).join('_').toLowerCase();
     var props:Array<Field> = [];
     var constructorProps:Array<Field> = [];
     var newFields:Array<Field> = [];
@@ -67,6 +72,9 @@ class WidgetBuilder {
 
       case FVar(t, e) if (options.stateful && f.meta.exists(m -> stateMeta.has(m.name))):
         createProperty(f, t, e, true);
+
+      case FVar(t, e) if (options.styled && f.meta.exists(m -> StyleSheetBuilder.styleMeta.has(m.name))):
+        StyleSheetBuilder.createStyle(clsName, f, t, e);
         
       case FFun(_) if (f.meta.exists(m -> initMeta.has(m.name))):
         var name = f.name;
@@ -87,7 +95,7 @@ class WidgetBuilder {
     var conArg = TAnonymous(constructorProps);
     newFields = newFields.concat((macro class {
 
-      var _pilot_props:$propsVar;
+      @:noCompletion var _pilot_props:$propsVar;
 
       public function new(props:$conArg) {
         _pilot_props = cast {};

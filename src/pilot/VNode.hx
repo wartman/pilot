@@ -57,24 +57,16 @@ abstract VNode(VNodeOptions) {
     });
   }
 
+  static public inline function element(impl:VNodeOptions) {
+    return new VNode(impl);
+  }
+
   static public inline function placeholder() {
     return new VNode({
       name: '[placeholder]',
       props: {},
       type: VNodePlaceholder
     });
-  }
-
-  static public inline function h(name:String, props:{}, ?children:Array<VNode>) {
-    return new VNode({
-      name: name,
-      props: props,
-      children: children != null ? children : []
-    });
-  }
-
-  static public inline function element(impl:VNodeOptions) {
-    return new VNode(impl);
   }
 
   static public inline function fragment(nodes:Array<VNode>) {
@@ -102,22 +94,6 @@ abstract VNode(VNodeOptions) {
     return fragment(value);
   }
 
-  public var style(get, set):Style;
-
-  function get_style() {
-    return this.style;
-  }
-
-  function set_style(style:Style) {
-    if (this.props.hasField('className')) {
-      this.props.setField('className', [ style, this.props.field('className') ].join(' '));
-    } else {
-      this.props.setField('className', style);
-    }
-    this.style = Style.compose([ this.style, style ]);
-    return style;
-  }
-
   public function new(impl:VNodeOptions) {
     this = impl;
     if (impl.type == null) {
@@ -133,13 +109,6 @@ abstract VNode(VNodeOptions) {
     if (impl.props.hasField('key')) {
       this.key = impl.props.field('key');
       this.props.deleteField('key');
-    }
-    if (impl.style != null) {
-      if (impl.props.hasField('className')) {
-        this.props.setField('className', [ impl.style, impl.props.field('className') ].join(' '));
-      } else {
-        this.props.setField('className', impl.style);
-      }
     }
     #if js
       if (impl.hooks == null) {

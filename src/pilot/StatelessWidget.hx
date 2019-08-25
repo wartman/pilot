@@ -1,6 +1,9 @@
 package pilot;
 
-@:autoBuild(pilot.macro.WidgetBuilder.build({ stateful: false }))
+@:autoBuild(pilot.macro.WidgetBuilder.build({ 
+  stateful: false, 
+  styled: true
+}))
 class StatelessWidget implements Widget {
 
   function build():VNode {

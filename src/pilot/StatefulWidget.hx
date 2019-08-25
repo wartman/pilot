@@ -4,7 +4,10 @@ package pilot;
   using pilot.Differ;
 #end
 
-@:autoBuild(pilot.macro.WidgetBuilder.build({ stateful: true }))
+@:autoBuild(pilot.macro.WidgetBuilder.build({ 
+  stateful: true, 
+  styled: true
+}))
 class StatefulWidget implements Widget {
 
   function build():VNode {
