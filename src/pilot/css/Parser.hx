@@ -1,3 +1,5 @@
+#if macro
+
 package pilot.css;
 
 import haxe.macro.Context;
@@ -142,3 +144,5 @@ class Parser {
   // }
   
 }
+
+#end

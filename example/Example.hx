@@ -10,10 +10,20 @@ class Colors {
 }
 
 class Root implements StyleSheet {
+  
   @:style static var foo = {
     background = Colors.grey;
     boxSizing = 'border-box';
   };
+
+  @:style(global = true)
+  static var root = {
+    [ html, body ] = {
+      padding = 0;
+      margin = 0;
+    }
+  }
+
 }
 
 class ContainerStyle extends StatelessWidget {

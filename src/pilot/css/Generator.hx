@@ -1,3 +1,5 @@
+#if macro
+
 package pilot.css;
 
 import haxe.macro.Expr;
@@ -17,12 +19,25 @@ class Generator {
     }
   }
 
-  public static function generateChild(name:String, exprs:Array<CssExpr>, children:Array<Expr>):Expr {
+  public static function generateGlobal(exprs:Array<CssExpr>):Expr {
+    var children:Array<Expr> = [];
+    for (rule in exprs) switch rule {
+      case EProperty(name, value):
+        throw 'Global styles cannot have properties at the root level';
+      default:
+        generateChild(null, exprs, children);
+    }
+    return macro [ $a{ children } ].join('\n');
+  }
+
+  public static function generateChild(name:Null<String>, exprs:Array<CssExpr>, children:Array<Expr>):Expr {
     var declaration:Array<Expr> = [];
     for (rule in exprs) switch rule {
       case EDeclaration(selectors, properties):
         for (s in selectors) {
-          var subName = if (s.contains('&')) {
+          var subName = if (name == null) {
+            s; 
+          } else if (s.contains('&')) {
             s.replace('&', name);
           } else {
             '$name $s';
@@ -41,3 +56,5 @@ class Generator {
   }
 
 }
+
+#end

@@ -5,21 +5,7 @@ package pilot;
 import js.html.CSSStyleSheet;
 import haxe.ds.Map;
 
-// using StringTools;
-
 class StyleManager {
-
-  // static final nameRe = ~/[^a-z0-9]/g;
-
-  // public static function makeClassNameSafe(name:String):String {
-  //   return nameRe.map(name, reg -> {
-  //     var match = reg.matched(0);
-  //     var c = match.charCodeAt(0);
-  //     if (c == 32) return '_';
-  //     if (c >= 65 && c <= 90) return '_' + match.toLowerCase();
-  //     return '__' + ('000' + c.hex(16)).substr(-4);
-  //   });
-  // }
 
   static final indices:Map<String, Int> = new Map();
   static final defined:Map<String, Bool> = new Map();
