@@ -57,7 +57,7 @@ class StyleBuilder {
         pack: [ 'pilot', 'styles' ],
         kind: TDAbstract(macro:String, [], [macro:String]),
         fields: (macro class {
-          @:keep public static final rules = pilot.StyleManager.getInstance().add($v{rules});
+          @:keep public static final rules = pilot.StyleManager.define($v{name}, () -> $v{rules});
           public inline function new() this = $v{name};
         }).fields,
         pos: Context.currentPos()

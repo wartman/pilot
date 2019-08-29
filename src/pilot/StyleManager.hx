@@ -1,52 +1,48 @@
 package pilot;
 
+#if (js && !nodejs)
+
+import js.html.CSSStyleSheet;
+import haxe.ds.Map;
+
 class StyleManager {
 
-  static var ids:Int = 0;
-  static var instance:StyleManager;
+  static final indices:Map<String, Int> = new Map();
+  static final defined:Map<String, Bool> = new Map();
+  static var mounted:Bool = false;
+  static var sheet:CSSStyleSheet;
 
-  public static function getInstance() {
-    if (instance == null) {
-      instance = new StyleManager();
+  public static function define(id:String, css:()->String):Style {
+    if (!defined[id]) {
+      add(id, css());
+      defined[id] = true;
     }
-    return instance;
+    return new Style(id);
   }
 
-  final id:String = 'pilot-styles-' + ids++;
-  var rules:Array<String> = [];
-  var injecting:Bool;
+  public static function add(id:String, css:String) {
+    if (!mounted) mount();
+    sheet.insertRule(
+      '@media all { ${css} }',
+      switch indices[id] {
+        case null: indices[id] = sheet.cssRules.length;
+        case v: v;
+      }
+    );
+  }
 
-  public function new() {}
-
-  public function add(rule:String):String {
-    rules.push(rule);
-    inject();
-    return rule;
+  static function mount() {
+    if (mounted) return;
+    mounted = true;
+    var styleEl = js.Browser.document.createStyleElement();
+    js.Browser.document.head.appendChild(styleEl);
+    sheet = cast styleEl.sheet;
   }
   
-  public function inject() {
-    if (injecting) { 
-      return;
-    }
-    injecting = true;
-
-    // todo: allow for browsers that might not have requestAnimationFrame.
-    js.Browser.window.requestAnimationFrame(_ -> {
-      var styles = js.Browser.document.getElementById(id);
-      var toInject = rules.copy();
-      rules = [];
-      
-      if (styles == null) {
-        var head = js.Browser.document.head;
-        styles = js.Browser.document.createStyleElement();
-        styles.setAttribute('id', id);
-        styles.setAttribute('rel', 'stylesheet');
-        head.appendChild(styles);
-      }
-    
-      styles.innerHTML = [styles.innerHTML].concat(toInject).join('\n');
-      injecting = false;
-    });
-  }
-
 }
+
+#else
+
+class StyleManager {}
+
+#end
