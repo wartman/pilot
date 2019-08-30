@@ -69,6 +69,8 @@ class Differ {
     if (oldVNode != null) {
       newVNode = doWillPatchHook(oldVNode, newVNode);
     }
+
+    applyStyle(newVNode);
     
     if (oldVNode == newVNode) {
     } else if (
@@ -305,6 +307,16 @@ class Differ {
     return if (vnode == null) null else vnode.key; 
   }
 
+  static function applyStyle(vnode:VNode) {
+    if (vnode.style != null) {
+      vnode.props.setField('className', switch vnode.props.field('className') {
+        case null: vnode.style;
+        case v: vnode.style.add(new Style(v));
+      });
+      vnode.style = null;
+    }
+  }
+
   static function merge(a:{}, b:{}):DynamicAccess<Dynamic> {
     var out:DynamicAccess<Dynamic> = new DynamicAccess();
     for (k => v in (a:DynamicAccess<Dynamic>)) out.set(k, v);
@@ -327,6 +339,8 @@ class Differ {
 
   static function createNode(vnode:VNode, isSvg:Bool):Node {
     if (vnode.name == 'svg') isSvg = true;
+
+    applyStyle(vnode);
 
     var node = switch vnode.type {
       case VNodeText:
