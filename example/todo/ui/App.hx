@@ -10,7 +10,7 @@ abstract App(VNode) to VNode {
   inline public function new(props:{ store:Store }) {
     this =  h('div', { id: 'root' }, [
       h('div', { 
-        className: Style.create({
+        className: Style.create('todo-app' => {
           background: '#fff',
           margin: '130px auto 40px auto',
           position: 'relative',
@@ -51,7 +51,7 @@ abstract App(VNode) to VNode {
           new SiteFooter({ store: props.store }) 
       ] else [])),
       h('footer', { 
-        className: Style.create({
+        className: Style.create('todo-app-footer' => {
           margin: '65px auto 0',
           color: '#bfbfbf',
           fontSize: '10px',

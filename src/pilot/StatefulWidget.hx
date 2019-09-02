@@ -47,7 +47,7 @@ class StatefulWidget implements Widget {
         || _pilot_vnode.node == null
       ) return;
       _pilot_patching = true;
-      js.Browser.window.requestAnimationFrame(_ -> {
+      Helpers.delay(() -> {
         _pilot_vnode.subPatch(build());
         _pilot_patching = false;
       });

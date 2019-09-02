@@ -4,7 +4,7 @@ import pilot.Style;
 import pilot.VNode;
 
 enum abstract ToggleType(Style) to Style {
-  var One = Style.create({
+  var One = Style.create('todo-toggle--one' => {
     'text-align': 'center',
     width: '40px',
     /* auto, since non-WebKit browsers doesn't support input styling */
@@ -35,7 +35,7 @@ enum abstract ToggleType(Style) to Style {
       }
     }
   });
-  var All = Style.create({
+  var All = Style.create('todo-toggle--two' => {
     width: '1px',
     height: '1px',
     border: 'none', /* Mobile Safari */

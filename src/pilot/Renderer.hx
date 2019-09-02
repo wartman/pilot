@@ -10,6 +10,7 @@ class Renderer {
     return switch vnode.type {
       case VNodeElement | VNodeRecycled:
         var out = '<${vnode.name}';
+        Helpers.applyStyle(vnode);
         var attrs = handleAttributes(vnode.props);
         if (attrs.length > 0) {
           out += ' ' + attrs.join(' ');

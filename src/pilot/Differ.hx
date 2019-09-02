@@ -307,14 +307,8 @@ class Differ {
     return if (vnode == null) null else vnode.key; 
   }
 
-  static function applyStyle(vnode:VNode) {
-    if (vnode.style != null) {
-      vnode.props.setField('className', switch vnode.props.field('className') {
-        case null: vnode.style;
-        case v: vnode.style.add(new Style(v));
-      });
-      vnode.style = null;
-    }
+  static inline function applyStyle(vnode:VNode) {
+    Helpers.applyStyle(vnode);
   }
 
   static function merge(a:{}, b:{}):DynamicAccess<Dynamic> {

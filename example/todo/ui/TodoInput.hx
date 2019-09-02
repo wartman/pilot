@@ -21,7 +21,7 @@ class TodoInput extends StatelessWidget {
   override function build():VNode {
     return new VNode({
       name: 'div',
-      style: Style.create({
+      style: Style.create('todo-input' => {
         input: {
           position: 'relative',
           margin: 0,

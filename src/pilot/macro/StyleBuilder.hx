@@ -29,17 +29,20 @@ class StyleBuilder {
     }
   }
 
-  public static function create(expr:Expr, ?className:ExprOf<String>, global:Bool = false) {
+  public static function create(expr:Expr, global:Bool = false) {
     var type = Context.getLocalType().toString();
     var id = getId();
-    var name = className == null ? id : switch className.expr {
-      case EConst(CString(s)): s;
-      case EConst(CIdent('null')): id;
-      default: Context.error('Classname must be a string', className.pos);
-    };
+    var name = id;
 
     var rules = switch expr.expr {
       case EObjectDecl(decls) if (decls.length >= 0):
+        add(type, parse('.${name}', decls, global));
+      case EBinop(
+        OpArrow, 
+        { expr: EConst(CString(clsName)), pos:_ },
+        { expr: EObjectDecl(decls), pos:_ }
+      ):
+        name = clsName;
         add(type, parse('.${name}', decls, global));
       case EBlock(_) | EObjectDecl(_):
         // Empty -- should skip.

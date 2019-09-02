@@ -13,7 +13,7 @@ abstract SiteHeader(VNode) to VNode {
       className: 'todo-header'
     }, [
       h('h1', {
-        className: Style.create({
+        className: Style.create('todo-header-title' => {
           position: 'absolute',
           top: '-155px',
           width: '100%',
@@ -24,7 +24,7 @@ abstract SiteHeader(VNode) to VNode {
           '-webkit-text-rendering': 'optimizeLegibility',
           '-moz-text-rendering': 'optimizeLegibility',
           'text-rendering': 'optimizeLegibility',
-        }, 'todo-header-title')
+        })
       }, [ 'todos' ]),
       new TodoInput({
         inputClass: 'new-todo',

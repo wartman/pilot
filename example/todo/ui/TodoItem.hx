@@ -21,7 +21,7 @@ class TodoItem extends StatefulWidget {
 
   override function build():VNode {
     var style:Style = [
-      Style.create({
+      Style.create('todo-item' => {
         position: 'relative',
         'font-size': '24px',
         'border-bottom': '1px solid #ededed',
@@ -88,13 +88,13 @@ class TodoItem extends StatefulWidget {
           display: 'block'
         },
 
-      }, 'todo-item'),
-      if (todo.complete) Style.create({
+      }),
+      if (todo.complete) Style.create('todo-item--complete' => {
         label: {
           color: '#d9d9d9',
           'text-decoration': 'line-through',
         }
-      }, 'todo-item--complete') else null
+      }) else null
     ];
 
     return switch editing {
@@ -145,10 +145,12 @@ class TodoItem extends StatefulWidget {
         new Toggle({
           type: One,
           checked: todo.complete,
-          onClick: e -> switch todo.complete {
-            case true: store.markPending(todo);
-            case false: store.markComplete(todo);
-          }
+          #if js
+            onClick: e -> switch todo.complete {
+              case true: store.markPending(todo);
+              case false: store.markComplete(todo);
+            }
+          #end
         }),
         h('label', {}, [ todo.content ]),
         h('button', {

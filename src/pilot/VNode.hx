@@ -26,7 +26,7 @@ abstract VNodeKey(String) from String to String {
 
 }
 
-typedef VNodeOptions = {
+typedef VNodeImpl = {
   name:String,
   ?props:{},
   ?style:Style,
@@ -44,7 +44,7 @@ typedef VNodeOptions = {
 };
 
 @:forward
-abstract VNode(VNodeOptions) {
+abstract VNode(VNodeImpl) {
 
   static public inline function text(value:String #if js, ?node:Node #end) {
     return new VNode({
@@ -73,15 +73,15 @@ abstract VNode(VNodeOptions) {
     });
   }
 
-  static public inline function element(impl:VNodeOptions) {
+  static public inline function element(impl:VNodeImpl) {
     return new VNode(impl);
   }
 
-  static public inline function fragment(nodes:Array<VNode>) {
+  static public inline function fragment(children:Array<VNode>) {
     return new VNode({
       name: '',
       props: {},
-      children: nodes,
+      children: children,
       type: VNodeFragment
     });
   }
@@ -102,23 +102,7 @@ abstract VNode(VNodeOptions) {
     return fragment(value);
   }
 
-  public var style(get, set):Style;
-
-  function get_style() {
-    return this.style;
-  }
-
-  function set_style(style:Style) {
-    if (this.props.hasField('className')) {
-      this.props.setField('className', [ style, this.props.field('className') ].join(' '));
-    } else {
-      this.props.setField('className', style);
-    }
-    this.style = Style.compose([ this.style, style ]);
-    return style;
-  }
-
-  public function new(impl:VNodeOptions) {
+  public function new(impl:VNodeImpl) {
     this = impl;
     if (impl.type == null) {
       this.type = VNodeElement;

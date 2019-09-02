@@ -5,7 +5,15 @@ extraParams.hxml
 -dce full
 -D analyzer-optimize
 -D pilot-prefix=todo-
-# -D pilot-css=app
 
 -main TodoApp
+
+--each
+
+# -D pilot-css=app.css
 -js dist/assets/app.js
+
+--next
+
+-D pilot-skip
+-php dist/php

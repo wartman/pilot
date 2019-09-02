@@ -13,7 +13,7 @@ class SiteFooter extends StatelessWidget {
 
   override function build():VNode {
     return h('footer', {
-      className: Style.create({
+      className: Style.create('site-footer' => {
         color: '#777',
         padding: '10px 15px',
         height: '20px',
@@ -49,16 +49,16 @@ class SiteFooter extends StatelessWidget {
         //     height: '50px'
         //   }
         // }
-      }, 'site-footer')
+      })
     }, [
       h('span', { 
-        className: Style.create({
+        className: Style.create('todo-remaining' => {
           float: 'left',
 	        'text-align': 'left',
         })
       }, [ remaining() ]),
       h('ul', { 
-        className: Style.create({
+        className: Style.create('todo-filter' => {
           margin: 0,
           padding: 0,
           listStyle: 'none',
@@ -119,7 +119,7 @@ class SiteFooter extends StatelessWidget {
         ])
       ]),
       h('button', {
-        className: Style.create({
+        className: Style.create('site-footer-clear-completed' => {
           float: 'right',
           position: 'relative',
           lineHeight: '20px',

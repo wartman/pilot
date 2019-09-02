@@ -11,7 +11,7 @@ abstract TodoList(VNode) to VNode {
     var store = props.store;
 
     this = h('div', {
-      className: Style.create({
+      className: Style.create('todo-list-wrapper' => {
         position: 'relative',
         'z-index': 2,
         'border-top': '1px solid #e6e6e6',
@@ -21,16 +21,18 @@ abstract TodoList(VNode) to VNode {
         type: All,
         checked: store.allSelected,
         id: 'toggle-all',
-        onClick: e -> {
-          switch store.allSelected {
-            case true: store.markAllPending();
-            default: store.markAllComplete();
+        #if js
+          onClick: e -> {
+            switch store.allSelected {
+              case true: store.markAllPending();
+              default: store.markAllComplete();
+            }
           }
-        }
+        #end
       }),
       h('label', { htmlFor: 'toggle-all' }, [ 'Toggle All' ]),
       h('ul', {
-        className: Style.create({
+        className: Style.create('todo-list' => {
           margin: 0,
           padding: 0,
           'list-style': 'none',
