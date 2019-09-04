@@ -20,7 +20,7 @@ abstract Style(String) to String {
   }
 
   public inline static function compose(styles:Array<Style>):Style {
-    return styles.fold((value:Style, next:Style) -> value.add(next), new Style(''));
+    return styles.fold((value:Style, next:Style) -> next.add(value), new Style(''));
   }
 
   public inline static function applyStyle(vnode:VNode, style:Style):VNode {
@@ -36,7 +36,7 @@ abstract Style(String) to String {
   public inline function add(style:Style):Style {
     return new Style(switch [ this, (style:String) ] {
       case [ null, v ] | [ v, null ]: v;
-      case [ a, b ] if (!a.contains(b)): '$a $b';
+      case [ a, b ] if (!a.split(' ').has(b)): '$a $b';
       default: this;
     });
   }
