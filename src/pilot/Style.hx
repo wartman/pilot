@@ -20,7 +20,7 @@ abstract Style(String) to String {
   }
 
   public inline static function compose(styles:Array<Style>):Style {
-    return styles.fold((ret, value:Style) -> value.add(ret), new Style(''));
+    return styles.fold((value:Style, next:Style) -> value.add(next), new Style(''));
   }
 
   public inline static function applyStyle(vnode:VNode, style:Style):VNode {
