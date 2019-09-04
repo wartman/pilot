@@ -12,6 +12,15 @@ class StatefulWidget implements Widget {
   }
 
   #if js
+  
+    @:noCompletion static final _pilot_hasRaf:Bool = js.Syntax.code('window.hasOwnProperty("requestAnimationFrame")');
+    @:noCompletion static function _pilot_delay(fn:()->Void) {
+      if (_pilot_hasRaf) {
+        js.Browser.window.requestAnimationFrame(_ -> fn());
+      } else {
+        js.Browser.window.setTimeout(fn, 100);
+      }
+    }
     
     @:noCompletion var _pilot_vnode:VNode;
     @:noCompletion var _pilot_patching:Bool = false;
@@ -47,7 +56,7 @@ class StatefulWidget implements Widget {
         || _pilot_vnode.node == null
       ) return;
       _pilot_patching = true;
-      Helpers.delay(() -> {
+      _pilot_delay(() -> {
         _pilot_vnode.subPatch(build());
         _pilot_patching = false;
       });

@@ -12,6 +12,10 @@ class StyleManager {
   static var mounted:Bool = false;
   static var sheet:CSSStyleSheet;
 
+  public static function isDefined(id:String) {
+    return defined[id] == true;
+  }
+
   public static function define(id:String, css:()->String):Style {
     if (!defined[id]) {
       add(id, css());

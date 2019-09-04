@@ -5,6 +5,7 @@ package pilot;
 #end
 
 using Reflect;
+using StringTools;
 
 enum VNodeType {
   VNodeElement;
@@ -100,6 +101,18 @@ abstract VNode(VNodeImpl) {
 
   @:from static public inline function ofArray(value:Array<VNode>) {
     return fragment(value);
+  }
+
+  public inline function addClassName(name:String) {
+    var className = switch [ (this.props.field('className'):String), name ] {
+      case [ null, null ]: null;
+      case [ null, v ] | [ v, null ] : v;
+      case [ a, b ] if (!a.contains(b)): '$a $b';
+      default: name;
+    }
+    if (className != null) {
+      this.props.setField('className', className);
+    }
   }
 
   public function new(impl:VNodeImpl) {

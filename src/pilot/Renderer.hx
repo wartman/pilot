@@ -7,10 +7,14 @@ using StringTools;
 class Renderer {
   
   public static function render(vnode:VNode) {
+    if (vnode.style != null) {
+      vnode.addClassName(vnode.style);
+      vnode.style = null;    
+    }
+
     return switch vnode.type {
       case VNodeElement | VNodeRecycled:
         var out = '<${vnode.name}';
-        Helpers.applyStyle(vnode);
         var attrs = handleAttributes(vnode.props);
         if (attrs.length > 0) {
           out += ' ' + attrs.join(' ');

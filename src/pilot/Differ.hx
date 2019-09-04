@@ -308,7 +308,8 @@ class Differ {
   }
 
   static inline function applyStyle(vnode:VNode) {
-    Helpers.applyStyle(vnode);
+    vnode.addClassName(vnode.style);
+    vnode.style = null;
   }
 
   static function merge(a:{}, b:{}):DynamicAccess<Dynamic> {

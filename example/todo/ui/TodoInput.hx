@@ -1,7 +1,6 @@
 package todo.ui;
 
 import pilot.StatelessWidget;
-import pilot.StyledWidget;
 import pilot.Style;
 import pilot.VNode;
 import pilot.VNode.h;

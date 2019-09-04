@@ -1,7 +1,6 @@
 package todo.ui;
 
 import pilot.Style;
-import pilot.StyledWidget;
 #if js
   import js.Browser;
 #end

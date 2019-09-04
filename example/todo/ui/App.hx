@@ -7,7 +7,7 @@ import todo.data.Store;
 
 abstract App(VNode) to VNode {
   
-  inline public function new(props:{ store:Store }) {
+  public function new(props:{ store:Store }) {
     this =  h('div', { id: 'root' }, [
       h('div', { 
         className: Style.create('todo-app' => {
@@ -40,6 +40,26 @@ abstract App(VNode) to VNode {
             '-moz-osx-font-smoothing': 'grayscale',
           },
 
+        }) + Style.global('global' => { 
+          'html, body': {
+            margin: 0,
+            padding: 0,
+          },
+          body: {
+            font: '14px "Helvetica Neue", Helvetica, Arial, sans-serif',
+            'line-height': '1.4em',
+            background: Color.secondary,
+            color: Color.primary,
+            'min-width': '230px',
+            'max-width': '550px',
+            margin: '0 auto',
+            '-webkit-font-smoothing': 'antialiased',
+            '-moz-osx-font-smoothing': 'grayscale',
+            'font-weight': 300,
+          },
+          ':focus': {
+            outline: 0,
+          },
         })
       // This following bit is kinda ugly, no?
       //

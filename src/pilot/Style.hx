@@ -10,8 +10,8 @@ abstract Style(String) to String {
   }
 
   public static macro function global(rules) {
-    pilot.macro.StyleBuilder.create(rules, true);
-    return macro null;
+    var id = pilot.macro.StyleBuilder.create(rules, true);
+    return macro @:pos(rules.pos) new pilot.Style(${id});
   }
 
   public static macro function create(rules:haxe.macro.Expr.ExprOf<Dynamic>) {
