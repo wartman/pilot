@@ -116,9 +116,8 @@ abstract VNode(VNodeImpl) {
   }
 
   public function new(impl:VNodeImpl) {
-    this = impl;
     if (impl.type == null) {
-      this.type = VNodeElement;
+      impl.type = VNodeElement;
     }
     if (impl.props == null) {
       impl.props = {};
@@ -126,23 +125,17 @@ abstract VNode(VNodeImpl) {
     if (impl.children == null) {
       impl.children = [];
     }
-    this.children = impl.children.filter(c -> c != null);
+    impl.children = impl.children.filter(c -> c != null);
     if (impl.props.hasField('key')) {
-      this.key = impl.props.field('key');
-      this.props.deleteField('key');
-    }
-    if (impl.style != null) {
-      if (impl.props.hasField('className')) {
-        this.props.setField('className', [ impl.style, impl.props.field('className') ].join(' '));
-      } else {
-        this.props.setField('className', impl.style);
-      }
+      impl.key = impl.props.field('key');
+      impl.props.deleteField('key');
     }
     #if js
       if (impl.hooks == null) {
-        this.hooks = {};
+        impl.hooks = {};
       }
     #end
+    this = impl;
   }
 
 }
