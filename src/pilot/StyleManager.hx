@@ -7,8 +7,8 @@ import haxe.ds.Map;
 
 class StyleManager {
 
-  static final indices:Map<String, Int> = new Map();
-  static final defined:Map<String, Bool> = new Map();
+  static var indices:Map<String, Int>;
+  static var defined:Map<String, Bool>;
   static var mounted:Bool = false;
   static var sheet:CSSStyleSheet;
 
@@ -17,6 +17,9 @@ class StyleManager {
   }
 
   public static function define(id:String, css:()->String):Style {
+    if (defined == null) {
+      defined = new Map();
+    }
     if (!defined[id]) {
       add(id, css());
       defined[id] = true;
@@ -26,6 +29,9 @@ class StyleManager {
 
   public static function add(id:String, css:String) {
     if (!mounted) mount();
+    if (indices == null) {
+      indices = new Map();
+    }
     sheet.insertRule(
       '@media all { ${css} }',
       switch indices[id] {

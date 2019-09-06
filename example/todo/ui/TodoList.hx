@@ -11,11 +11,13 @@ abstract TodoList(VNode) to VNode {
     var store = props.store;
 
     this = h('div', {
-      className: Style.create('todo-list-wrapper' => {
-        position: 'relative',
-        'z-index': 2,
-        'border-top': '1px solid #e6e6e6',
-      })
+      className: Style.sheet({
+        todoListWrapper: {
+          position: 'relative',
+          'z-index': 2,
+          'border-top': '1px solid #e6e6e6',
+        }
+      }).all()
     }, [
       new Toggle({
         type: All,
@@ -32,11 +34,13 @@ abstract TodoList(VNode) to VNode {
       }),
       h('label', { htmlFor: 'toggle-all' }, [ 'Toggle All' ]),
       h('ul', {
-        className: Style.create('todo-list' => {
-          margin: 0,
-          padding: 0,
-          'list-style': 'none',
-        })
+        className: Style.sheet({
+          todoList: {
+            margin: 0,
+            padding: 0,
+            'list-style': 'none',
+          }
+        }).all()
       }, [ 
           for (todo in store.visibleTodos) new TodoItem({
             todo: todo,

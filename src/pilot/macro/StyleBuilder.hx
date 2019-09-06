@@ -9,77 +9,56 @@ import haxe.ds.Map;
 import sys.io.File;
 
 using StringTools;
-using haxe.io.Path;
 using haxe.macro.Tools;
 using haxe.macro.TypeTools;
+using haxe.io.Path;
 
 class StyleBuilder {
   
-  @:persistent static public var content:Map<String, String> = [];
   static final ucase:EReg = ~/[A-Z]/g;
-  static var ran:Array<String> = []; 
-
-  public static function use() {
-    if (
-      Context.defined('pilot-css')
-      && !Context.defined('display') 
-      && !Context.defined('pilot-skip')
-    ) {
-      Context.onAfterGenerate(() -> write());
-    }
-  }
+  static var ran:Array<String> = [];
+  static var isInitialized:Bool = false;
+  static final isEmbedded:Bool = !Context.defined('pilot-css');
+  static final isSkipped:Bool = Context.defined('pilot-skip');
 
   public static function create(expr:Expr, global:Bool = false) {
-    var type = Context.getLocalType().toString();
     var id = getId();
-    var name = id;
-
-    var rules = switch expr.expr {
-      case EObjectDecl(decls) if (decls.length >= 0):
-        add(type, parse('.${name}', decls, global));
-      case EBinop(
-        OpArrow, 
-        { expr: EConst(CString(clsName)), pos:_ },
-        { expr: EObjectDecl(decls), pos:_ }
-      ):
-        name = clsName;
-        add(type, parse('.${name}', decls, global));
-      case EBlock(_) | EObjectDecl(_):
-        // Empty -- should skip.
-        '';
-      default:
-        Context.error('Should be an object', expr.pos);
-        '';
-    }
-
-    if (!Context.defined('pilot-css') && !Context.defined('pilot-skip')) {
-      var clsName = id.replace('-', '_').toUpperCase();
-      var cls = 'pilot.styles.${clsName}';
-      var abs:TypeDefinition = {
-        name: clsName,
-        pack: [ 'pilot', 'styles' ],
-        kind: TDAbstract(macro:String, [], [macro:String]),
-        fields: (macro class {
-          @:keep public static final rules = pilot.StyleManager.define($v{name}, () -> $v{rules});
-          public inline function new() this = $v{name};
-        }).fields,
-        pos: Context.currentPos()
-      };
-      Context.defineType(abs);
-      return macro new pilot.styles.$clsName();
-    } else {
-      return macro $v{name};
-    }
+    var rules = [ parseSingle(id, expr, global) ];
+    var inst = export(id, rules);
+    return macro ${inst}.$id;
   }
 
-  static function add(type:String, value:String):String {
-    if (ran.indexOf(type) > -1) {
-      content.set(type, [ content.get(type), value ].join('\n'));
-      return value;
+  public static function createSheet(expr:Expr, global:Bool = false) {
+    var rules = parseSheet(expr, global);
+    return export(getId(), rules);
+  }
+
+  static function parseSingle(name:String, expr:Expr, global:Bool):CssRule {
+    var css = switch expr.expr {
+      case EObjectDecl(decls) if (decls.length >= 0):
+        parse('.${name}', decls, global);
+      case EObjectDecl(_) | EBlock(_):
+        // Skip empty objects.
+        '';
+      default:
+        Context.error('Only an object is accepted here', expr.pos);
+        '';
     }
-    ran.push(type);
-    content.set(type, value);
-    return value;
+    return {
+      name: name,
+      css: css,
+      pos: expr.pos
+    };
+  }
+
+  static function parseSheet(expr:Expr, global:Bool):Array<CssRule> {
+    return switch expr.expr {
+      case EObjectDecl(decls):
+        [ for (d in decls) parseSingle(d.field, d.expr, global) ];
+      default:
+        Context.error('Only an object is accepted here', expr.pos);
+        [];
+    }
   }
 
   static function parse(name:String, rules:Array<ObjectField>, global:Bool) {
@@ -268,22 +247,24 @@ class StyleBuilder {
     function rand(from:Int, to:Int):Int {
       return from + Math.floor((to - from) * Math.random());
     }
-    var prefix = Context.defined('pilot-prefix') ? Context.definedValue('pilot-prefix') : '_';
+    var prefix = 
+      (Context.defined('pilot-prefix') ? Context.definedValue('pilot-prefix') : '_')
+      .replace('-', '_');
     var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     return prefix + [ for (i in 0...5) chars.charAt(rand(0, chars.length - 1)) ].join('');
   }
 
-  static function write() {
-    var root = Sys.getCwd();
-    var outDir = Compiler.getOutput();
-    var outName:String = Context.definedValue('pilot-css');
-    if (outName == null) outName = 'app';
-    if (outDir.extension() != '') {
-      outDir = outDir.directory();
-    }
-    outDir = Path.join([outDir, outName.trim()]).withExtension('css');
-    File.saveContent(outDir, [ for (k => v in content) v ].join('\n'));
-  }
+  // static function write() {
+  //   var root = Sys.getCwd();
+  //   var outDir = Compiler.getOutput();
+  //   var outName:String = Context.definedValue('pilot-css');
+  //   if (outName == null) outName = 'app';
+  //   if (outDir.extension() != '') {
+  //     outDir = outDir.directory();
+  //   }
+  //   outDir = Path.join([outDir, outName.trim()]).withExtension('css');
+  //   File.saveContent(outDir, [ for (k => v in content) v ].join('\n'));
+  // }
 
   static function prepareKey(key:String) {
     return [ for (i in 0...key.length)
@@ -331,7 +312,106 @@ class StyleBuilder {
 
     return selector;
   }
+  
+  static function export(id:String, rules:Array<CssRule>) {
+    if (!isInitialized) {
+      isInitialized = true;
+      if (!isEmbedded && !isSkipped) {
+        Context.onGenerate(types -> {
+          Context.onAfterGenerate(() -> {
+            var out:Array<String> = [];
+            
+            for (t in types) switch t {
+              case TInst(_.get() => cls, _) if (cls.meta.has(':pilot_output')):
+                for (field in cls.fields.get()) {
+                  for (meta in field.meta.extract(':pilot_output')) {
+                    for (e in meta.params) switch e.expr {
+                      case EConst(CString(s)):
+                        out.push(s);
+                      default:
+                        throw 'assert';
+                    }
+                  }
+                }
+              default:
+            }
 
+            sys.io.File.saveContent(switch Context.definedValue('pilot-css') {
+              case abs = _.charAt(0) => '.' | '/': abs;
+              case relative:
+                Path.join([
+                  sys.FileSystem.absolutePath(Compiler.getOutput().directory()),
+                  relative
+                ]);
+            }, out.join('\n'));
+          });
+        });
+      }
+    }
+
+    return createRulesClass(id, rules);
+  }
+
+  static function createRulesClass(id:String, rules:Array<CssRule>) {
+    var clsName = id.replace('-', '_').toUpperCase();
+    var tp = { pack: [], name: clsName };
+    var ruleGen = if (rules.length > 1) {
+      var ruleList:Array<Expr> = [ for (rule in rules) {
+        var name = rule.name;
+        macro this.$name;
+      } ];
+      macro pilot.Style.compose([ $a{ruleList} ]);
+    } else {
+      var name = rules[0].name;
+      macro this.$name;
+    }
+    var cls = macro class $clsName implements pilot.StyleSheet {
+      public static final inst = new $tp();
+      public function new() {}
+      public inline function all() {
+        return ${ruleGen};
+      }
+    }
+
+    cls.meta.push({
+      name: ':pilot_output',
+      params: [],
+      pos: cls.pos
+    });
+
+    for (rule in rules) {
+      cls.fields.push({
+        name: rule.name,
+        pos: rule.pos,
+        access: [ APublic, AFinal ],
+        kind: FVar(
+          macro:pilot.Style,
+          if (isEmbedded && !isSkipped)
+            macro new pilot.Style(pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css}));
+          else
+            macro new pilot.Style($v{rule.name})
+        ),
+        meta: [
+          {
+            name: ':pilot_output',
+            params: [ macro $v{rule.css} ],
+            pos: rule.pos
+          }
+        ]
+      });
+    }
+
+    Context.defineType(cls);
+
+    return macro $i{clsName}.inst;
+  }
+
+}
+
+private typedef CssRule = {
+  name:String,
+  css:String,
+  pos:Position
 }
 
 #end

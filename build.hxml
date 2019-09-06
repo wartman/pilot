@@ -1,5 +1,3 @@
-extraParams.hxml
-
 -cp src
 -cp example
 -dce full
@@ -10,7 +8,7 @@ extraParams.hxml
 
 --each
 
-# -D pilot-css=app.css
+-D pilot-css=app.css
 -js dist/assets/app.js
 
 --next

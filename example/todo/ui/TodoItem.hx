@@ -20,80 +20,84 @@ class TodoItem extends StatefulWidget {
 
   override function build():VNode {
     var style:Style = [
-      Style.create('todo-item' => {
-        position: 'relative',
-        'font-size': '24px',
-        'border-bottom': '1px solid #ededed',
+      Style.sheet({
+        todoItem: {
+          position: 'relative',
+          'font-size': '24px',
+          'border-bottom': '1px solid #ededed',
 
-        '&:last-child': {
-          'border-bottom': 'none'
-        },
+          '&:last-child': {
+            'border-bottom': 'none'
+          },
 
-        '&.editing': {
-          'border-bottom': 'none',
-          padding: 0,
+          '&.editing': {
+            'border-bottom': 'none',
+            padding: 0,
 
-          '.edit': {
+            '.edit': {
+              display: 'block',
+              width: '506px',
+              padding: '12px 16px',
+              margin: '0 0 0 43px',
+            }
+          },
+
+          label: {
+            'word-break':' break-all',
+            padding: '15px 15px 15px 60px',
             display: 'block',
-            width: '506px',
-            padding: '12px 16px',
-            margin: '0 0 0 43px',
-          }
-        },
-
-        label: {
-          'word-break':' break-all',
-          padding: '15px 15px 15px 60px',
-          display: 'block',
-          'line-height': '1.2',
-          transition: 'color 0.4s',
-        },
-
-        '&.completed label': {
-          color: '#d9d9d9',
-          'text-decoration': 'line-through',
-        },
-
-        '.destroy': {
-          display: 'none',
-          position: 'absolute',
-          top: 0,
-          right: '10px',
-          bottom: 0,
-          width: '40px',
-          height: '40px',
-          margin: 'auto 0',
-          'font-size': '30px',
-          color: '#cc9a9a',
-          'margin-bottom': '11px',
-          transition: 'color 0.2s ease-out',
-
-          '&:hover': {
-            color: '#af5b5e',
+            'line-height': '1.2',
+            transition: 'color 0.4s',
           },
 
-          '&:after': {
-            content: '"x"'
+          '&.completed label': {
+            color: '#d9d9d9',
+            'text-decoration': 'line-through',
           },
 
-          media: {
-            query: { maxWidth: '430px' },
-            style: { display: 'block' }
+          '.destroy': {
+            display: 'none',
+            position: 'absolute',
+            top: 0,
+            right: '10px',
+            bottom: 0,
+            width: '40px',
+            height: '40px',
+            margin: 'auto 0',
+            'font-size': '30px',
+            color: '#cc9a9a',
+            'margin-bottom': '11px',
+            transition: 'color 0.2s ease-out',
+
+            '&:hover': {
+              color: '#af5b5e',
+            },
+
+            '&:after': {
+              content: '"x"'
+            },
+
+            media: {
+              query: { maxWidth: '430px' },
+              style: { display: 'block' }
+            },
+
           },
 
-        },
+          '&:hover .destroy': {
+            display: 'block'
+          },
 
-        '&:hover .destroy': {
-          display: 'block'
-        },
-
-      }),
-      if (todo.complete) Style.create('todo-item--complete' => {
-        label: {
-          color: '#d9d9d9',
-          'text-decoration': 'line-through',
         }
-      }) else null
+      }).all(),
+      if (todo.complete) Style.sheet({
+        todoItemComplete: {
+          label: {
+            color: '#d9d9d9',
+            'text-decoration': 'line-through',
+          }
+        }
+      }).all() else null
     ];
 
     return switch editing {
