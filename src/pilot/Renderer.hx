@@ -2,6 +2,7 @@ package pilot;
 
 import haxe.DynamicAccess;
 
+using Reflect;
 using StringTools;
 using pilot.VNodeTools;
 
@@ -16,12 +17,21 @@ class Renderer {
     return switch vnode.type {
       case VNodeElement | VNodeRecycled:
         var out = '<${vnode.name}';
+        var innerHtml = if (vnode.props.hasField('innerHTML')) {
+          var ret = vnode.props.field('innerHTML');
+          vnode.props.deleteField('innerHTML');
+          ret;
+        } else null;
         var attrs = handleAttributes(vnode.props);
         if (attrs.length > 0) {
           out += ' ' + attrs.join(' ');
         }
         if (vnode.children.length == 0) {
-          return out + '/>';
+          if (innerHtml != null) {
+            return '${out}>${innerHtml}</${vnode.name}>';
+          } else {
+            return '${out}/>';
+          }
         }
         out 
           + [ for (child in vnode.children) render(child) ].join('')
@@ -32,7 +42,6 @@ class Renderer {
         '';
       case VNodeText:
         vnode.name.htmlEscape(true);
-      // todo: allow for unescaped HTML.
     }
   }
 

@@ -13,5 +13,7 @@
 
 --next
 
+-D php7
 -D pilot-skip
+# -D real-position
 -php dist/php

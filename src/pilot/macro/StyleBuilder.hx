@@ -15,6 +15,10 @@ using haxe.io.Path;
 
 class StyleBuilder {
   
+  @:persistent static var id:Int = 0;
+  static final prefix = Context.defined('pilot-prefix') 
+    ? Context.definedValue('pilot-prefix').replace('-', '_')
+    : 'pilot_';
   static final ucase:EReg = ~/[A-Z]/g;
   static var ran:Array<String> = [];
   static var isInitialized:Bool = false;
@@ -244,27 +248,8 @@ class StyleBuilder {
   }
 
   static function getId() {
-    function rand(from:Int, to:Int):Int {
-      return from + Math.floor((to - from) * Math.random());
-    }
-    var prefix = 
-      (Context.defined('pilot-prefix') ? Context.definedValue('pilot-prefix') : '_')
-      .replace('-', '_');
-    var chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return prefix + [ for (i in 0...5) chars.charAt(rand(0, chars.length - 1)) ].join('');
+    return prefix + id++;
   }
-
-  // static function write() {
-  //   var root = Sys.getCwd();
-  //   var outDir = Compiler.getOutput();
-  //   var outName:String = Context.definedValue('pilot-css');
-  //   if (outName == null) outName = 'app';
-  //   if (outDir.extension() != '') {
-  //     outDir = outDir.directory();
-  //   }
-  //   outDir = Path.join([outDir, outName.trim()]).withExtension('css');
-  //   File.saveContent(outDir, [ for (k => v in content) v ].join('\n'));
-  // }
 
   static function prepareKey(key:String) {
     return [ for (i in 0...key.length)
