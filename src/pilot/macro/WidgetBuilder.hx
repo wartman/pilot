@@ -11,6 +11,9 @@ class WidgetBuilder {
   static final initMeta = [ ':init' ];
   static final propsMeta = [ ':prop', ':property' ];
   static final stateMeta = [ ':state' ];
+  static final styleMeta = [ ':style' ];
+  static final styleSheetMeta = [ ':style.sheet' ];
+  static final styleGlobalMeta = [ ':style.global' ];
 
   public static function build(options:{ stateful:Bool }) {
     var fields = Context.getBuildFields();
@@ -67,7 +70,17 @@ class WidgetBuilder {
 
       case FVar(t, e) if (options.stateful && f.meta.exists(m -> stateMeta.has(m.name))):
         createProperty(f, t, e, true);
-        
+      
+      case FVar(t, e) if (f.meta.exists(m -> styleMeta.has(m.name))):
+        f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(f.name, e));
+
+      case FVar(t, e) if (f.meta.exists(m -> styleSheetMeta.has(m.name))):
+        f.kind = FVar(macro:pilot.StyleSheet, StyleBuilder.createSheet(e));
+      
+      case FVar(t, e) if (f.meta.exists(m -> styleGlobalMeta.has(m.name))):
+        f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(f.name, e, true));
+        f.meta.push({ name: ':keep', params: [], pos: f.pos });
+
       case FFun(_) if (f.meta.exists(m -> initMeta.has(m.name))):
         var name = f.name;
         initializers.push(macro this.$name());

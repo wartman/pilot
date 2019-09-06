@@ -46,7 +46,7 @@ abstract Style(String) to String {
     return styles.fold((value:Style, next:Style) -> next.add(value), new Style(''));
   }
 
-  @:deprecated('Use `VNodeTools.addStyle` instead')
+  @:deprecated('Use `pilot.VNodeTools.addStyle` instead')
   public inline static function applyStyle(vnode:VNode, style:Style):VNode {
     vnode.style = compose([ vnode.style, style ]);
     return vnode;

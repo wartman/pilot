@@ -26,7 +26,14 @@ class StyleBuilder {
   static final isSkipped:Bool = Context.defined('pilot-skip');
 
   public static function create(expr:Expr, global:Bool = false) {
-    var id = getId();
+    // var id = getId();
+    // var rules = [ parseSingle(id, expr, global) ];
+    // var inst = export(id, rules);
+    // return macro ${inst}.$id;
+    return createNamed(getId(), expr, global);
+  }
+
+  public static function createNamed(id:String, expr:Expr, global:Bool = false) {
     var rules = [ parseSingle(id, expr, global) ];
     var inst = export(id, rules);
     return macro ${inst}.$id;
@@ -338,7 +345,7 @@ class StyleBuilder {
   }
 
   static function createRulesClass(id:String, rules:Array<CssRule>) {
-    var clsName = id.replace('-', '_').toUpperCase();
+    var clsName = ('__Pilot_' + id).replace('-', '_');
     var tp = { pack: [], name: clsName };
     var ruleGen = if (rules.length > 1) {
       var ruleList:Array<Expr> = [ for (rule in rules) {
