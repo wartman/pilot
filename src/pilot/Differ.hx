@@ -9,6 +9,7 @@ import pilot.VNode;
 
 using StringTools;
 using Reflect;
+using pilot.VNodeTools;
 
 /**
   This is a haxe port of https://github.com/jorgebucaran/superfine

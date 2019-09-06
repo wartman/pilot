@@ -66,6 +66,7 @@ abstract VNode(VNodeImpl) {
     });
   }
 
+  @:deprecated('Use new VNode({...}) instead')
   static public inline function h(name:String, props:{}, ?children:Array<VNode>) {
     return new VNode({
       name: name,
@@ -101,18 +102,6 @@ abstract VNode(VNodeImpl) {
 
   @:from static public inline function ofArray(value:Array<VNode>) {
     return fragment(value);
-  }
-
-  public inline function addClassName(name:String) {
-    var className = switch [ (this.props.field('className'):String), name ] {
-      case [ null, null ]: null;
-      case [ null, v ] | [ v, null ] : v;
-      case [ a, b ] if (!a.contains(b)): '$a $b';
-      default: name;
-    }
-    if (className != null) {
-      this.props.setField('className', className);
-    }
   }
 
   public function new(impl:VNodeImpl) {

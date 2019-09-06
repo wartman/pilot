@@ -3,6 +3,7 @@ package pilot;
 import haxe.DynamicAccess;
 
 using StringTools;
+using pilot.VNodeTools;
 
 class Renderer {
   
