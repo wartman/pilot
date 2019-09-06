@@ -345,7 +345,7 @@ class StyleBuilder {
   }
 
   static function createRulesClass(id:String, rules:Array<CssRule>) {
-    var clsName = ('__Pilot_' + id).replace('-', '_');
+    var clsName = ('Pilot_Css_' + id).replace('-', '_');
     var tp = { pack: [], name: clsName };
     var ruleGen = if (rules.length > 1) {
       var ruleList:Array<Expr> = [ for (rule in rules) {
