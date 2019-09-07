@@ -8,12 +8,12 @@
 
 --each
 
--D pilot-css=app.css
+# -D pilot-output=app.css
+-D js-es=6
 -js dist/assets/app.js
 
 --next
 
--D php7
 -D pilot-skip
-# -D real-position
+-D real-position
 -php dist/php

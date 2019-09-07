@@ -22,7 +22,7 @@ class StyleBuilder {
   static final ucase:EReg = ~/[A-Z]/g;
   static var ran:Array<String> = [];
   static var isInitialized:Bool = false;
-  static final isEmbedded:Bool = !Context.defined('pilot-css');
+  static final isEmbedded:Bool = !Context.defined('pilot-output');
   static final isSkipped:Bool = Context.defined('pilot-skip');
 
   public static function create(expr:Expr, global:Bool = false) {
@@ -328,7 +328,7 @@ class StyleBuilder {
               default:
             }
 
-            sys.io.File.saveContent(switch Context.definedValue('pilot-css') {
+            sys.io.File.saveContent(switch Context.definedValue('pilot-output') {
               case abs = _.charAt(0) => '.' | '/': abs;
               case relative:
                 Path.join([
