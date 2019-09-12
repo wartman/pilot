@@ -13,7 +13,6 @@ abstract Style(String) to String {
     return pilot.macro.StyleBuilder.create(rules, true);
   }
 
-  @:deprecated('Just use Style.sheet now')
   public static macro function sheet(rules:haxe.macro.Expr.ExprOf<Dynamic>) {
     return pilot.macro.StyleBuilder.createSheet(rules);
   }

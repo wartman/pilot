@@ -32,14 +32,21 @@ class StyleBuilder {
 
   public static function createNamed(field:String, expr:Expr, global:Bool = false) {
     var id = getId(expr.pos);
-    var rules = [ parseSingle(field, id, expr, global) ];
-    var inst = export(id, rules);
-    return macro ${inst}.$field;
+    return export(parseSingle(field, id, expr, global));
   }
 
+  // todo: consider removal?
   public static function createSheet(expr:Expr, global:Bool = false) {
     var rules = parseSheet(expr, global);
-    return export(getId(expr.pos), rules);
+    return {
+      expr:EObjectDecl([ for (rule in rules) 
+        {
+          field: rule.field,
+          expr: export(rule)
+        }
+      ]),
+      pos: Context.currentPos()
+    };
   }
 
   static function parseSingle(field:String, name:String, expr:Expr, global:Bool):CssRule {
@@ -318,7 +325,7 @@ class StyleBuilder {
     return selector;
   }
   
-  static function export(id:String, rules:Array<CssRule>) {
+  static function export(rule:CssRule) {
     if (!isInitialized) {
       isInitialized = true;
       if (!isEmbedded && !isSkipped) {
@@ -353,15 +360,7 @@ class StyleBuilder {
       }
     }
 
-    return {
-      expr:EObjectDecl([ for (rule in rules) 
-        {
-          field: rule.field,
-          expr: createClassName(rule)
-        }
-      ]),
-      pos: Context.currentPos()
-    };
+    return createClassName(rule);
   }
 
   static function createClassName(rule:CssRule) {
