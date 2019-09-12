@@ -4,6 +4,7 @@ package pilot.macro;
 import haxe.macro.Expr;
 import haxe.macro.Context;
 
+using StringTools;
 using Lambda;
 
 class WidgetBuilder {
@@ -74,13 +75,20 @@ class WidgetBuilder {
         createProperty(f, t, e, true);
       
       case FVar(t, e) if (f.meta.exists(m -> styleMeta.has(m.name))):
-        f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(clsName + '_' + f.name, e));
+        f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(
+          clsName + '_' + f.name,
+          e
+        ));
 
       case FVar(t, e) if (f.meta.exists(m -> styleSheetMeta.has(m.name))):
         f.kind = FVar(macro:pilot.StyleSheet, StyleBuilder.createSheet(e));
       
       case FVar(t, e) if (f.meta.exists(m -> styleGlobalMeta.has(m.name))):
-        f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(clsName + '_' + f.name, e, true));
+        f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(
+          clsName + '_' + f.name,
+          e, 
+          true
+        ));
         f.meta.push({ name: ':keep', params: [], pos: f.pos });
 
       case FFun(_) if (f.meta.exists(m -> initMeta.has(m.name))):

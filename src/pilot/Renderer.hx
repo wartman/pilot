@@ -30,7 +30,8 @@ class Renderer {
           if (innerHtml != null) {
             return '${out}>${innerHtml}</${vnode.name}>';
           } else {
-            return '${out}/>';
+            // Todo: check if this element should be stand-alone.
+            return '${out}></${vnode.name}>';
           }
         }
         out + '>'
@@ -46,13 +47,21 @@ class Renderer {
   }
 
   static function handleAttributes(props:DynamicAccess<Dynamic>) {
-    return [ for (k => v in props) switch Type.getClass(v) {
-      case Bool: switch v {
-        case true: '${k} = "${k}"';
-        case false: null;
-      }
-      default: '${k} = "${Std.string(v)}"';
-    } ].filter(v -> v != null);
+    return [ for (k => v in props) {
+      if (v == null)
+        null
+      else 
+        switch Type.getClass(v) {
+          case Bool: switch v {
+            case true: '${k} = "${k}"';
+            case false: null;
+          }
+          default: switch k {
+            case 'className' | 'classname': 'class="${Std.string(v)}"';
+            default: '${k}="${Std.string(v)}"';
+          }
+        } 
+    }].filter(v -> v != null);
   }
 
 }

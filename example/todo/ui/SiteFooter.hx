@@ -13,88 +13,82 @@ class SiteFooter extends StatelessWidget {
 
   override function build():VNode {
     return h('footer', {
-      className: Style.sheet({
-        siteFooter: {
-          color: '#777',
-          padding: '10px 15px',
-          height: '20px',
-          textAlign: 'center',
-          borderTop: '1px solid #e6e6e6',
-          '&:before': {
-            content: '""',
-            position: 'absolute',
-            right: 0,
-            bottom: 0,
-            left: 0,
-            height: '50px',
-            overflow: 'hidden',
-            boxShadow: '0 1px 1px rgba(0, 0, 0, 0.2),
-              0 8px 0 -3px #f6f6f6,
-              0 9px 1px -3px rgba(0, 0, 0, 0.2),
-              0 16px 0 -6px #f6f6f6,
-              0 17px 2px -6px rgba(0, 0, 0, 0.2)',
-          },
-          media: {
-            query: {
-              and: {
-                maxWidth: '430px'
-              },
-              type: 'screen',
+      className: Style.create({
+        color: '#777',
+        padding: '10px 15px',
+        height: '20px',
+        textAlign: 'center',
+        borderTop: '1px solid #e6e6e6',
+        '&:before': {
+          content: '""',
+          position: 'absolute',
+          right: 0,
+          bottom: 0,
+          left: 0,
+          height: '50px',
+          overflow: 'hidden',
+          boxShadow: '0 1px 1px rgba(0, 0, 0, 0.2),
+            0 8px 0 -3px #f6f6f6,
+            0 9px 1px -3px rgba(0, 0, 0, 0.2),
+            0 16px 0 -6px #f6f6f6,
+            0 17px 2px -6px rgba(0, 0, 0, 0.2)',
+        },
+        media: {
+          query: {
+            and: {
+              maxWidth: '430px'
             },
-            style: {
-              height: '50px'
-            }
+            type: 'screen',
           },
-          // '@media (max-width: 430px)': {
-          //   '&': {
-          //     height: '50px'
-          //   }
-          // }
-        }
-      }).all()
+          style: {
+            height: '50px'
+          }
+        },
+        // '@media (max-width: 430px)': {
+        //   '&': {
+        //     height: '50px'
+        //   }
+        // }
+      })
     }, [
       h('span', { 
-        className: Style.sheet({
-          todoRemaining: {
-            float: 'left',
-            'text-align': 'left',
-          }
-        }).all()
+        className: Style.create({
+          float: 'left',
+          'text-align': 'left',
+        })
       }, [ remaining() ]),
       h('ul', { 
-        className: Style.sheet({
-          todoFilter: {
-            margin: 0,
-            padding: 0,
-            listStyle: 'none',
-            position: 'absolute',
-            right: 0,
-            left: 0,
-            '@media (max-width: 430px)': {
-              '&': {
-                bottom: '10px'
-              }
-            },
+        className: Style.create({
+          margin: 0,
+          padding: 0,
+          listStyle: 'none',
+          position: 'absolute',
+          right: 0,
+          left: 0,
+          '@media (max-width: 430px)': {
+            '&': {
+              bottom: '10px'
+            }
+          },
 
-            li: {
-              display: 'inline',
-              a: {
-                color: 'inherit',
-                margin: '3px',
-                padding: '3px 7px',
-                textDecoration: 'none',
-                border: '1px solid transparent',
-                borderRadius: '3px',
-                '&:hover': {
-                  borderColor: 'rgba(175, 47, 47, 0.1)',
-                },
-                '&.selected': {
-                  borderColor: 'rgba(175, 47, 47, 0.2)',
-                }
+          li: {
+            display: 'inline',
+            a: {
+              color: 'inherit',
+              margin: '3px',
+              padding: '3px 7px',
+              textDecoration: 'none',
+              border: '1px solid transparent',
+              borderRadius: '3px',
+              '&:hover': {
+                borderColor: 'rgba(175, 47, 47, 0.1)',
+              },
+              '&.selected': {
+                borderColor: 'rgba(175, 47, 47, 0.2)',
               }
             }
           }
-        }).all()
+        })
       }, [
         h('li', {}, [
           h('a', { 
@@ -125,15 +119,13 @@ class SiteFooter extends StatelessWidget {
         ])
       ]),
       h('button', {
-        className: Style.sheet({
-          siteFooterClearCompleted: {
-            float: 'right',
-            position: 'relative',
-            lineHeight: '20px',
-            textDecoration: 'none',
-            cursor: 'pointer',
-          }
-        }).all(),
+        className: Style.create({
+          float: 'right',
+          position: 'relative',
+          lineHeight: '20px',
+          textDecoration: 'none',
+          cursor: 'pointer',
+        }),
         onClick: e -> store.clearCompleted(),
       }, [ 'Clear completed' ])
     ]);

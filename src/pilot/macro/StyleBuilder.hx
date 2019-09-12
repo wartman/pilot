@@ -12,6 +12,7 @@ using StringTools;
 using haxe.macro.Tools;
 using haxe.macro.TypeTools;
 using haxe.io.Path;
+using haxe.macro.PositionTools;
 
 class StyleBuilder {
   
@@ -26,25 +27,22 @@ class StyleBuilder {
   static final isSkipped:Bool = Context.defined('pilot-skip');
 
   public static function create(expr:Expr, global:Bool = false) {
-    // var id = getId();
-    // var rules = [ parseSingle(id, expr, global) ];
-    // var inst = export(id, rules);
-    // return macro ${inst}.$id;
-    return createNamed(getId(), expr, global);
+    return createNamed(getId(expr.pos), expr, global);
   }
 
-  public static function createNamed(id:String, expr:Expr, global:Bool = false) {
-    var rules = [ parseSingle(id, expr, global) ];
+  public static function createNamed(field:String, expr:Expr, global:Bool = false) {
+    var id = getId(expr.pos);
+    var rules = [ parseSingle(field, id, expr, global) ];
     var inst = export(id, rules);
-    return macro ${inst}.$id;
+    return macro ${inst}.$field;
   }
 
   public static function createSheet(expr:Expr, global:Bool = false) {
     var rules = parseSheet(expr, global);
-    return export(getId(), rules);
+    return export(getId(expr.pos), rules);
   }
 
-  static function parseSingle(name:String, expr:Expr, global:Bool):CssRule {
+  static function parseSingle(field:String, name:String, expr:Expr, global:Bool):CssRule {
     var css = switch expr.expr {
       case EObjectDecl(decls) if (decls.length >= 0):
         parse('.${name}', decls, global);
@@ -56,6 +54,7 @@ class StyleBuilder {
         '';
     }
     return {
+      field: field,
       name: name,
       css: css,
       pos: expr.pos
@@ -65,7 +64,12 @@ class StyleBuilder {
   static function parseSheet(expr:Expr, global:Bool):Array<CssRule> {
     return switch expr.expr {
       case EObjectDecl(decls):
-        [ for (d in decls) parseSingle(d.field, d.expr, global) ];
+        [ for (d in decls) parseSingle(
+          d.field,
+          getId(d.expr.pos),
+          d.expr,
+          global
+        ) ];
       default:
         Context.error('Only an object is accepted here', expr.pos);
         [];
@@ -254,8 +258,17 @@ class StyleBuilder {
     
   }
 
-  static function getId() {
-    return prefix + id++;
+  /**
+    Generate a consistant ID from the class name and the position
+    of the expression.
+  **/
+  static function getId(pos:Position) {
+    var cls = Context.getLocalClass().get();
+    var name = cls.pack.map(part -> part.replace('_', '').substr(0, 2).toLowerCase());
+    var clsName = cls.name.replace('_', '');
+    name.push(clsName.substr(0, 2).toLowerCase());
+    name.push(clsName.substr(-2).toLowerCase());
+    return name.join('') + pos.getInfos().max;
   }
 
   static function prepareKey(key:String) {
@@ -314,15 +327,14 @@ class StyleBuilder {
             var out:Array<String> = [];
             
             for (t in types) switch t {
-              case TInst(_.get() => cls, _) if (cls.meta.has(':pilot_output')):
-                for (field in cls.fields.get()) {
-                  for (meta in field.meta.extract(':pilot_output')) {
-                    for (e in meta.params) switch e.expr {
-                      case EConst(CString(s)):
-                        out.push(s);
-                      default:
-                        throw 'assert';
-                    }
+              case TAbstract(_.get() => cls, _) if (cls.meta.has(':pilot_output')):
+                for (meta in cls.meta.extract(':pilot_output')) {
+                  for (e in meta.params) switch e.expr {
+                    case EConst(CString(s)):
+                      trace(s);
+                      out.push(s);
+                    default:
+                      throw 'assert';
                   }
                 }
               default:
@@ -341,66 +353,51 @@ class StyleBuilder {
       }
     }
 
-    return createRulesClass(id, rules);
+    return {
+      expr:EObjectDecl([ for (rule in rules) 
+        {
+          field: rule.field,
+          expr: createClassName(rule)
+        }
+      ]),
+      pos: Context.currentPos()
+    };
   }
 
-  static function createRulesClass(id:String, rules:Array<CssRule>) {
-    var clsName = ('Pilot_Css_' + id).replace('-', '_');
-    var tp = { pack: [], name: clsName };
-    var ruleGen = if (rules.length > 1) {
-      var ruleList:Array<Expr> = [ for (rule in rules) {
-        var name = rule.name;
-        macro this.$name;
-      } ];
-      macro pilot.Style.compose([ $a{ruleList} ]);
-    } else {
-      var name = rules[0].name;
-      macro this.$name;
-    }
-    var cls = macro class $clsName implements pilot.StyleSheet {
-      public static final inst = new $tp();
-      public function new() {}
-      public inline function all() {
-        return ${ruleGen};
-      }
-    }
-
-    cls.meta.push({
-      name: ':pilot_output',
-      params: [],
-      pos: cls.pos
-    });
-
-    for (rule in rules) {
-      cls.fields.push({
-        name: rule.name,
-        pos: rule.pos,
-        access: [ APublic, AFinal ],
-        kind: FVar(
-          macro:pilot.Style,
-          if (isEmbedded && !isSkipped)
-            macro new pilot.Style(pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css}));
-          else
-            macro new pilot.Style($v{rule.name})
-        ),
-        meta: [
-          {
-            name: ':pilot_output',
-            params: [ macro $v{rule.css} ],
-            pos: rule.pos
-          }
-        ]
-      });
-    }
-
-    Context.defineType(cls);
-
-    return macro $i{clsName}.inst;
+  static function createClassName(rule:CssRule) {
+    var clsName = 'PilotClss_${rule.name}';
+    var cls = 'pilot.styles.${clsName}';
+    var abs:TypeDefinition = {
+      name: clsName,
+      pack: [ 'pilot', 'styles' ],
+      kind: TDAbstract(macro:pilot.Style, [], [macro:pilot.Style]),
+      meta: [
+        {
+          name: ':pilot_output',
+          params: [  macro $v{rule.css} ],
+          pos: Context.currentPos()
+        }
+      ],
+      fields: 
+        if (isEmbedded && !isSkipped)
+          (macro class {
+            @:keep public static final rules = pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css});
+            public inline function new() this = new pilot.Style($v{rule.name});
+          }).fields
+        else 
+          (macro class {
+            public inline function new() this = new pilot.Style($v{rule.name});
+          }).fields,
+      pos: Context.currentPos()
+    };
+    Context.defineType(abs);
+    return macro new pilot.styles.$clsName();
   }
 
 }
 
 private typedef CssRule = {
+  field:String,
   name:String,
   css:String,
   pos:Position

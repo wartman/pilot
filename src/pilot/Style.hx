@@ -5,31 +5,15 @@ using Lambda;
 
 abstract Style(String) to String {
   
-  /**
-    Create CSS rules. These will be given a randomly generated class name.
-
-    If you're creating an isomorphic app, you should NOT use this method.
-    Even if you're just creating a single class name, use `pilot.Style#sheet`
-    to ensure that names are consistant across targets.
-  **/
   public static macro function create(rules:haxe.macro.Expr.ExprOf<Dynamic>) {
     return pilot.macro.StyleBuilder.create(rules);
   }
   
-  /**
-    Create global rules.
-
-    Note that you should still place this in a VNode's `style` property 
-    to ensure that the compiler does not ignore it.
-  **/
   public static macro function global(rules) {
     return pilot.macro.StyleBuilder.create(rules, true);
   }
 
-  /**
-    Create a `pilot.StyleSheet` of individual rules. If you want to use
-    named rules in your app this is the method you want.
-  **/
+  @:deprecated('Just use Style.sheet now')
   public static macro function sheet(rules:haxe.macro.Expr.ExprOf<Dynamic>) {
     return pilot.macro.StyleBuilder.createSheet(rules);
   }
