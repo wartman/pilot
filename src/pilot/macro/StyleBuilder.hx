@@ -16,12 +16,7 @@ using haxe.macro.PositionTools;
 
 class StyleBuilder {
   
-  @:persistent static var id:Int = 0;
-  static final prefix = Context.defined('pilot-prefix') 
-    ? Context.definedValue('pilot-prefix').replace('-', '_')
-    : 'pilot_';
   static final ucase:EReg = ~/[A-Z]/g;
-  static var ran:Array<String> = [];
   static var isInitialized:Bool = false;
   static final isEmbedded:Bool = !Context.defined('pilot-output');
   static final isSkipped:Bool = Context.defined('pilot-skip');
@@ -338,7 +333,6 @@ class StyleBuilder {
                 for (meta in cls.meta.extract(':pilot_output')) {
                   for (e in meta.params) switch e.expr {
                     case EConst(CString(s)):
-                      trace(s);
                       out.push(s);
                     default:
                       throw 'assert';
@@ -364,7 +358,7 @@ class StyleBuilder {
   }
 
   static function createClassName(rule:CssRule) {
-    var clsName = 'PilotClss_${rule.name}';
+    var clsName = 'PilotCss_${rule.name}';
     var cls = 'pilot.styles.${clsName}';
     var abs:TypeDefinition = {
       name: clsName,

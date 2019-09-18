@@ -48,19 +48,15 @@ class Renderer {
 
   static function handleAttributes(props:DynamicAccess<Dynamic>) {
     return [ for (k => v in props) {
-      if (v == null)
+      if (v == null || v == false)
         null
+      else if (v == true)
+        '${k}="${k}"'
       else 
-        switch Type.getClass(v) {
-          case Bool: switch v {
-            case true: '${k} = "${k}"';
-            case false: null;
-          }
-          default: switch k {
-            case 'className' | 'classname': 'class="${Std.string(v)}"';
-            default: '${k}="${Std.string(v)}"';
-          }
-        } 
+        switch k {
+          case 'className' | 'classname': 'class="${Std.string(v)}"';
+          default: '${k}="${Std.string(v)}"';
+        }
     }].filter(v -> v != null);
   }
 
