@@ -267,9 +267,11 @@ class StyleBuilder {
   static function getId(pos:Position) {
     var cls = Context.getLocalClass().get();
     var name = cls.pack.map(part -> part.replace('_', '').substr(0, 1).toLowerCase());
-    var clsName = cls.name.replace('_', '');
-    name.push(clsName.substr(0, 5).toLowerCase());
-    name.push(clsName.substr(-2).toLowerCase());
+    var clsName = cls.name
+      .replace('_', '')
+      .toLowerCase()
+      .replace('impl', '');
+    name.push('_' + clsName.substr(0, 20));
     return name.join('') + pos.getInfos().max;
   }
 

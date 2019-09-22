@@ -357,8 +357,13 @@ class Differ {
       patchProperty(node, key, null, value, isSvg);
     }
 
-    for (child in vnode.children) {
-      node.appendChild(createNode(child, isSvg));
+    switch vnode.type {
+      case VNodeText | VNodePlaceholder: 
+        // Do nothing, these can't have children
+      default: 
+        for (child in vnode.children) {
+          node.appendChild(createNode(child, isSvg));
+        }
     }
 
     vnode.node = node;
