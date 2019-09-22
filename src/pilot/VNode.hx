@@ -1,11 +1,6 @@
 package pilot;
 
-#if js
-  import js.html.Node;
-#end
-
 using Reflect;
-using StringTools;
 
 enum VNodeType {
   VNodeElement;
@@ -40,14 +35,15 @@ typedef VNodeImpl = {
       ?detach:()->Void,
       ?willPatch:(newVNode:VNode)->VNode,
     },
-    ?node:Node
+    ?node:js.html.Node
   #end
 };
 
 @:forward
 abstract VNode(VNodeImpl) {
 
-  static public inline function text(value:String #if js, ?node:Node #end) {
+  @:deprecated('use `new Text({ ... })` instead')
+  static public inline function text(value:String #if js, ?node:js.html.Node #end) {
     return new VNode({
       name: value,
       props: {},
@@ -58,6 +54,7 @@ abstract VNode(VNodeImpl) {
     });
   }
 
+  @:deprecated('Use `new Placeholder()` instead')
   static public inline function placeholder() {
     return new VNode({
       name: '[placeholder]',
@@ -66,7 +63,7 @@ abstract VNode(VNodeImpl) {
     });
   }
 
-  @:deprecated('Use new VNode({...}) instead')
+  @:deprecated('Use `new VNode({...})` instead')
   static public inline function h(name:String, props:{}, ?children:Array<VNode>) {
     return new VNode({
       name: name,
@@ -75,14 +72,15 @@ abstract VNode(VNodeImpl) {
     });
   }
 
+  @:deprecated('Use `new VNode({...})` instead')
   static public inline function element(impl:VNodeImpl) {
     return new VNode(impl);
   }
 
+  @:deprecated('Use `new Fragment({ ... })` instead')
   static public inline function fragment(children:Array<VNode>) {
     return new VNode({
       name: '',
-      props: {},
       children: children,
       type: VNodeFragment
     });
@@ -93,15 +91,25 @@ abstract VNode(VNodeImpl) {
   }
 
   @:from static public inline function ofString(value:String) {
-    return text(value);
+    return new VNode({
+      name: value,
+      type: VNodeText
+    });
   }
 
   @:from static public inline function ofInt(value:Int) {
-    return text(Std.string(value));
+    return new VNode({
+      name: Std.string(value),
+      type: VNodeText
+    });
   }
 
-  @:from static public inline function ofArray(value:Array<VNode>) {
-    return fragment(value);
+  @:from static public inline function ofArray(children:Array<VNode>) {
+    return new VNode({
+      name: '[fragment]',
+      children: children,
+      type: VNodeFragment
+    });
   }
 
   public function new(impl:VNodeImpl) {

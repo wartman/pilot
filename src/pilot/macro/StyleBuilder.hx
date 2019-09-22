@@ -21,13 +21,13 @@ class StyleBuilder {
   static final isEmbedded:Bool = !Context.defined('pilot-output');
   static final isSkipped:Bool = Context.defined('pilot-skip');
 
-  public static function create(expr:Expr, global:Bool = false) {
-    return createNamed(getId(expr.pos), expr, global);
+  public static function create(expr:Expr, global:Bool = false, forceEmbedding:Bool = false) {
+    return createNamed(getId(expr.pos), expr, global, forceEmbedding);
   }
 
-  public static function createNamed(field:String, expr:Expr, global:Bool = false) {
+  public static function createNamed(field:String, expr:Expr, global:Bool = false, forceEmbedding:Bool = false) {
     var id = getId(expr.pos);
-    return export(parseSingle(field, id, expr, global));
+    return export(parseSingle(field, id, expr, global), forceEmbedding);
   }
 
   // todo: consider removal?
@@ -266,9 +266,9 @@ class StyleBuilder {
   **/
   static function getId(pos:Position) {
     var cls = Context.getLocalClass().get();
-    var name = cls.pack.map(part -> part.replace('_', '').substr(0, 2).toLowerCase());
+    var name = cls.pack.map(part -> part.replace('_', '').substr(0, 1).toLowerCase());
     var clsName = cls.name.replace('_', '');
-    name.push(clsName.substr(0, 2).toLowerCase());
+    name.push(clsName.substr(0, 5).toLowerCase());
     name.push(clsName.substr(-2).toLowerCase());
     return name.join('') + pos.getInfos().max;
   }
@@ -320,7 +320,7 @@ class StyleBuilder {
     return selector;
   }
   
-  static function export(rule:CssRule) {
+  static function export(rule:CssRule, forceEmbedding:Bool = false) {
     if (!isInitialized) {
       isInitialized = true;
       if (!isEmbedded && !isSkipped) {
@@ -354,10 +354,10 @@ class StyleBuilder {
       }
     }
 
-    return createClassName(rule);
+    return createClassName(rule, forceEmbedding);
   }
 
-  static function createClassName(rule:CssRule) {
+  static function createClassName(rule:CssRule, forceEmbedding:Bool) {
     var clsName = 'PilotCss_${rule.name}';
     var cls = 'pilot.styles.${clsName}';
     var abs:TypeDefinition = {
@@ -372,7 +372,7 @@ class StyleBuilder {
         }
       ],
       fields: 
-        if (isEmbedded && !isSkipped)
+        if ((isEmbedded && !isSkipped) || forceEmbedding)
           (macro class {
             @:keep public static final rules = pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css});
             public inline function new() this = new pilot.Style($v{rule.name});

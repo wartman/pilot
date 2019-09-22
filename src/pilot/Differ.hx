@@ -322,14 +322,16 @@ class Differ {
 
   static function recycleNode(node:Node) {
     return node.nodeType == 3
-      ? VNode.text(node.nodeValue, node)
+      ? new VNode({
+          type: VNodeText,
+          name: node.nodeValue,
+          node: node
+        })
       : new VNode({
-          name: node.nodeName.toLowerCase(),
-          props: {},
-          children: [ for (n in node.childNodes) recycleNode(n) ],
-          node: node,
           type: VNodeRecycled,
-          key: null
+          name: node.nodeName.toLowerCase(),
+          children: [ for (n in node.childNodes) recycleNode(n) ],
+          node: node
         });
   }
 
@@ -385,7 +387,11 @@ class Differ {
       // This seems a bit fishy -- we may want to use a method other than
       // `Reflect` :/
       node.setProperty(key, newValue == null ? '' : newValue );
-    } else if (newValue == null || newValue == false) {
+    } else if (
+      newValue == null 
+      || newValue == false
+      || (Std.is(newValue, String) && newValue.length == 0)
+    ) {
       var el:Element = cast node;
       el.removeAttribute(key);
     } else {
