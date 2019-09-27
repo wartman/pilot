@@ -12,24 +12,11 @@ using Type;
 
 class Differ {
 
-  final globalHooks:Array<Hook> = [];
+  public final hooks:HookManager = [];
   final eventPrefix = 'on';
   final nodeKey = 'key';
 
-  public function new() {
-    // // Add default hooks?
-    // addHook(HookPrePatch((_, newVn) -> {
-    //   switch newVn.vnode {
-    //     case VNodeElement(name, props, children, style):
-    //       newVn.addClassName(style);
-    //     default:
-    //   }
-    // }));
-  }
-
-  public function addHook(hook:Hook) {
-    globalHooks.push(hook);
-  }
+  public function new() { }
   
   public function patch(node:Node, vnode:VNode) {
     node = patchNode(
@@ -46,10 +33,24 @@ class Differ {
     return vnode;
   }
 
+  public function subPatch(vNode:VNode, newVNode:VNode) {
+    patchNode(
+      vNode.node,
+      vNode.node,
+      vNode,
+      newVNode,
+      newVNode.isSvg()
+    );
+    vNode.vnode = newVNode.vnode;
+    vNode.key = newVNode.key;
+    vNode.hooks = newVNode.hooks;
+  }
+
   function recycleNode(node:Node):VNode {
     return node.nodeType == 3
       ? {
           vnode: VNodeText(node.nodeValue),
+          hooks: [],
           node: node,
           isRecycled: true
         }
@@ -66,20 +67,42 @@ class Differ {
     newVNode:VNode,
     isSvg:Bool
   ):Node {
-    doPrePatchHook(oldVNode, newVNode);
 
-    function finish() {
-      doPostPatchHook(oldVNode, newVNode);
+    function finish(didPatch:Bool = true) {
+      if (didPatch) {
+        newVNode.hooks.doPostPatchHook(oldVNode, newVNode);
+        hooks.doPostPatchHook(oldVNode, newVNode);
+      }
+
+      newVNode.hooks.doPostHook();
+      hooks.doPostHook();
+
       newVNode.setNode(node);
       return node;
     }
 
-    if (oldVNode == newVNode) {
-      return finish();
+    function insert(doRemove:Bool = false) {
+      node = parent.insertBefore(createNode(newVNode, isSvg), node);
+      if (doRemove && oldVNode != null && oldVNode.node != null) {
+        removeNode(parent, oldVNode);
+      }
+      newVNode.setNode(node);
+      newVNode.hooks.doInsertHook(newVNode);
+      hooks.doInsertHook(newVNode);
     }
 
+    newVNode.hooks.doPreHook();
+    hooks.doPreHook();
+
+    if (oldVNode == newVNode) {
+      return finish(false);
+    }
+
+    newVNode.hooks.doPrePatchHook(oldVNode, newVNode);
+    hooks.doPrePatchHook(oldVNode, newVNode);
+
     if (oldVNode == null) {
-      node = parent.insertBefore(createNode(newVNode, isSvg), node);
+      insert(false);
       return finish();
     }
 
@@ -87,10 +110,15 @@ class Differ {
 
       case VNodeText(content): switch newVNode.vnode {
 
-        case VNodeText(newContent):
-          if (content != newContent) node.nodeValue = newContent;
+        case VNodeText(newContent) if (content != newContent): 
+          newVNode.hooks.doUpdateHook(oldVNode, newVNode);
+          hooks.doUpdateHook(oldVNode, newVNode);
+          node.nodeValue = newContent;
           return finish();
 
+        case VNodeText(newContent) if (content == newContent):
+          return finish();
+          
         default:
 
       }
@@ -100,6 +128,9 @@ class Differ {
         case VNodeElement(newName, newProps, newChildren) if (oldName == newName):
           
           isSvg = isSvg || newVNode.isSvg();
+
+          newVNode.hooks.doUpdateHook(oldVNode, newVNode);
+          hooks.doUpdateHook(oldVNode, newVNode);
 
           for (k => _ in mergeProps(oldProps, newProps)) {
             switch k {
@@ -139,29 +170,6 @@ class Differ {
         default:          
       }
 
-      case VNodeComponent(oldComponent): switch newVNode.vnode {
-
-        case VNodeComponent(newComponent) if (oldComponent.getClass() == newComponent.getClass()):
-          oldComponent.setProperties(newComponent.getProperties());
-          
-          // This seems a tad iffy:
-          var lastRender = oldComponent.lastRender;
-          var newRender = oldComponent.render();
-          oldComponent.lastRender = newRender;
-
-          node = patchNode(
-            parent,
-            node,
-            lastRender,
-            newRender,
-            isSvg
-          );
-
-          return finish();
-
-        default:
-      }
-
       case VNodePlaceholder(oldLabel): switch newVNode.vnode {
         case VNodePlaceholder(newLabel) if (oldLabel == newLabel):
           return finish();
@@ -193,10 +201,18 @@ class Differ {
 
       }
 
+      case VNodeState(oldState): switch newVNode.vnode {
+        
+        // todo: figure out how you want to handle state.
+        //       right now it is a mess.
+      
+        default:
+
+      }
+
     }
 
-    node = parent.insertBefore(createNode(newVNode, isSvg), node);
-    removeNode(parent, oldVNode);
+    insert(true);
     return finish();
   }
 
@@ -371,10 +387,14 @@ class Differ {
     }
   }
 
-  function createNode(vn:VNode, isSvg:Bool) {
+  function createNode(vn:VNode, isSvg:Bool):Node {
     if (vn.isSvg()) isSvg = true;
 
-    doCreateHook(vn);
+    vn.hooks.doCreateHook(vn);
+    hooks.doCreateHook(vn);
+
+    vn.hooks.doUpdateHook(null, vn);
+    hooks.doUpdateHook(null, vn);
     
     var node = switch vn.vnode {
       case VNodeElement(name, props, children):
@@ -389,7 +409,6 @@ class Differ {
       case VNodeText(content):
         Browser.document.createTextNode(content);
       case VNodeFragment(children):
-        doCreateHook(vn);
         var n = Browser.document.createDocumentFragment();
         for (child in children) {
           n.appendChild(createNode(child, isSvg));
@@ -401,10 +420,10 @@ class Differ {
         var n = Browser.document.createDivElement();
         n.innerHTML = content;
         n;
-      case VNodeComponent(component):
-        var newRender = component.render();
-        component.lastRender = newRender;
-        createNode(newRender, isSvg);
+      case VNodeState(state):
+        var vn = state.build();
+        state.mount(this, vn);
+        createNode(vn, isSvg);
     }
 
     vn.setNode(node);
@@ -412,43 +431,15 @@ class Differ {
   }
 
   function removeNode(parent:Node, vnode:VNode) {
-    doRemoveHook(vnode);
+    vnode.hooks.doRemoveHook(vnode);
+    vnode.hooks.doDestroyHook(vnode);
+    hooks.doRemoveHook(vnode);
     if (!parent.contains(vnode.node)) {
       return;
     }
     parent.removeChild(vnode.node);
   }
 
-  function doPrePatchHook(oldVn:VNode, newVn:VNode) {
-    if (oldVn == newVn) return;
-    for (hook in newVn.hooks) switch hook {
-      case HookPrePatch(cb): cb(oldVn, newVn);
-      default:
-    }
-  }
-
-  function doPostPatchHook(oldVn:VNode, newVn:VNode) {
-    if (oldVn == newVn) return;
-    for (hook in newVn.hooks) switch hook {
-      case HookPostPatch(cb): cb(oldVn, newVn);
-      default:
-    }
-  }
-
-  function doCreateHook(vn:VNode) {
-    for (hook in vn.hooks) switch hook {
-      case HookCreate(cb): cb(vn);
-      default:
-    }
-  }
-
-  function doRemoveHook(vn:VNode) {
-    for (hook in vn.hooks) switch hook {
-      case HookRemove(cb): cb(vn);
-      default:
-    }
-  }
-  
   inline public function setNodeVNode(node:Node, vnode:VNode) {
     node.setField('__vnode', vnode);
   }

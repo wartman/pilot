@@ -1,0 +1,76 @@
+import pilot2.VNode;
+import pilot2.Differ;
+import pilot2.Widget;
+
+class Test {
+
+  static function main() {
+    var root = js.Browser.document.getElementById('root');
+    var differ = new Differ();
+    differ.hooks.add(HookCreate(vn -> {
+      trace('Create:');
+      trace(vn);
+    }));
+    differ.hooks.add(HookUpdate((_, vn) -> {
+      trace('Update:');
+      trace(vn);
+    }));
+    differ.hooks.add(HookRemove((vn) -> {
+      trace('Remove:');
+      trace(vn);
+    }));
+    function render(name:String) {
+      differ.patch(root, new VNode({
+        name: 'div',
+        props: {
+          // if this ID isn't here the patch won't work
+          // which is worrying
+          id: 'root'
+        },
+        children: [
+          new TestWidget({ 
+            title: name
+          }),
+          new VNode({
+            name: 'button',
+            props: {
+              onClick: _ -> render('Reset')
+            },
+            children: [ 'Reset' ]
+          })
+        ]
+      }));
+    }
+    render('foo');
+  }
+
+}
+
+class TestWidget extends Widget {
+  
+  @:prop var title:String;
+  @:state var index:Int = 0;
+
+  override function build():VNode {
+    return new VNode({
+      name: 'div',
+      props: {
+        className: 'test'
+      },
+      children: [
+        [ title, ' ', index ],
+        [ ' example ', 'of arrays' ],
+        new VNode({
+          name: 'button',
+          props: {
+            onClick: e -> {
+              index++;
+            }
+          },
+          children: [ 'Make Bar' ]
+        })
+      ]
+    });
+  }
+
+}

@@ -11,17 +11,17 @@ enum VNodeDef {
     props:{},
     ?children:Array<VNode>
   );
-  VNodeComponent(component:Component);
   VNodeText(content:String);
   VNodeSafe(content:String);
   VNodeFragment(children:Array<VNode>);
   VNodePlaceholder(?label:String);
+  VNodeState<T:Widget>(state:WidgetState<T>);
 }
 
 typedef VNodeObject = {
   vnode:VNodeDef,
+  hooks:HookManager,
   ?key:String,
-  ?hooks:Array<Hook>,
   ?node:Node,
   ?isRecycled:Bool
 }; 
@@ -29,16 +29,24 @@ typedef VNodeObject = {
 @:forward
 abstract VNode(VNodeObject) from VNodeObject {
   
-  @:from public static function ofArray(children:Array<VNode>):VNode {
-    return { vnode: VNodeFragment(children) };
+  @:from public static function ofWidgetState<T:Widget>(state:WidgetState<T>):VNode {
+    return { vnode: VNodeState(state), hooks: [] };
   }
 
-  @:from public static function ofComponent(component:Component):VNode {
-    return { vnode: VNodeComponent(component) };
+  @:from public static function ofArray(children:Array<VNode>):VNode {
+    return { vnode: VNodeFragment(children), hooks: [] };
   }
 
   @:from public static function ofText(content:String):VNode {
-    return { vnode: VNodeText(content) };
+    return { vnode: VNodeText(content), hooks: [] };
+  }
+
+  @:from public static function ofInt(content:Int):VNode {
+    return { vnode: VNodeText(Std.string(content)), hooks: [] };
+  }
+  
+  @:from public static function ofRenderable(renderable:Renderable):VNode {
+    return renderable.render();
   }
 
   public function new(options:{
@@ -47,24 +55,24 @@ abstract VNode(VNodeObject) from VNodeObject {
     ?props:{},
     ?hooks:Array<Hook>,
     ?children:Array<VNode>,
-    ?isRecycled:Bool
-    // ?style:Style
+    ?isRecycled:Bool,
+    ?style:Style
   }) {
     this = {
       vnode: VNodeElement(
         options.name,
         options.props != null ? options.props : {},
         options.children != null ? options.children : []
-        // options.style
       ),
       key: options.key == null
-        ? options.props.hasField('key')
+        ? options.props != null && options.props.hasField('key')
           ? options.props.field('key')
           : null
         : options.key,
-      hooks: options.hooks,
+      hooks: options.hooks != null ? options.hooks : [],
       node: null
     };
+    if (options.style != null) addClassName(options.style);
   }
 
   inline public function isSvg():Bool {
@@ -88,14 +96,6 @@ abstract VNode(VNodeObject) from VNodeObject {
     return this.node != null;
   }
 
-  public function addHook(hook:Hook):VNode {
-    if (this.hooks == null) {
-      this.hooks = [];
-    }
-    this.hooks.push(hook);
-    return this;
-  }
-
   public function addClassName(name:String):VNode {
     switch this.vnode {
       case VNodeElement(name, props, children):
@@ -110,8 +110,13 @@ abstract VNode(VNodeObject) from VNodeObject {
         }
         this.vnode = VNodeElement(name, props, children);
       default:
+        // throw an error?
     }
     return this;
+  }
+
+  inline public function addStyle(style:Style):VNode {
+    return addClassName(style);
   }
 
   public function appendChild(child:VNode) {
