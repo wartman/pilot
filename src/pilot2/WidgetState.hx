@@ -1,7 +1,7 @@
 package pilot2;
 
 @:allow(pilot2.Differ)
-class WidgetState<T:Widget> {
+class WidgetState<T:WidgetLike> {
   
   var widget:T;
   #if js

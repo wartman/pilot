@@ -1,8 +1,7 @@
 package pilot2;
 
-@:allow(pilot2.WidgetState)
 @:autoBuild(pilot2.macro.WidgetBuilder.build())
-class Widget implements Renderable {
+class Widget implements WidgetLike {
 
   function build():VNode {
     return null;
