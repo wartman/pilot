@@ -7,18 +7,18 @@ class Test {
   static function main() {
     var root = js.Browser.document.getElementById('root');
     var differ = new Differ();
-    differ.hooks.add(HookCreate(vn -> {
-      trace('Create:');
-      trace(vn);
-    }));
-    differ.hooks.add(HookUpdate((_, vn) -> {
-      trace('Update:');
-      trace(vn);
-    }));
-    differ.hooks.add(HookRemove((vn) -> {
-      trace('Remove:');
-      trace(vn);
-    }));
+    // differ.hooks.add(HookCreate(vn -> {
+    //   trace('Create:');
+    //   trace(vn);
+    // }));
+    // differ.hooks.add(HookUpdate((_, vn) -> {
+    //   trace('Update:');
+    //   trace(vn);
+    // }));
+    // differ.hooks.add(HookRemove((vn) -> {
+    //   trace('Remove:');
+    //   trace(vn);
+    // }));
     function render(name:String) {
       differ.patch(root, new VNode({
         name: 'div',
@@ -49,7 +49,17 @@ class Test {
 class TestWidget extends Widget {
   
   @:prop var title:String;
-  @:state var index:Int = 0;
+  @:prop.state var index:Int = 0;
+
+  @:hook.prePatch
+  function testBefore(oldVn, newVn) {
+    trace('Will be patched!');
+  }
+
+  @:hook.postPatch
+  function testAfter(oldVn, newVn) {
+    trace('Was be patched!');
+  }
 
   override function build():VNode {
     return new VNode({

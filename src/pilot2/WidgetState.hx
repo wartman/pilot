@@ -1,7 +1,5 @@
 package pilot2;
 
-// This seems to leak like mad?
-
 @:allow(pilot2.Differ)
 class WidgetState<T:Widget> {
   
@@ -21,9 +19,10 @@ class WidgetState<T:Widget> {
 
   #if js
     
-    public function mount(differ:Differ, vNode:VNode) {
+    public function mount(differ:Differ) {
       this.differ = differ;
-      this.vNode = vNode;
+      vNode = build();
+      return vNode;
     }
 
     public function patch() {

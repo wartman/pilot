@@ -35,7 +35,7 @@ abstract HookManager(Array<Hook>) from Array<Hook> {
   public function doDestroyHook(vn:VNode) {
     for (hook in this) switch hook {
       case HookDestroy(cb):
-        switch vn.vnode {
+        switch vn.type {
           case VNodeElement(_, _, children):
             for (c in children) c.hooks.doDestroyHook(c);
           default:

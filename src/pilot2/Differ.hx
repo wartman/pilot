@@ -10,6 +10,14 @@ using Reflect;
 using StringTools;
 using Type;
 
+/**
+  Diff a HTML node.
+
+  Most of this code, especially the core of the diffing algorithm
+  in `patchChildren`, is based on/taken directly 
+  from https://github.com/jorgebucaran/superfine. The main changes
+  were adding `Hooks` and using Haxe's enums. 
+**/
 class Differ {
 
   public final hooks:HookManager = [];
@@ -41,7 +49,7 @@ class Differ {
       newVNode,
       newVNode.isSvg()
     );
-    vNode.vnode = newVNode.vnode;
+    vNode.type = newVNode.type;
     vNode.key = newVNode.key;
     vNode.hooks = newVNode.hooks;
   }
@@ -49,7 +57,7 @@ class Differ {
   function recycleNode(node:Node):VNode {
     return node.nodeType == 3
       ? {
-          vnode: VNodeText(node.nodeValue),
+          type: VNodeText(node.nodeValue),
           hooks: [],
           node: node,
           isRecycled: true
@@ -106,9 +114,9 @@ class Differ {
       return finish();
     }
 
-    switch oldVNode.vnode {
+    switch oldVNode.type {
 
-      case VNodeText(content): switch newVNode.vnode {
+      case VNodeText(content): switch newVNode.type {
 
         case VNodeText(newContent) if (content != newContent): 
           newVNode.hooks.doUpdateHook(oldVNode, newVNode);
@@ -123,7 +131,7 @@ class Differ {
 
       }
 
-      case VNodeElement(oldName, oldProps, oldChildren): switch newVNode.vnode {
+      case VNodeElement(oldName, oldProps, oldChildren): switch newVNode.type {
 
         case VNodeElement(newName, newProps, newChildren) if (oldName == newName):
           
@@ -170,13 +178,13 @@ class Differ {
         default:          
       }
 
-      case VNodePlaceholder(oldLabel): switch newVNode.vnode {
+      case VNodePlaceholder(oldLabel): switch newVNode.type {
         case VNodePlaceholder(newLabel) if (oldLabel == newLabel):
           return finish();
         default:
       }
 
-      case VNodeFragment(oldChildren): switch newVNode.vnode {
+      case VNodeFragment(oldChildren): switch newVNode.type {
 
         case VNodeFragment(newChildren):
           patchChildren(
@@ -192,7 +200,7 @@ class Differ {
         default:
       }
 
-      case VNodeSafe(oldContent): switch newVNode.vnode {
+      case VNodeSafe(oldContent): switch newVNode.type {
 
         case VNodeSafe(newContent) if (oldContent == newContent):
           return finish();
@@ -201,10 +209,19 @@ class Differ {
 
       }
 
-      case VNodeState(oldState): switch newVNode.vnode {
-        
-        // todo: figure out how you want to handle state.
-        //       right now it is a mess.
+      case VNodeState(oldState): switch newVNode.type {
+
+        case VNodeState(newState) if (
+          oldState.widget.getClass() == newState.widget.getClass()
+        ):
+          node = patchNode(
+            parent,
+            node,
+            oldState.vNode,
+            newState.mount(this),
+            isSvg
+          );
+          return finish();
       
         default:
 
@@ -396,7 +413,7 @@ class Differ {
     vn.hooks.doUpdateHook(null, vn);
     hooks.doUpdateHook(null, vn);
     
-    var node = switch vn.vnode {
+    var node = switch vn.type {
       case VNodeElement(name, props, children):
         var n = Browser.document.createElement(name);
         for (key => value in (props:DynamicAccess<Dynamic>)) {
@@ -421,9 +438,7 @@ class Differ {
         n.innerHTML = content;
         n;
       case VNodeState(state):
-        var vn = state.build();
-        state.mount(this, vn);
-        createNode(vn, isSvg);
+        createNode(state.mount(this), isSvg);
     }
 
     vn.setNode(node);

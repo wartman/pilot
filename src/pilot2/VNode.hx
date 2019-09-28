@@ -19,7 +19,7 @@ enum VNodeDef {
 }
 
 typedef VNodeObject = {
-  vnode:VNodeDef,
+  type:VNodeDef,
   hooks:HookManager,
   ?key:String,
   ?node:Node,
@@ -30,23 +30,27 @@ typedef VNodeObject = {
 abstract VNode(VNodeObject) from VNodeObject {
   
   @:from public static function ofWidgetState<T:Widget>(state:WidgetState<T>):VNode {
-    return { vnode: VNodeState(state), hooks: [] };
+    return { type: VNodeState(state), hooks: [] };
   }
 
   @:from public static function ofArray(children:Array<VNode>):VNode {
-    return { vnode: VNodeFragment(children), hooks: [] };
+    return { type: VNodeFragment(children), hooks: [] };
   }
 
   @:from public static function ofText(content:String):VNode {
-    return { vnode: VNodeText(content), hooks: [] };
+    return { type: VNodeText(content), hooks: [] };
   }
 
   @:from public static function ofInt(content:Int):VNode {
-    return { vnode: VNodeText(Std.string(content)), hooks: [] };
+    return { type: VNodeText(Std.string(content)), hooks: [] };
   }
   
   @:from public static function ofRenderable(renderable:Renderable):VNode {
     return renderable.render();
+  }
+
+  public inline static function create(vn:VNodeObject):VNode {
+    return vn;
   }
 
   public function new(options:{
@@ -59,7 +63,7 @@ abstract VNode(VNodeObject) from VNodeObject {
     ?style:Style
   }) {
     this = {
-      vnode: VNodeElement(
+      type: VNodeElement(
         options.name,
         options.props != null ? options.props : {},
         options.children != null ? options.children : []
@@ -76,7 +80,7 @@ abstract VNode(VNodeObject) from VNodeObject {
   }
 
   inline public function isSvg():Bool {
-    return switch this.vnode {
+    return switch this.type {
       case VNodeElement(name, _, _): name == 'svg';
       default: false;
     }
@@ -97,7 +101,7 @@ abstract VNode(VNodeObject) from VNodeObject {
   }
 
   public function addClassName(name:String):VNode {
-    switch this.vnode {
+    switch this.type {
       case VNodeElement(name, props, children):
         var className = switch [ (props.field('className'):String), name ] {
           case [ null, null ]: null;
@@ -108,7 +112,7 @@ abstract VNode(VNodeObject) from VNodeObject {
         if (className != null) {
           props.setField('className', className);
         }
-        this.vnode = VNodeElement(name, props, children);
+        this.type = VNodeElement(name, props, children);
       default:
         // throw an error?
     }
@@ -120,9 +124,9 @@ abstract VNode(VNodeObject) from VNodeObject {
   }
 
   public function appendChild(child:VNode) {
-    switch this.vnode {
+    switch this.type {
       case VNodeElement(name, props, children):
-        this.vnode = VNodeElement(name, props, children.concat([ child ]));
+        this.type = VNodeElement(name, props, children.concat([ child ]));
       default: 
         // throw an error??
     }
@@ -130,9 +134,9 @@ abstract VNode(VNodeObject) from VNodeObject {
   }
 
   public function appendChildren(children:Array<VNode>) {
-    switch this.vnode {
+    switch this.type {
       case VNodeElement(name, props, existing):
-        this.vnode = VNodeElement(name, props, existing.concat(children));
+        this.type = VNodeElement(name, props, existing.concat(children));
       default: 
         // throw an error??
     }
