@@ -1,9 +1,7 @@
 Pilot
 =====
 
-A simple UI framework. At the moment, basically a direct port of  https://github.com/jorgebucaran/superfine with a few little extras.
-
-No tests for now, but the todo example does work.
+A simple UI framework, based heavily on [Superfine](https://github.com/jorgebucaran/superfine) under the hood.
 
 About
 -----
