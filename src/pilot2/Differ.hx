@@ -456,28 +456,28 @@ class Differ {
   }
 
   inline public function setNodeVNode(node:Node, vnode:VNode) {
-    node.setField('__vnode', vnode);
+    node.setField('_pilot_vnode', vnode);
   }
 
   inline public function getNodeVNode(node:Node) {
-    return node.field('__vnode');
+    return node.field('_pilot_vnode');
   }
   
   inline function getListener(node:Node) {
-    if (node.field('__listener') == null) {
-      node.setField('__listener', function (event:Event) {
+    if (node.field('_pilot_listener') == null) {
+      node.setField('_pilot_listener', function (event:Event) {
         var cb:(e:Event)->Void = getHandlers(node).field(event.type);
         if (cb != null) cb(event);
       });
     }
-    return node.field('__listener');
+    return node.field('_pilot_listener');
   }
 
   inline function getHandlers(node:Node):Dynamic {
-    if (node.field('__handlers') == null) {
-      node.setField('__handlers', {});
+    if (node.field('_pilot_handlers') == null) {
+      node.setField('_pilot_handlers', {});
     }
-    return node.field('__handlers');
+    return node.field('_pilot_handlers');
   }
 
   function getKey(?vnode:VNode) {

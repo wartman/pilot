@@ -87,8 +87,12 @@ class WidgetBuilder {
           createProperty(f, t, e, false);
         } else switch parts[1] {
           case 'state':
-            isStateful = true;
-            createProperty(f, t, e, true);
+            if (Context.defined('js')) {
+              isStateful = true;
+              createProperty(f, t, e, true);
+            } else {
+              createProperty(f, t, e, false);
+            }
           default:
             Context.error('Only `@:prop` or `@:prop.state` is allowed', meta.pos);
         }
@@ -102,7 +106,7 @@ class WidgetBuilder {
             e
           ));
         } else switch parts[1] {
-          case 'global': 
+          case 'global':
             f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(
               clsName + '_' + f.name,
               e, 

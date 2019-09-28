@@ -1,6 +1,8 @@
 package pilot2;
 
-import js.html.Node;
+#if js
+  import js.html.Node;
+#end
 
 using Lambda;
 using Reflect;
@@ -22,7 +24,9 @@ typedef VNodeObject = {
   type:VNodeDef,
   hooks:HookManager,
   ?key:String,
-  ?node:Node,
+  #if js
+    ?node:Node,
+  #end
   ?isRecycled:Bool
 }; 
 
@@ -74,7 +78,9 @@ abstract VNode(VNodeObject) from VNodeObject {
           : null
         : options.key,
       hooks: options.hooks != null ? options.hooks : [],
-      node: null
+      #if js
+        node: null
+      #end
     };
     if (options.style != null) addClassName(options.style);
   }
@@ -86,18 +92,20 @@ abstract VNode(VNodeObject) from VNodeObject {
     }
   }
 
-  inline public function setNode(node:Node):VNode {
-    this.node = node;
-    return this;
-  }
+  #if js
+    inline public function setNode(node:Node):VNode {
+      this.node = node;
+      return this;
+    }
+  
+    inline public function hasNode():Bool {
+      return this.node != null;
+    }
+  #end
 
   inline public function markRecycled():VNode {
     this.isRecycled = true;
     return this;
-  }
-
-  inline public function hasNode():Bool {
-    return this.node != null;
   }
 
   public function addClassName(name:String):VNode {
