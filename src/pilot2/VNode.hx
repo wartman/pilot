@@ -17,7 +17,7 @@ enum VNodeDef {
   VNodeSafe(content:String);
   VNodeFragment(children:Array<VNode>);
   VNodePlaceholder(?label:String);
-  VNodeState<T:Widget>(state:WidgetState<T>);
+  VNodeState<T:WidgetLike>(state:WidgetState<T>);
 }
 
 typedef VNodeObject = {
@@ -33,7 +33,7 @@ typedef VNodeObject = {
 @:forward
 abstract VNode(VNodeObject) from VNodeObject {
   
-  @:from public static function ofWidgetState<T:Widget>(state:WidgetState<T>):VNode {
+  @:from public static function ofWidgetState<T:WidgetLike>(state:WidgetState<T>):VNode {
     return { type: VNodeState(state), hooks: [] };
   }
 
