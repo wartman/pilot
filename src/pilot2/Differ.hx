@@ -19,13 +19,15 @@ using StringTools;
 **/
 class Differ {
 
-  public final hooks:HookManager = [];
+  final context:Context;
   final eventPrefix = 'on';
   final nodeKey = 'key';
 
-  public function new() { }
+  public function new(context) {
+    this.context = context;
+  }
   
-  public function patch(node:Node, vnode:VNode) {
+  public function patch(node:Node, vNode:VNode) {
     node = patchNode(
       node,
       node,
@@ -33,11 +35,11 @@ class Differ {
         getNodeVNode(node)
       else
         recycleNode(node),
-      vnode,
-      vnode.isSvg()
+      vNode,
+      vNode.isSvg()
     );
-    setNodeVNode(node, vnode);
-    return vnode;
+    setNodeVNode(node, vNode);
+    return vNode;
   }
 
   public function subPatch(vNode:VNode, newVNode:VNode) {
@@ -78,11 +80,11 @@ class Differ {
     function finish(didPatch:Bool = true) {
       if (didPatch) {
         newVNode.hooks.doPostPatchHook(oldVNode, newVNode);
-        hooks.doPostPatchHook(oldVNode, newVNode);
+        context.hooks.doPostPatchHook(oldVNode, newVNode);
       }
 
       newVNode.hooks.doPostHook();
-      hooks.doPostHook();
+      context.hooks.doPostHook();
 
       newVNode.setNode(node);
       return node;
@@ -95,18 +97,18 @@ class Differ {
       }
       newVNode.setNode(node);
       newVNode.hooks.doInsertHook(newVNode);
-      hooks.doInsertHook(newVNode);
+      context.hooks.doInsertHook(newVNode);
     }
 
     newVNode.hooks.doPreHook();
-    hooks.doPreHook();
+    context.hooks.doPreHook();
 
     if (oldVNode == newVNode) {
       return finish(false);
     }
 
     newVNode.hooks.doPrePatchHook(oldVNode, newVNode);
-    hooks.doPrePatchHook(oldVNode, newVNode);
+    context.hooks.doPrePatchHook(oldVNode, newVNode);
 
     if (oldVNode == null) {
       insert(false);
@@ -119,7 +121,7 @@ class Differ {
 
         case VNodeText(newContent) if (content != newContent): 
           newVNode.hooks.doUpdateHook(oldVNode, newVNode);
-          hooks.doUpdateHook(oldVNode, newVNode);
+          context.hooks.doUpdateHook(oldVNode, newVNode);
           node.nodeValue = newContent;
           return finish();
 
@@ -137,7 +139,7 @@ class Differ {
           isSvg = isSvg || newVNode.isSvg();
 
           newVNode.hooks.doUpdateHook(oldVNode, newVNode);
-          hooks.doUpdateHook(oldVNode, newVNode);
+          context.hooks.doUpdateHook(oldVNode, newVNode);
 
           for (k => _ in mergeProps(oldProps, newProps)) {
             switch k {
@@ -208,19 +210,22 @@ class Differ {
 
       }
 
-      case VNodeState(oldState): switch newVNode.type {
+      case VNodeRenderable(oldR): switch newVNode.type {
 
-        case VNodeState(newState) if (oldState.id == newState.id):
+        // Todo: this is probably a place for optimization!
+        case VNodeRenderable(newR) if (oldR._pilot_getId() == newR._pilot_getId()):
           node = patchNode(
             parent,
             node,
-            oldState.vNode,
-            newState.mount(this),
+            oldR._pilot_getVNode(),
+            newR.render(context),
             isSvg
           );
+          oldR.dispose();
           return finish();
-      
+
         default:
+          oldR.dispose();
 
       }
 
@@ -392,9 +397,9 @@ class Differ {
         }
       }
 
-      for (k => vnode in keyed) {
+      for (k => vNode in keyed) {
         if (newKeyed.get(k) == null) {
-          removeNode(node, vnode);
+          removeNode(node, vNode);
         }
       }
 
@@ -405,10 +410,10 @@ class Differ {
     if (vn.isSvg()) isSvg = true;
 
     vn.hooks.doCreateHook(vn);
-    hooks.doCreateHook(vn);
+    context.hooks.doCreateHook(vn);
 
     vn.hooks.doUpdateHook(null, vn);
-    hooks.doUpdateHook(null, vn);
+    context.hooks.doUpdateHook(null, vn);
     
     var node = switch vn.type {
       case VNodeElement(name, props, children):
@@ -434,30 +439,30 @@ class Differ {
         var n = Browser.document.createDivElement();
         n.innerHTML = content;
         n;
-      case VNodeState(state):
-        createNode(state.mount(this), isSvg);
+      case VNodeRenderable(renderable):
+        createNode(renderable.render(context), isSvg);
     }
 
     vn.setNode(node);
     return node;
   }
 
-  function removeNode(parent:Node, vnode:VNode) {
-    vnode.hooks.doRemoveHook(vnode);
-    vnode.hooks.doDestroyHook(vnode);
-    hooks.doRemoveHook(vnode);
-    if (!parent.contains(vnode.node)) {
+  function removeNode(parent:Node, vNode:VNode) {
+    vNode.hooks.doRemoveHook(vNode);
+    vNode.hooks.doDestroyHook(vNode);
+    context.hooks.doRemoveHook(vNode);
+    if (!parent.contains(vNode.node)) {
       return;
     }
-    parent.removeChild(vnode.node);
+    parent.removeChild(vNode.node);
   }
 
-  inline public function setNodeVNode(node:Node, vnode:VNode) {
-    node.setField('_pilot_vnode', vnode);
+  inline public function setNodeVNode(node:Node, vNode:VNode) {
+    node.setField('_pilot_vNode', vNode);
   }
 
   inline public function getNodeVNode(node:Node) {
-    return node.field('_pilot_vnode');
+    return node.field('_pilot_vNode');
   }
   
   inline function getListener(node:Node) {
@@ -477,8 +482,8 @@ class Differ {
     return node.field('_pilot_handlers');
   }
 
-  function getKey(?vnode:VNode) {
-    return if (vnode == null) null else vnode.key; 
+  function getKey(?vNode:VNode) {
+    return if (vNode == null) null else vNode.key; 
   }
 
   function mergeProps(a:{}, b:{}):DynamicAccess<Dynamic> {

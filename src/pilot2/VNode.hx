@@ -17,7 +17,7 @@ enum VNodeDef {
   VNodeSafe(content:String);
   VNodeFragment(children:Array<VNode>);
   VNodePlaceholder(?label:String);
-  VNodeState(state:VNodeState);
+  VNodeRenderable(renderable:Renderable);
 }
 
 typedef VNodeObject = {
@@ -33,8 +33,8 @@ typedef VNodeObject = {
 @:forward
 abstract VNode(VNodeObject) from VNodeObject {
   
-  @:from public static function ofVNodeState(state:VNodeState):VNode {
-    return { type: VNodeState(state), hooks: [] };
+  @:from public static function ofRenderable(renderable:Renderable):VNode {
+    return { type: VNodeRenderable(renderable), hooks: [] };
   }
 
   @:from public static function ofArray(children:Array<VNode>):VNode {
@@ -47,10 +47,6 @@ abstract VNode(VNodeObject) from VNodeObject {
 
   @:from public static function ofInt(content:Int):VNode {
     return { type: VNodeText(Std.string(content)), hooks: [] };
-  }
-  
-  @:from public static function ofRenderable(renderable:Renderable):VNode {
-    return renderable.render();
   }
 
   public inline static function create(vn:VNodeObject):VNode {

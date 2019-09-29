@@ -1,12 +1,13 @@
+import pilot2.Context;
 import pilot2.VNode;
 import pilot2.Widget;
 
 class Test {
 
   static function main() {
+    var ctx = new Context();
     #if js
       var root = js.Browser.document.getElementById('root');
-      var differ = new pilot2.Differ();
       // differ.hooks.add(HookCreate(vn -> {
       //   trace('Create:');
       //   trace(vn);
@@ -20,7 +21,7 @@ class Test {
       //   trace(vn);
       // }));
       function render(name:String) {
-        differ.patch(root, new VNode({
+        ctx.mount(root, new VNode({
           name: 'div',
           props: {
             // if this ID isn't here the patch won't work
@@ -43,7 +44,7 @@ class Test {
       }
       render('foo');
     #else
-      pilot2.Renderer.render(new TestWidget({ 
+      ctx.render(new TestWidget({ 
         title: 'foo'
       }));
     #end

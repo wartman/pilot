@@ -62,9 +62,7 @@ class WidgetBuilder {
         newFields = newFields.concat((macro class {
           function $setName(value) {
             _pilot_props.$name = value;
-            if (_pilot_currentState != null) {
-              _pilot_currentState.patch();
-            }
+            _pilot_patch();
             return value;
           }
           inline function $getName() return _pilot_props.$name;
@@ -167,6 +165,10 @@ class WidgetBuilder {
         $b{lateInitializers};
       }
 
+      override function _pilot_getId() {
+        return $v{clsName};
+      }
+
       override function _pilot_applyHooks(vNode:VNode) {
         $b{hooks};
       }
@@ -180,26 +182,30 @@ class WidgetBuilder {
 
       newFields = newFields.concat((macro class {
 
-        @:noCompletion var _pilot_currentState:pilot2.VNodeState;
+        @:noCompletion var _pilot_context:pilot2.Context;
 
-        override function render():VNode {
-          _pilot_currentState = new pilot2.VNodeState($v{clsName}, this.build);
-          var vn:VNode = _pilot_currentState;
-          _pilot_applyHooks(vn);
+        override function render(context:pilot2.Context):VNode {
+          _pilot_vNode = build();
+          _pilot_context = context;
 
           function cleanup(vn:VNode) {
-            if (
-              _pilot_currentState == null
-              // Only remove if vn == the vnode being patched out
-              || @:privateAccess _pilot_currentState.vNode != vn 
-            ) return;
-            @:privateAccess _pilot_currentState.differ = null;
-            _pilot_currentState = null;
-          };
+            if (_pilot_vNode == null || _pilot_vNode != vn) {
+              return;
+            }
+            _pilot_context = null;
+          }
 
-          vn.hooks.add(HookDestroy(cleanup));
-          vn.hooks.add(HookPostPatch((oldVn, _) -> cleanup(oldVn)));
-          return vn;
+          _pilot_vNode.hooks.add(HookDestroy(cleanup));
+          _pilot_vNode.hooks.add(HookPostPatch((vn, _) -> cleanup(vn)));
+          _pilot_applyHooks(_pilot_vNode);
+
+          return _pilot_vNode;
+        }
+
+        function _pilot_patch() {
+          if (_pilot_context != null && _pilot_vNode != null) {
+            _pilot_context.differ.subPatch(_pilot_vNode, build());
+          }
         }
 
       }).fields);
