@@ -6,7 +6,6 @@ import haxe.macro.Context;
 
 using Lambda;
 using pilot2.macro.MetaTools;
-using haxe.macro.Tools;
 
 class WidgetBuilder {
   
@@ -18,7 +17,6 @@ class WidgetBuilder {
   public static function build() {
     var cls = Context.getLocalClass().get();
     var clsName = cls.pack.concat([ cls.name ]).join('_');
-    var clsType = Context.getType(clsName).toComplexType();
     var isStateful = false;
     var fields = Context.getBuildFields();
     var props:Array<Field> = [];
@@ -182,10 +180,10 @@ class WidgetBuilder {
 
       newFields = newFields.concat((macro class {
 
-        @:noCompletion var _pilot_currentState:pilot2.WidgetState<$clsType>;
+        @:noCompletion var _pilot_currentState:pilot2.VNodeState;
 
         override function render():VNode {
-          _pilot_currentState = new pilot2.WidgetState(this);
+          _pilot_currentState = new pilot2.VNodeState($v{clsName}, this.build);
           var vn:VNode = _pilot_currentState;
           _pilot_applyHooks(vn);
 
@@ -195,7 +193,6 @@ class WidgetBuilder {
               // Only remove if vn == the vnode being patched out
               || @:privateAccess _pilot_currentState.vNode != vn 
             ) return;
-            @:privateAccess _pilot_currentState.widget = null;
             @:privateAccess _pilot_currentState.differ = null;
             _pilot_currentState = null;
           };

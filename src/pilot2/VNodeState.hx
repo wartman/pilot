@@ -1,20 +1,18 @@
 package pilot2;
 
 @:allow(pilot2.Differ)
-class WidgetState<T:WidgetLike> {
+class VNodeState {
   
-  var widget:T;
+  public final id:String;
+  public final build:()->VNode;
   #if js
     var vNode:VNode;
     var differ:Differ;
   #end
 
-  public function new(widget:T) {
-    this.widget = widget;
-  }
-
-  public function build() {
-    return widget.build();
+  public function new(id:String, build:()->VNode) {
+    this.id = id;
+    this.build = build;
   }
 
   #if js

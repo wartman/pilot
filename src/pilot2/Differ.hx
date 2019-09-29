@@ -8,7 +8,6 @@ import haxe.DynamicAccess;
 
 using Reflect;
 using StringTools;
-using Type;
 
 /**
   Diff a HTML node.
@@ -211,9 +210,7 @@ class Differ {
 
       case VNodeState(oldState): switch newVNode.type {
 
-        case VNodeState(newState) if (
-          oldState.widget.getClass() == newState.widget.getClass()
-        ):
+        case VNodeState(newState) if (oldState.id == newState.id):
           node = patchNode(
             parent,
             node,
