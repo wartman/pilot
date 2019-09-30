@@ -97,13 +97,13 @@ class WidgetBuilder {
         var meta = f.meta.getMetaByPrefix(styleMetaPrefix);
         var parts = meta.name.split('.');
         if (parts.length == 1) {
-          f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(
+          f.kind = FVar(macro:pilot2.Style, StyleBuilder.createNamed(
             clsName + '_' + f.name,
             e
           ));
         } else switch parts[1] {
           case 'global':
-            f.kind = FVar(macro:pilot.Style, StyleBuilder.createNamed(
+            f.kind = FVar(macro:pilot2.Style, StyleBuilder.createNamed(
               clsName + '_' + f.name,
               e, 
               true

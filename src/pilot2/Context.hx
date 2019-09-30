@@ -32,7 +32,7 @@ class Context {
     }
 
     public function render(vNode:VNode) {
-      Sys.print(renderer.render(vNode));
+      return renderer.render(vNode);
     }
 
   #end

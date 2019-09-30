@@ -201,7 +201,7 @@ class StyleBuilder {
           Context.error('The field ${b} does not exist', expr.pos);
         }
         if (!f.isFinal) {
-          Context.error('Fields used in pilot.Style MUST be final', expr.pos);
+          Context.error('Fields used in pilot2.Style MUST be final', expr.pos);
         }
         switch f.expr().expr {
           case TConst(TString(s)):
@@ -239,7 +239,7 @@ class StyleBuilder {
           Context.error('The field ${typeName}.${b} does not exist', expr.pos);
         }
         if (!f.isFinal) {
-          Context.error('Fields used in pilot.Style MUST be final', expr.pos);
+          Context.error('Fields used in pilot2.Style MUST be final', expr.pos);
         }
         switch f.expr().expr {
           case TConst(TString(s)):
@@ -358,11 +358,11 @@ class StyleBuilder {
 
   static function createClassName(rule:CssRule, forceEmbedding:Bool) {
     var clsName = 'PilotCss_${rule.name}';
-    var cls = 'pilot.styles.${clsName}';
+    var cls = 'pilot2.styles.${clsName}';
     var abs:TypeDefinition = {
       name: clsName,
-      pack: [ 'pilot', 'styles' ],
-      kind: TDAbstract(macro:pilot.Style, [], [macro:pilot.Style]),
+      pack: [ 'pilot2', 'styles' ],
+      kind: TDAbstract(macro:pilot2.Style, [], [macro:pilot2.Style]),
       meta: [
         {
           name: ':pilot_output',
@@ -373,17 +373,17 @@ class StyleBuilder {
       fields: 
         if ((isEmbedded && !isSkipped) || forceEmbedding)
           (macro class {
-            @:keep public static final rules = pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css});
-            public inline function new() this = new pilot.Style($v{rule.name});
+            @:keep public static final rules = pilot2.StyleManager.define($v{rule.name}, () -> $v{rule.css});
+            public inline function new() this = new pilot2.Style($v{rule.name});
           }).fields
         else 
           (macro class {
-            public inline function new() this = new pilot.Style($v{rule.name});
+            public inline function new() this = new pilot2.Style($v{rule.name});
           }).fields,
       pos: Context.currentPos()
     };
     Context.defineType(abs);
-    return macro new pilot.styles.$clsName();
+    return macro new pilot2.styles.$clsName();
   }
 
 }

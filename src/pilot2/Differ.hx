@@ -19,9 +19,10 @@ using StringTools;
 **/
 class Differ {
 
+  static final eventPrefix = 'on';
+  static final nodeKey = 'key';
+
   final context:Context;
-  final eventPrefix = 'on';
-  final nodeKey = 'key';
 
   public function new(context) {
     this.context = context;

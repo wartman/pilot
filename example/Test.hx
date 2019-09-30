@@ -1,6 +1,8 @@
+import task.data.Store;
 import pilot2.Context;
 import pilot2.VNode;
 import pilot2.Widget;
+import task.ui.App;
 
 class Test {
 
@@ -32,6 +34,7 @@ class Test {
             new TestWidget({ 
               title: name
             }),
+            new App({}),
             new VNode({
               name: 'button',
               props: {

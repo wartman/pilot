@@ -106,7 +106,7 @@ abstract VNode(VNodeObject) from VNodeObject {
 
   public function addClassName(name:String):VNode {
     switch this.type {
-      case VNodeElement(name, props, children):
+      case VNodeElement(nodeName, props, children):
         var className = switch [ (props.field('className'):String), name ] {
           case [ null, null ]: null;
           case [ null, v ] | [ v, null ] : v;
@@ -116,7 +116,7 @@ abstract VNode(VNodeObject) from VNodeObject {
         if (className != null) {
           props.setField('className', className);
         }
-        this.type = VNodeElement(name, props, children);
+        this.type = VNodeElement(nodeName, props, children);
       default:
         // throw an error?
     }

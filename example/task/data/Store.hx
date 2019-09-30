@@ -1,11 +1,20 @@
 package task.data;
 
 import pilot2.VNode;
+import pilot2.Context;
+import task.data.Task;
+
+enum TaskVisibility {
+  All;
+  Filtered(status:TaskStatus);
+}
 
 class Store {
 
-  final tasks:Array<Task>;
   final build:(store:Store)->VNode;
+  final context = new Context();
+  var tasks:Array<Task>;
+  var filter:TaskVisibility = All;
 
   public function new(tasks, build) {
     this.tasks = tasks;
@@ -14,22 +23,23 @@ class Store {
 
   #if js
 
-    var state:pilot2.VNodeState;
+    var node:js.html.Node;
 
     public function mount(node:js.html.Node) {
-      var differ = new pilot2.Differ();
-      state = new pilot2.VNodeState('root', () -> build(this));
-      differ.patch(node, state);
+      this.node = node;
+      context.differ.patch(node, build(this));
     }
 
     public function update() {
-      if (state != null) state.patch();
+      if (node != null) {
+        context.differ.patch(node, build(this));
+      }
     }
 
   #else
 
     public function render() {
-      Sys.print(pilot2.Renderer.render(build(this)));
+      Sys.print(context.render(build(this)));
     }
 
     public function update() {
@@ -37,5 +47,36 @@ class Store {
     }
 
   #end
+
+  public function getTasks() {
+    return tasks;
+  }
+
+  public function getFilteredTasks() {
+    return switch filter {
+      case All: tasks;
+      case Filtered(status): tasks.filter(t -> t.status == status);
+    }
+  }
+
+  public function setFilter(filter:TaskVisibility) {
+    this.filter = filter;
+    update();
+  }
+
+  public function addTask(todo:Task) {
+    tasks.push(todo);
+    update();
+  }
+
+  public function updateTask(task:Task, content:String) {
+    task.content = content;
+    update();
+  }
+
+  public function removeTask(todo:Task) {
+    tasks.remove(todo);
+    update();
+  }
 
 }
