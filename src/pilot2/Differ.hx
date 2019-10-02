@@ -28,32 +28,41 @@ class Differ {
     this.context = context;
   }
   
-  public function patch(node:Node, vNode:VNode) {
-    node = patchNode(
-      node,
-      node,
-      if (getNodeVNode(node) != null)
-        getNodeVNode(node)
-      else
-        recycleNode(node),
-      vNode,
-      vNode.isSvg()
-    );
-    setNodeVNode(node, vNode);
-    return vNode;
+  public function patch(node:Node, vNode:VNode):Void {
+    Scheduler.enqueue(() -> {
+      node = patchNode(
+        node.parentNode != null
+          ? node.parentNode
+          : node,
+        node,
+        if (getNodeVNode(node) != null)
+          getNodeVNode(node)
+        else
+          recycleNode(node),
+        vNode,
+        vNode.isSvg()
+      );
+      setNodeVNode(node, vNode);
+    });
   }
 
-  public function subPatch(vNode:VNode, newVNode:VNode) {
-    patchNode(
-      vNode.node,
-      vNode.node,
-      vNode,
-      newVNode,
-      newVNode.isSvg()
-    );
-    vNode.type = newVNode.type;
-    vNode.key = newVNode.key;
-    vNode.hooks = newVNode.hooks;
+  public function subPatch(vNode:VNode, newVNode:VNode):Void {
+    Scheduler.enqueue(() -> {
+      var node = patchNode(
+        vNode.node.parentNode != null
+          ? vNode.node.parentNode
+          : vNode.node,
+        vNode.node,
+        vNode,
+        newVNode,
+        newVNode.isSvg()
+      );
+      setNodeVNode(node, vNode);
+      vNode.type = newVNode.type;
+      vNode.key = newVNode.key;
+      vNode.hooks = newVNode.hooks;
+      vNode.node = newVNode.node;
+    });
   }
 
   function recycleNode(node:Node):VNode {
@@ -112,7 +121,7 @@ class Differ {
     context.hooks.doPrePatchHook(oldVNode, newVNode);
 
     if (oldVNode == null) {
-      insert(false);
+      insert();
       return finish();
     }
 
@@ -211,24 +220,38 @@ class Differ {
 
       }
 
-      case VNodeRenderable(oldR): switch newVNode.type {
+      case VNodeRenderable(oldR): 
+        var realNode = oldR._pilot_getVNode();
+        
+        switch newVNode.type {
 
-        // Todo: this is probably a place for optimization!
-        case VNodeRenderable(newR) if (oldR._pilot_getId() == newR._pilot_getId()):
-          node = patchNode(
-            parent,
-            node,
-            oldR._pilot_getVNode(),
-            newR.render(context),
-            isSvg
-          );
-          oldR.dispose();
-          return finish();
+          // Todo: this is probably a place for optimization!
+          case VNodeRenderable(newR) if (oldR._pilot_getId() == newR._pilot_getId()):
+            newVNode.hooks.doUpdateHook(oldVNode, newVNode);
+            context.hooks.doUpdateHook(oldVNode, newVNode);
+            
+            node = patchNode(
+              parent,
+              realNode.node,
+              realNode,
+              newR.render(context),
+              isSvg
+            );
+            oldR.dispose();
+            return finish();
 
-        default:
-          oldR.dispose();
+          default:
+            node = patchNode(
+              parent, 
+              realNode.node, 
+              realNode,
+              newVNode,
+              isSvg
+            );
+            oldR.dispose();
+            return finish();
 
-      }
+        }
 
     }
 
@@ -304,12 +327,21 @@ class Differ {
 
     if (oldHead > oldTail) {
       while (newHead <= newTail) {
-        node.insertBefore(
-          createNode(newChildren[newHead++], isSvg),
+        patchNode(
+          node,
           (oldChild = oldChildren[oldHead]) != null 
             ? oldChild.node 
-            : null
+            : null,
+          null,
+          newChildren[newHead++],
+          isSvg
         );
+        // node.insertBefore(
+        //   createNode(newChildren[newHead++], isSvg),
+        //   (oldChild = oldChildren[oldHead]) != null 
+        //     ? oldChild.node 
+        //     : null
+        // );
       }
     } else if (newHead > newTail) {
       while (oldHead <= oldTail) {
@@ -423,7 +455,8 @@ class Differ {
           patchProperty(n, key, null, value, isSvg);
         }
         for (child in children) {
-          n.appendChild(createNode(child, isSvg));
+          patchNode(n, null, null, child, isSvg);
+          // n.appendChild(createNode(child, isSvg));
         }
         n;
       case VNodeText(content):

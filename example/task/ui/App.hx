@@ -6,9 +6,10 @@ import task.data.Store;
 
 class App extends Widget {
   
-  // @:prop var store:Store;
+  @:prop var store:Store;
   @:style var root = {
-    display: 'flex'
+    display: 'flex',
+    maxWidth: '900px', 
   };
   @:style.global var glob = {
     'html, body': {
@@ -21,9 +22,18 @@ class App extends Widget {
     return new VNode({
       name: 'div',
       style: root,
-      props: { id: 'root' },
+      // props: { id: 'root' },
       children: [
-        new SiteHeader({})
+        new SiteHeader({ store: store }),
+        new VNode({
+          name: 'div',
+          children: [ for (task in store.getFilteredTasks()) 
+            new TaskItem({
+              store: store,
+              task: task
+            }) 
+          ]
+        })
       ]
     });
   }
