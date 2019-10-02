@@ -15,20 +15,29 @@ class TaskEditor extends Widget {
     @:prop var onSave:(value:String)->Void;
     var inputNode:js.html.InputElement;
 
-    @:hook.postPatch
-    function watchForClickOff(_, _) {
-      trace('click off');
-      function clickOff() {
-        requestClose();
-        js.Browser.document.removeEventListener('click', clickOff);
-      }
-      js.Browser.document.addEventListener('click', clickOff);
+    @:hook.pre
+    function test() {
+      trace('Pre');
     }
 
   #end
 
   override function build():VNode {
+    #if js
+      function clickOff() {
+        trace('click');
+        requestClose();
+        js.Browser.document.removeEventListener('click', clickOff);
+      }
+    #end
     return new Card({
+      #if js
+        onClick: e -> e.stopPropagation(),
+        hooks: [
+          HookDestroy(_ -> js.Browser.document.removeEventListener('click', clickOff)),
+          HookInsert(_ -> js.Browser.document.addEventListener('click', clickOff))
+        ],
+      #end
       children: [
         new VNode({
           name: 'input',

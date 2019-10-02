@@ -101,7 +101,12 @@ class Differ {
     }
 
     function insert(doRemove:Bool = false) {
-      node = parent.insertBefore(createNode(newVNode, isSvg), node);
+      node = parent.insertBefore(switch newVNode.type {
+        case VNodeRenderable(renderable):
+          patchNode(parent, null, null, renderable.render(context), isSvg);
+        default:
+          createNode(newVNode, isSvg);
+      }, node);
       if (doRemove && oldVNode != null && oldVNode.node != null) {
         removeNode(parent, oldVNode);
       }
@@ -225,8 +230,9 @@ class Differ {
         
         switch newVNode.type {
 
-          // Todo: this is probably a place for optimization!
-          case VNodeRenderable(newR) if (oldR._pilot_getId() == newR._pilot_getId()):
+          // // Todo: this is probably a place for optimization!
+          // case VNodeRenderable(newR) if (oldR._pilot_getId() == newR._pilot_getId()):
+          case VNodeRenderable(newR):
             newVNode.hooks.doUpdateHook(oldVNode, newVNode);
             context.hooks.doUpdateHook(oldVNode, newVNode);
             
@@ -336,12 +342,6 @@ class Differ {
           newChildren[newHead++],
           isSvg
         );
-        // node.insertBefore(
-        //   createNode(newChildren[newHead++], isSvg),
-        //   (oldChild = oldChildren[oldHead]) != null 
-        //     ? oldChild.node 
-        //     : null
-        // );
       }
     } else if (newHead > newTail) {
       while (oldHead <= oldTail) {
@@ -456,7 +456,6 @@ class Differ {
         }
         for (child in children) {
           patchNode(n, null, null, child, isSvg);
-          // n.appendChild(createNode(child, isSvg));
         }
         n;
       case VNodeText(content):
@@ -464,7 +463,7 @@ class Differ {
       case VNodeFragment(children):
         var n = Browser.document.createDocumentFragment();
         for (child in children) {
-          n.appendChild(createNode(child, isSvg));
+          patchNode(n, null, null, child, isSvg);
         }
         n;
       case VNodePlaceholder(label):
@@ -474,7 +473,15 @@ class Differ {
         n.innerHTML = content;
         n;
       case VNodeRenderable(renderable):
-        createNode(renderable.render(context), isSvg);
+        // Note: this generally should not be reached, but it's here
+        //       just in case.
+        patchNode(
+          Browser.document.createDocumentFragment(),
+          null,
+          null,
+          renderable.render(context),
+          isSvg
+        );
     }
 
     vn.setNode(node);
