@@ -1,15 +1,12 @@
 #if macro
-
 package pilot.macro;
 
 import haxe.macro.Expr;
 import haxe.macro.Context;
 import haxe.macro.Compiler;
-import haxe.ds.Map;
 import sys.io.File;
 
 using StringTools;
-using haxe.macro.Tools;
 using haxe.macro.TypeTools;
 using haxe.io.Path;
 using haxe.macro.PositionTools;
@@ -371,13 +368,18 @@ class StyleBuilder {
           name: ':pilot_output',
           params: [  macro $v{rule.css} ],
           pos: Context.currentPos()
-        }
+        },
+        // {
+        //   name: ':keep',
+        //   params: [],
+        //   pos: Context.currentPos()
+        // }
       ],
       fields: 
         if ((isEmbedded && !isSkipped) || forceEmbedding)
           (macro class {
-            @:keep public static final rules = pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css});
-            public inline function new() this = new pilot.Style($v{rule.name});
+            public static final rules = pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css});
+            public function new() this = rules;
           }).fields
         else 
           (macro class {

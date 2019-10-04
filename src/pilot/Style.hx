@@ -40,26 +40,19 @@ abstract Style(String) to String {
     return pilot.macro.StyleBuilder.createSheet(rules);
   }
 
-  @:from public inline static function ofArray(styles):Style {
+  @:from inline public static function ofArray(styles):Style {
     return compose(styles);
   }
 
-  public inline static function compose(styles:Array<Null<Style>>):Style {
+  inline public static function compose(styles:Array<Null<Style>>):Style {
     return styles.fold((value:Style, next:Style) -> next.add(value), new Style(''));
   }
 
-  @:deprecated('Use `pilot.VNodeTools.addStyle` instead')
-  public inline static function applyStyle(vnode:VNode, style:Style):VNode {
-    vnode.style = compose([ vnode.style, style ]);
-    return vnode;
-  }
-
-  public inline function new(name:String) {
+  inline public function new(name:String) {
     this = name;
   }
 
-  @:op(a + b)
-  public inline function add(style:Style):Style {
+  public function add(style:Style):Style {
     return new Style(switch [ this, (style:String) ] {
       case [ null, v ] | [ v, null ]: v;
       case [ a, b ] if (a.length == 0): b;

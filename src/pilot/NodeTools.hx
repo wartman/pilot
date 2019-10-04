@@ -1,8 +1,7 @@
-package pilot2;
+package pilot;
 
 import js.html.Node;
 import js.html.Event;
-// import js.html.Element;
 
 using Reflect;
 

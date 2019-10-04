@@ -1,7 +1,7 @@
 package task.ui;
 
-import pilot2.VNode;
-import pilot2.Widget;
+import pilot.VNode;
+import pilot.Widget;
 import task.ui.pattern.Card;
 
 class TaskEditor extends Widget {

@@ -4,49 +4,85 @@ import haxe.DynamicAccess;
 
 using Reflect;
 using StringTools;
-using pilot.VNodeTools;
 
+/**
+  Render vNodes for non-js targets (like PHP), or in cases
+  where you want static output (such as a server).
+**/
 class Renderer {
   
-  public static function render(vnode:VNode) {
-    if (vnode.style != null) {
-      vnode.addClassName(vnode.style);
-      vnode.style = null;    
-    }
+  final context:Context;
 
-    return switch vnode.type {
-      case VNodeElement | VNodeRecycled:
-        var out = '<${vnode.name}';
-        var innerHtml = if (vnode.props.hasField('innerHTML')) {
-          var ret = vnode.props.field('innerHTML');
-          vnode.props.deleteField('innerHTML');
+  public function new(context) {
+    this.context = context;
+  }
+
+  /**
+    Render a vNode to string. This will also dispatch some 
+    `Hooks` to mimic nodes being created by `Differ.patch`.
+  **/
+  public function render(vNode:VNode) {
+    vNode.hooks.doPreHook();
+    context.hooks.doPreHook();
+
+    vNode.hooks.doPrePatchHook(null, vNode);
+    context.hooks.doPrePatchHook(null, vNode);
+
+    vNode.hooks.doCreateHook(vNode);
+    context.hooks.doCreateHook(vNode);
+
+    var out = switch vNode.type {
+
+      case VNodeElement(name, props, children):
+        var out = '<${name}';
+        var innerHtml = if (props.hasField('innerHTML')) {
+          var ret = props.field('innerHTML');
+          props.deleteField('innerHTML');
           ret;
         } else null;
-        var attrs = handleAttributes(vnode.props);
+        var attrs = handleAttributes(props);
         if (attrs.length > 0) {
           out += ' ' + attrs.join(' ');
         }
-        if (vnode.children.length == 0) {
+        if (children.length == 0) {
           if (innerHtml != null) {
-            return '${out}>${innerHtml}</${vnode.name}>';
+            return '${out}>${innerHtml}</${name}>';
           } else {
             // Todo: check if this element should be stand-alone.
-            return '${out}></${vnode.name}>';
+            return '${out}></${name}>';
           }
         }
         out + '>'
-          + [ for (child in vnode.children) render(child) ].join('')
-          + '</${vnode.name}>';
-      case VNodeFragment:
-        [ for (child in vnode.children) render(child) ].join('');
-      case VNodePlaceholder:
+          + [ for (child in children) render(child) ].join('')
+          + '</${name}>';
+      
+      case VNodeText(content):
+        content.htmlEscape(true);
+
+      case VNodeSafe(content):
+        content;
+
+      case VNodePlaceholder(_):
         '';
-      case VNodeText:
-        vnode.name.htmlEscape(true);
+
+      case VNodeFragment(children):
+        children.map(render).join('');
+
+      case VNodeRenderable(renderable):
+        render(renderable.render(context));
+        
     }
+
+    vNode.hooks.doPostPatchHook(null, vNode);
+    context.hooks.doPostPatchHook(null, vNode);
+
+    vNode.hooks.doPostHook();
+    context.hooks.doPostHook();
+
+    return out;
   }
 
-  static function handleAttributes(props:DynamicAccess<Dynamic>) {
+  function handleAttributes(props:DynamicAccess<Dynamic>) {
     return [ for (k => v in props) {
       if (v == null || v == false)
         null
@@ -59,5 +95,6 @@ class Renderer {
         }
     }].filter(v -> v != null);
   }
+
 
 }

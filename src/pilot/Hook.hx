@@ -1,4 +1,4 @@
-package pilot2;
+package pilot;
 
 enum Hook {
 

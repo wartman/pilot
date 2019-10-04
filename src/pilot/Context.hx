@@ -1,4 +1,6 @@
-package pilot2;
+package pilot;
+
+import haxe.ds.Map;
 
 /**
   Right now this is mostly a way to pass a Differ or
@@ -10,6 +12,7 @@ package pilot2;
 class Context {
 
   public final hooks:HookManager = [];
+  public final data:Map<String, Dynamic> = [];
 
   #if js
   

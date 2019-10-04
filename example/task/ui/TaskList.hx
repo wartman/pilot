@@ -1,6 +1,6 @@
 package task.ui;
 
-import pilot2.*;
+import pilot.*;
 import task.data.*;
 import task.ui.pattern.*;
 
@@ -29,7 +29,7 @@ class TaskList extends Widget {
               #end
               value: ''
             }) else new Card({
-              key: 'add',
+              // key: 'add',
               children: [
                 new VNode({
                   name: 'button',

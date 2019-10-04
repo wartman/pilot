@@ -1,4 +1,4 @@
-package pilot2.macro;
+package pilot.macro;
 
 import haxe.macro.Expr;
 

@@ -1,7 +1,7 @@
 package task.data;
 
-import pilot2.VNode;
-import pilot2.Context;
+import pilot.VNode;
+import pilot.Context;
 import task.data.Task;
 
 enum TaskVisibility {

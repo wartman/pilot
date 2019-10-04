@@ -1,6 +1,6 @@
 package task.ui;
 
-import pilot2.*;
+import pilot.*;
 import task.data.Store;
 
 class App extends Widget {
@@ -9,13 +9,15 @@ class App extends Widget {
   @:style var root = {
     display: 'flex',
     flexDirection: 'column',
-    maxWidth: '900px', 
+    maxWidth: '900px',
+    width: '100%',
     margin: '0 auto',
   };
   @:style.global var glob = {
     'html, body': {
       margin: 0,
       padding: 0,
+      fontFamily: 'sans-serif'
     }
   };
 

@@ -1,4 +1,4 @@
-package pilot2;
+package pilot;
 
 @:forward
 abstract HookManager(Array<Hook>) from Array<Hook> {

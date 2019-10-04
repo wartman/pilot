@@ -1,12 +1,12 @@
 package task.ui.pattern;
 
-import pilot2.*;
+import pilot.*;
 
 class Card extends Widget {
   
   @:prop var children:Children;
   @:prop var hooks:Array<Hook> = [];
-  @:prop @:optional var key:String;
+  // @:prop @:optional var key:String;
   #if js
     @:prop @:optional var onClick:(e:js.html.Event)->Void;
   #end

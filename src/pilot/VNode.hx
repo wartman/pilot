@@ -1,138 +1,150 @@
 package pilot;
 
+#if js
+  import js.html.Node;
+#end
+
+using Lambda;
 using Reflect;
 
-enum VNodeType {
-  VNodeElement;
-  VNodeText;
-  VNodeRecycled;
-  VNodeFragment;
-  VNodePlaceholder;
+enum VNodeDef {
+  VNodeElement(
+    name:String,
+    props:{},
+    ?children:Array<VNode>
+  );
+  VNodeText(content:String);
+  VNodeSafe(content:String);
+  VNodeFragment(children:Array<VNode>);
+  VNodePlaceholder(?label:String);
+  VNodeRenderable(renderable:Renderable);
 }
 
-abstract VNodeKey(String) from String to String {
-
-  @:from public static inline function ofInt(value:Int) {
-    return new VNodeKey(Std.string(value));
-  } 
-
-  public function new(name:String) {
-    this = name;
-  }
-
-}
-
-typedef VNodeImpl = {
-  name:String,
-  ?props:{},
-  ?style:Style,
-  ?type:VNodeType,
-  ?children:Array<VNode>,
-  ?key:VNodeKey,
+typedef VNodeObject = {
+  type:VNodeDef,
+  hooks:HookManager,
+  ?key:String,
   #if js
-    ?hooks: {
-      ?attach:(vnode:VNode)->Void,
-      ?detach:()->Void,
-      ?willPatch:(newVNode:VNode)->VNode,
-    },
-    ?node:js.html.Node
+    ?node:Node,
   #end
-};
+  ?isRecycled:Bool
+}; 
 
 @:forward
-abstract VNode(VNodeImpl) {
-
-  @:deprecated('use `new Text({ ... })` instead')
-  static public inline function text(value:String #if js, ?node:js.html.Node #end) {
-    return new VNode({
-      name: value,
-      props: {},
-      type: VNodeText,
-      #if js
-        node: node
-      #end
-    });
-  }
-
-  @:deprecated('Use `new Placeholder()` instead')
-  static public inline function placeholder() {
-    return new VNode({
-      name: '[placeholder]',
-      props: {},
-      type: VNodePlaceholder
-    });
-  }
-
-  @:deprecated('Use `new VNode({...})` instead')
-  static public inline function h(name:String, props:{}, ?children:Array<VNode>) {
-    return new VNode({
-      name: name,
-      props: props,
-      children: children != null ? children : []
-    });
-  }
-
-  @:deprecated('Use `new VNode({...})` instead')
-  static public inline function element(impl:VNodeImpl) {
-    return new VNode(impl);
-  }
-
-  @:deprecated('Use `new Fragment({ ... })` instead')
-  static public inline function fragment(children:Array<VNode>) {
-    return new VNode({
-      name: '',
-      children: children,
-      type: VNodeFragment
-    });
-  }
+abstract VNode(VNodeObject) from VNodeObject {
   
-  @:from public static inline function ofWidget(widget:Widget) {
-    return widget.render();
+  @:from public static function ofRenderable(renderable:Renderable):VNode {
+    return { type: VNodeRenderable(renderable), hooks: [] };
   }
 
-  @:from static public inline function ofString(value:String) {
-    return new VNode({
-      name: value,
-      type: VNodeText
-    });
+  @:from public static function ofArray(children:Array<VNode>):VNode {
+    return { type: VNodeFragment(children), hooks: [] };
   }
 
-  @:from static public inline function ofInt(value:Int) {
-    return new VNode({
-      name: Std.string(value),
-      type: VNodeText
-    });
+  @:from public static function ofText(content:String):VNode {
+    return { type: VNodeText(content), hooks: [] };
   }
 
-  @:from static public inline function ofArray(children:Array<VNode>) {
-    return new VNode({
-      name: '[fragment]',
-      children: children,
-      type: VNodeFragment
-    });
+  @:from public static function ofInt(content:Int):VNode {
+    return { type: VNodeText(Std.string(content)), hooks: [] };
   }
 
-  public function new(impl:VNodeImpl) {
-    if (impl.type == null) {
-      impl.type = VNodeElement;
+  public inline static function create(vn:VNodeObject):VNode {
+    return vn;
+  }
+
+  public function new(options:{
+    name:String,
+    ?key:String,
+    ?props:{},
+    ?hooks:Array<Hook>,
+    ?children:Array<VNode>,
+    ?isRecycled:Bool,
+    ?style:Style
+  }) {
+    this = {
+      type: VNodeElement(
+        options.name,
+        options.props != null ? options.props : {},
+        options.children != null ? options.children : []
+      ),
+      key: options.key == null
+        ? options.props != null && options.props.hasField('key')
+          ? options.props.field('key')
+          : null
+        : options.key,
+      hooks: options.hooks != null ? options.hooks : [],
+      #if js
+        node: null
+      #end
+    };
+    if (options.style != null) addClassName(options.style);
+  }
+
+  inline public function isSvg():Bool {
+    return switch this.type {
+      case VNodeElement(name, _, _): name == 'svg';
+      default: false;
     }
-    if (impl.props == null) {
-      impl.props = {};
+  }
+
+  #if js
+    inline public function setNode(node:Node):VNode {
+      this.node = node;
+      return this;
     }
-    if (impl.children == null) {
-      impl.children = [];
+  
+    inline public function hasNode():Bool {
+      return this.node != null;
     }
-    impl.children = impl.children.filter(c -> c != null);
-    if (impl.props.hasField('key')) {
-      impl.key = impl.props.field('key');
-      impl.props.deleteField('key');
+  #end
+
+  inline public function markRecycled():VNode {
+    this.isRecycled = true;
+    return this;
+  }
+
+  public function addClassName(name:String):VNode {
+    switch this.type {
+      case VNodeElement(nodeName, props, children):
+        var className = switch [ (props.field('className'):String), name ] {
+          case [ null, null ]: null;
+          case [ null, v ] | [ v, null ] : v;
+          case [ a, b ] if (!a.split(' ').has(b)): '$a $b';
+          default: name;
+        }
+        if (className != null) {
+          props.setField('className', className);
+        }
+        this.type = VNodeElement(nodeName, props, children);
+      default:
+        // throw an error?
     }
-    #if js
-      if (impl.hooks == null) {
-        impl.hooks = {};
-      }
-    #end
-    this = impl;
+    return this;
+  }
+
+  inline public function addStyle(style:Style):VNode {
+    return addClassName(style);
+  }
+
+  public function appendChild(child:VNode) {
+    switch this.type {
+      case VNodeElement(name, props, children):
+        this.type = VNodeElement(name, props, children.concat([ child ]));
+      default: 
+        // throw an error??
+    }
+    return this;
+  }
+
+  public function appendChildren(children:Array<VNode>) {
+    switch this.type {
+      case VNodeElement(name, props, existing):
+        this.type = VNodeElement(name, props, existing.concat(children));
+      default: 
+        // throw an error??
+    }
+    return this;
   }
 
 }
