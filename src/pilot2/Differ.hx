@@ -90,19 +90,13 @@ class Differ {
       }
 
       newVNode.hooks.doPostHook();
-      context.hooks.doPostHook();
 
       newVNode.setNode(node);
       return node;
     }
 
     function insert(doRemove:Bool = false) {
-      node = switch newVNode.type {
-        case VNodeRenderable(renderable):
-          patchNode(parent, node, null, renderable.render(context), isSvg);
-        default:
-          parent.insertBefore(createNode(newVNode, isSvg), node);
-      }
+      node = parent.insertBefore(createNode(newVNode, isSvg), node);
       if (doRemove && oldVNode != null && oldVNode.node != null) {
         removeNode(parent, oldVNode);
       }
@@ -111,7 +105,6 @@ class Differ {
     }
 
     newVNode.hooks.doPreHook();
-    context.hooks.doPreHook();
 
     if (oldVNode == newVNode) {
       return finish(false);
@@ -364,8 +357,6 @@ class Differ {
         i++;
       }
 
-      // Keys seem to work wrong?
-
       while (newHead <= newTail) {
         oldKey = getKey((oldChild = oldChildren[oldHead]));
         newKey = getKey(newChildren[newHead]);
@@ -454,6 +445,27 @@ class Differ {
 
     vn.hooks.doUpdateHook(null, vn);
     context.hooks.doUpdateHook(null, vn);
+
+    // If a child vNode is not passed through `patchNode`,
+    // we'll need to mock up its lifecyle.
+    function createWithLifecycle(child:VNode) {
+      child.hooks.doPreHook();
+
+      child.hooks.doPrePatchHook(null, child);
+      context.hooks.doPrePatchHook(null, child);
+      
+      var node = createNode(child, isSvg);
+      
+      child.hooks.doInsertHook(child);
+      context.hooks.doInsertHook(child);
+      
+      child.hooks.doPostPatchHook(null, child);
+      context.hooks.doPostPatchHook(null, child);
+      
+      child.hooks.doPostHook();
+      
+      return node;
+    }
     
     var node = switch vn.type {
       case VNodeElement(name, props, children):
@@ -470,7 +482,7 @@ class Differ {
       case VNodeFragment(children):
         var n = Browser.document.createDocumentFragment();
         for (child in children) {
-          patchNode(n, null, null, child, isSvg);
+          n.appendChild(createWithLifecycle(child));
         }
         n;
       case VNodePlaceholder(label):
@@ -480,15 +492,7 @@ class Differ {
         n.innerHTML = content;
         n;
       case VNodeRenderable(renderable):
-        // Note: this generally should not be reached, but it's here
-        //       just in case.
-        patchNode(
-          Browser.document.createDocumentFragment(),
-          null,
-          null,
-          renderable.render(context),
-          isSvg
-        );
+        createWithLifecycle(renderable.render(context));
     }
 
     vn.setNode(node);
