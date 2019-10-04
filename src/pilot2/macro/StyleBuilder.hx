@@ -368,13 +368,18 @@ class StyleBuilder {
           name: ':pilot_output',
           params: [  macro $v{rule.css} ],
           pos: Context.currentPos()
-        }
+        },
+        // {
+        //   name: ':keep',
+        //   params: [],
+        //   pos: Context.currentPos()
+        // }
       ],
       fields: 
         if ((isEmbedded && !isSkipped) || forceEmbedding)
           (macro class {
             @:keep public static final rules = pilot2.StyleManager.define($v{rule.name}, () -> $v{rule.css});
-            public inline function new() this = new pilot2.Style($v{rule.name});
+            public inline function new() this = rules;
           }).fields
         else 
           (macro class {

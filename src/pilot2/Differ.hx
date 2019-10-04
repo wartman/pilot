@@ -8,6 +8,7 @@ import haxe.DynamicAccess;
 
 using Reflect;
 using StringTools;
+using pilot2.NodeTools;
 
 /**
   Diff a HTML node.
@@ -28,41 +29,36 @@ class Differ {
     this.context = context;
   }
   
-  public function patch(node:Node, vNode:VNode):Void {
-    Scheduler.enqueue(() -> {
-      node = patchNode(
-        node.parentNode != null
-          ? node.parentNode
-          : node,
-        node,
-        if (getNodeVNode(node) != null)
-          getNodeVNode(node)
-        else
-          recycleNode(node),
-        vNode,
-        vNode.isSvg()
-      );
-      setNodeVNode(node, vNode);
-    });
+  public function patch(node:Node, vNode:VNode):Node {
+    node = patchNode(
+      node.parentNode != null
+        ? node.parentNode
+        : node,
+      node,
+      if (node.getVNode() != null)
+        node.getVNode()
+      else
+        recycleNode(node),
+      vNode,
+      vNode.isSvg()
+    );
+    node.setVNode(vNode);
+    return node;
   }
 
   public function subPatch(vNode:VNode, newVNode:VNode):Void {
-    Scheduler.enqueue(() -> {
-      var node = patchNode(
-        vNode.node.parentNode != null
-          ? vNode.node.parentNode
-          : vNode.node,
-        vNode.node,
-        vNode,
-        newVNode,
-        newVNode.isSvg()
-      );
-      setNodeVNode(node, vNode);
-      vNode.type = newVNode.type;
-      vNode.key = newVNode.key;
-      vNode.hooks = newVNode.hooks;
-      vNode.node = newVNode.node;
-    });
+    var node = patchNode(
+      vNode.node.parentNode,
+      vNode.node,
+      vNode,
+      newVNode,
+      newVNode.isSvg()
+    );
+    vNode.type = newVNode.type;
+    vNode.key = newVNode.key;
+    vNode.hooks = newVNode.hooks;
+    vNode.node = node;
+    node.setVNode(vNode);
   }
 
   function recycleNode(node:Node):VNode {
@@ -101,16 +97,15 @@ class Differ {
     }
 
     function insert(doRemove:Bool = false) {
-      node = parent.insertBefore(switch newVNode.type {
+      node = switch newVNode.type {
         case VNodeRenderable(renderable):
-          patchNode(parent, null, null, renderable.render(context), isSvg);
+          patchNode(parent, node, null, renderable.render(context), isSvg);
         default:
-          createNode(newVNode, isSvg);
-      }, node);
+          parent.insertBefore(createNode(newVNode, isSvg), node);
+      }
       if (doRemove && oldVNode != null && oldVNode.node != null) {
         removeNode(parent, oldVNode);
       }
-      newVNode.setNode(node);
       newVNode.hooks.doInsertHook(newVNode);
       context.hooks.doInsertHook(newVNode);
     }
@@ -126,8 +121,8 @@ class Differ {
     context.hooks.doPrePatchHook(oldVNode, newVNode);
 
     if (oldVNode == null) {
-      insert();
-      return finish();
+      insert(false);
+      return finish(false);
     }
 
     switch oldVNode.type {
@@ -203,6 +198,9 @@ class Differ {
       case VNodeFragment(oldChildren): switch newVNode.type {
 
         case VNodeFragment(newChildren):
+          newVNode.hooks.doUpdateHook(oldVNode, newVNode);
+          context.hooks.doUpdateHook(oldVNode, newVNode);
+
           patchChildren(
             parent, // I think?
             oldChildren,
@@ -214,13 +212,23 @@ class Differ {
           return finish();
 
         default:
+
       }
 
       case VNodeSafe(oldContent): switch newVNode.type {
 
         case VNodeSafe(newContent) if (oldContent == newContent):
           return finish();
-        
+
+        case VNodeSafe(newContent) if (oldContent != newContent):
+          newVNode.hooks.doUpdateHook(oldVNode, newVNode);
+          context.hooks.doUpdateHook(oldVNode, newVNode);
+
+          var el:Element = cast node;
+          el.innerHTML = newContent;
+
+          return finish();
+          
         default:
 
       }
@@ -233,9 +241,6 @@ class Differ {
           // // Todo: this is probably a place for optimization!
           // case VNodeRenderable(newR) if (oldR._pilot_getId() == newR._pilot_getId()):
           case VNodeRenderable(newR):
-            newVNode.hooks.doUpdateHook(oldVNode, newVNode);
-            context.hooks.doUpdateHook(oldVNode, newVNode);
-            
             node = patchNode(
               parent,
               realNode.node,
@@ -276,8 +281,8 @@ class Differ {
 
     if (key.startsWith(eventPrefix)) {
       var event = key.substr(eventPrefix.length).toLowerCase();
-      var listener = getListener(node);
-      getHandlers(node).setField(event, newValue);
+      var listener = node.getListener();
+      node.getHandlers().setField(event, newValue);
       if (newValue == null) {
         node.removeEventListener(event, listener);
       } else if (oldValue == null) {
@@ -358,6 +363,8 @@ class Differ {
         }
         i++;
       }
+
+      // Keys seem to work wrong?
 
       while (newHead <= newTail) {
         oldKey = getKey((oldChild = oldChildren[oldHead]));
@@ -489,38 +496,13 @@ class Differ {
   }
 
   function removeNode(parent:Node, vNode:VNode) {
+    var n = vNode.node;
+    if (parent.contains(n)) {
+      parent.removeChild(n);
+    }
     vNode.hooks.doRemoveHook(vNode);
     vNode.hooks.doDestroyHook(vNode);
     context.hooks.doRemoveHook(vNode);
-    if (!parent.contains(vNode.node)) {
-      return;
-    }
-    parent.removeChild(vNode.node);
-  }
-
-  inline public function setNodeVNode(node:Node, vNode:VNode) {
-    node.setField('_pilot_vNode', vNode);
-  }
-
-  inline public function getNodeVNode(node:Node) {
-    return node.field('_pilot_vNode');
-  }
-  
-  inline function getListener(node:Node) {
-    if (node.field('_pilot_listener') == null) {
-      node.setField('_pilot_listener', function (event:Event) {
-        var cb:(e:Event)->Void = getHandlers(node).field(event.type);
-        if (cb != null) cb(event);
-      });
-    }
-    return node.field('_pilot_listener');
-  }
-
-  inline function getHandlers(node:Node):Dynamic {
-    if (node.field('_pilot_handlers') == null) {
-      node.setField('_pilot_handlers', {});
-    }
-    return node.field('_pilot_handlers');
   }
 
   function getKey(?vNode:VNode) {

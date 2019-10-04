@@ -15,11 +15,6 @@ class TaskEditor extends Widget {
     @:prop var onSave:(value:String)->Void;
     var inputNode:js.html.InputElement;
 
-    @:hook.pre
-    function test() {
-      trace('Pre');
-    }
-
   #end
 
   override function build():VNode {
@@ -31,6 +26,7 @@ class TaskEditor extends Widget {
       }
     #end
     return new Card({
+      // key: id,
       #if js
         onClick: e -> e.stopPropagation(),
         hooks: [
@@ -44,9 +40,9 @@ class TaskEditor extends Widget {
           #if js
             hooks: [
               HookInsert(vn -> {
-                trace('input insert');
+                // trace('input insert');
                 inputNode = cast vn.node;
-                trace(inputNode); 
+                // trace(inputNode); 
                 inputNode.focus();
               })
             ],

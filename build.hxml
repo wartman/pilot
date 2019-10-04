@@ -2,19 +2,17 @@
 -cp example
 -dce full
 -D analyzer-optimize
--D pilot-prefix=todo-
 
 # -main TodoApp
 -main Test
 
---each
+# --each
 
-# -D pilot-output=app.css
+# -D pilot-skip
+# -D real-position
+# -php dist/php
+
+# --next
+
 -D js-es=6
 -js dist/assets/app.js
-
---next
-
--D pilot-skip
--D real-position
--php dist/php

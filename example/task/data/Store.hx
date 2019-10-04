@@ -26,8 +26,7 @@ class Store {
     var node:js.html.Node;
 
     public function mount(node:js.html.Node) {
-      this.node = node;
-      context.differ.patch(node, build(this));
+      this.node = context.differ.patch(node, build(this));
     }
 
     public function update() {

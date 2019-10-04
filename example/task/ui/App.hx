@@ -1,7 +1,6 @@
 package task.ui;
 
-import pilot2.VNode;
-import pilot2.Widget;
+import pilot2.*;
 import task.data.Store;
 
 class App extends Widget {
@@ -9,7 +8,9 @@ class App extends Widget {
   @:prop var store:Store;
   @:style var root = {
     display: 'flex',
+    flexDirection: 'column',
     maxWidth: '900px', 
+    margin: '0 auto',
   };
   @:style.global var glob = {
     'html, body': {
@@ -22,18 +23,10 @@ class App extends Widget {
     return new VNode({
       name: 'div',
       style: root,
-      // props: { id: 'root' },
+      props: { id: 'root' },
       children: [
         new SiteHeader({ store: store }),
-        new VNode({
-          name: 'div',
-          children: [ for (task in store.getFilteredTasks()) 
-            new TaskItem({
-              store: store,
-              task: task
-            }) 
-          ]
-        })
+        new TaskList({ store: store })
       ]
     });
   }

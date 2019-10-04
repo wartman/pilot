@@ -13,7 +13,7 @@ class TaskItem extends Widget {
 
   override function build():VNode {
     return if (isEditing) new TaskEditor({
-      id: 'edit',
+      id: 'edit_${task.id}',
       value: task.content,
       #if js
         onSave: value -> {
@@ -22,6 +22,7 @@ class TaskItem extends Widget {
         requestClose: () -> isEditing = false
       #end
     }) else new Card({
+      // key: 'edit_${task.id}',
       children: [
         new VNode({ name: 'p', children: [ task.content ] }),
         new VNode({
