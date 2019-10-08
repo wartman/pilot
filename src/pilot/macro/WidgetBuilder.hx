@@ -13,6 +13,7 @@ class WidgetBuilder {
   static final styleMetaPrefix = [ ':style' ];
   static final propsMetaPrefix = [ ':prop', ':property' ];
   static final hookMetaPrefix = [ ':hook' ];
+  static final isClient = Context.defined('js') && !Context.defined('nodejs');
 
   public static function build() {
     var cls = Context.getLocalClass().get();
@@ -83,12 +84,8 @@ class WidgetBuilder {
           createProperty(f, t, e, false);
         } else switch parts[1] {
           case 'state':
-            if (Context.defined('js')) {
-              isStateful = true;
-              createProperty(f, t, e, true);
-            } else {
-              createProperty(f, t, e, false);
-            }
+            isStateful = true;
+            createProperty(f, t, e, true);
           default:
             Context.error('Only `@:prop` or `@:prop.state` is allowed', meta.pos);
         }
@@ -124,14 +121,10 @@ class WidgetBuilder {
         if (parts.length == 1) {
           Context.error('You must specify a specific hook (such as `@:hook.pre`, `@:hook.post`, etc.)', meta.pos);
         } else switch parts[1] {
-          case 'pre':
-            hooks.push(macro @:pos(f.pos) vNode.hooks.add(HookPre($i{name})));
-          case 'post':
-            hooks.push(macro @:pos(f.pos) vNode.hooks.add(HookPost($i{name})));
-          case 'prePatch':
-            hooks.push(macro @:pos(f.pos) vNode.hooks.add(HookPrePatch($i{name})));
-          case 'postPatch':
-            hooks.push(macro @:pos(f.pos) vNode.hooks.add(HookPostPatch($i{name})));
+          case 'before':
+            hooks.push(macro @:pos(f.pos) vNode.hooks.add(HookBefore($i{name})));
+          case 'after':
+            hooks.push(macro @:pos(f.pos) vNode.hooks.add(HookAfter($i{name})));
           case 'remove':
             hooks.push(macro @:pos(f.pos) vNode.hooks.add(HookRemove($i{name})));
           case 'destroy':
@@ -165,20 +158,17 @@ class WidgetBuilder {
         $b{lateInitializers};
       }
 
-      override function _pilot_getId() {
+      @:noCompletion override function _pilot_getId() {
         return $v{clsName};
       }
 
-      override function _pilot_applyHooks(vNode:VNode) {
+      @:noCompletion override function _pilot_applyHooks(vNode:VNode) {
         $b{hooks};
       }
 
     }).fields);
 
-    if (isStateful && Context.defined('js')) {
-
-      // todo: this isn't there yet -- eventually, the State returned by
-      //       Render should handle state simialr to how Flutter does it.
+    if (isStateful && isClient) {
 
       newFields = newFields.concat((macro class {
 
@@ -196,16 +186,26 @@ class WidgetBuilder {
           }
 
           _pilot_vNode.hooks.add(HookDestroy(cleanup));
-          _pilot_vNode.hooks.add(HookPostPatch((vn, _) -> cleanup(vn)));
+          _pilot_vNode.hooks.add(HookAfter((vn, _) -> cleanup(vn)));
           _pilot_applyHooks(_pilot_vNode);
 
           return _pilot_vNode;
         }
 
-        function _pilot_patch() {
+        @:noCompletion function _pilot_patch() {
           if (_pilot_context != null && _pilot_vNode != null) {
             _pilot_context.differ.subPatch(_pilot_vNode, build());
           }
+        }
+
+      }).fields);
+
+    } else if (isStateful) {
+
+      newFields = newFields.concat((macro class {
+
+        @:noCompletion function _pilot_patch() {
+          // noop
         }
 
       }).fields);

@@ -85,11 +85,9 @@ class Differ {
 
     function finish(didPatch:Bool = true) {
       if (didPatch) {
-        newVNode.hooks.doPostPatchHook(oldVNode, newVNode);
-        context.hooks.doPostPatchHook(oldVNode, newVNode);
+        newVNode.hooks.doAfterHook(oldVNode, newVNode);
+        context.hooks.doAfterHook(oldVNode, newVNode);
       }
-
-      newVNode.hooks.doPostHook();
 
       newVNode.setNode(node);
       return node;
@@ -104,14 +102,12 @@ class Differ {
       context.hooks.doInsertHook(newVNode);
     }
 
-    newVNode.hooks.doPreHook();
-
     if (oldVNode == newVNode) {
       return finish(false);
     }
 
-    newVNode.hooks.doPrePatchHook(oldVNode, newVNode);
-    context.hooks.doPrePatchHook(oldVNode, newVNode);
+    newVNode.hooks.doBeforeHook(oldVNode, newVNode);
+    context.hooks.doBeforeHook(oldVNode, newVNode);
 
     if (oldVNode == null) {
       insert(false);
@@ -449,20 +445,16 @@ class Differ {
     // If a child vNode is not passed through `patchNode`,
     // we'll need to mock up its lifecyle.
     function createWithLifecycle(child:VNode) {
-      child.hooks.doPreHook();
-
-      child.hooks.doPrePatchHook(null, child);
-      context.hooks.doPrePatchHook(null, child);
+      child.hooks.doBeforeHook(null, child);
+      context.hooks.doBeforeHook(null, child);
       
       var node = createNode(child, isSvg);
       
       child.hooks.doInsertHook(child);
       context.hooks.doInsertHook(child);
       
-      child.hooks.doPostPatchHook(null, child);
-      context.hooks.doPostPatchHook(null, child);
-      
-      child.hooks.doPostHook();
+      child.hooks.doAfterHook(null, child);
+      context.hooks.doAfterHook(null, child);
       
       return node;
     }
@@ -501,9 +493,21 @@ class Differ {
 
   function removeNode(parent:Node, vNode:VNode) {
     var n = vNode.node;
+
+    // This probably is bad: hooks are applied to the underlying VNode,
+    // not the current VNode, when it's a renderable type.
+    //
+    // May need to reconcider this. For now, this will work.
+    switch vNode.type {
+      case VNodeRenderable(renderable):
+        vNode = renderable._pilot_getVNode();
+      default:
+    }
+
     if (parent.contains(n)) {
       parent.removeChild(n);
     }
+    
     vNode.hooks.doRemoveHook(vNode);
     vNode.hooks.doDestroyHook(vNode);
     context.hooks.doRemoveHook(vNode);

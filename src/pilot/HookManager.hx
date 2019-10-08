@@ -10,20 +10,6 @@ abstract HookManager(Array<Hook>) from Array<Hook> {
   public inline function add(hook:Hook) {
     this.push(hook);
   }
-  
-  public function doPreHook() {
-    for (hook in this) switch hook {
-      case HookPre(cb): cb();
-      default:
-    }
-  }
-
-  public function doPostHook() {
-    for (hook in this) switch hook {
-      case HookPost(cb): cb();
-      default:
-    }
-  }
 
   public function doRemoveHook(vn:VNode) {
     for (hook in this) switch hook {
@@ -71,16 +57,16 @@ abstract HookManager(Array<Hook>) from Array<Hook> {
     }
   });
 
-  public function doPrePatchHook(oldVn:VNode, newVn:VNode) {
+  public function doBeforeHook(oldVn:VNode, newVn:VNode) {
     for (hook in this) switch hook {
-      case HookPrePatch(cb): cb(oldVn, newVn);
+      case HookBefore(cb): cb(oldVn, newVn);
       default:
     }
   }
 
-  public function doPostPatchHook(oldVn:VNode, newVn:VNode) {
+  public function doAfterHook(oldVn:VNode, newVn:VNode) {
     for (hook in this) switch hook {
-      case HookPostPatch(cb): cb(oldVn, newVn);
+      case HookAfter(cb): cb(oldVn, newVn);
       default:
     }
   }

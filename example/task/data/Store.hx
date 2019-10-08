@@ -52,10 +52,12 @@ class Store {
   }
 
   public function getFilteredTasks() {
-    return switch filter {
-      case All: tasks;
+    var filtered = switch filter {
+      case All: tasks.copy();
       case Filtered(status): tasks.filter(t -> t.status == status);
     }
+    filtered.reverse();
+    return filtered;
   }
 
   public function setFilter(filter:TaskVisibility) {

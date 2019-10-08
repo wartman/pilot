@@ -29,12 +29,16 @@ class Portal implements Renderable {
     if (target == null) {
       throw 'No target exists with the id ${id}';
     }
-    target.set(child);
+    #if js
+      target.set(child);
+    #end
     vNode = VNode.create({
       type: VNodePlaceholder(_pilot_getId()),
       hooks: [
-        HookDestroy(vn -> if (vn == vNode) target.clear()),
-        HookPostPatch((oldVn, _) -> if (oldVn == vNode) target.clear())
+        #if js
+          HookDestroy(vn -> if (vn == vNode) target.clear()),
+          HookAfter((oldVn, _) -> if (oldVn == vNode) target.clear())
+        #end
       ]
     });
     return vNode;

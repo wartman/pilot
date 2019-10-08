@@ -2,6 +2,7 @@ package task.ui;
 
 import pilot.*;
 import task.data.Store;
+import task.ui.pattern.*;
 
 class App extends Widget {
   
@@ -27,8 +28,9 @@ class App extends Widget {
       style: root,
       props: { id: 'root' },
       children: [
+        new PortalTarget({ id: 'overlay' }),
         new SiteHeader({ store: store }),
-        new TaskList({ store: store })
+        new TaskList({ store: store }),
       ]
     });
   }

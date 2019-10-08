@@ -378,12 +378,12 @@ class StyleBuilder {
       fields: 
         if ((isEmbedded && !isSkipped) || forceEmbedding)
           (macro class {
-            public static final rules = pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css});
-            public function new() this = rules;
+            @:keep public static final rules = pilot.StyleManager.define($v{rule.name}, () -> $v{rule.css});
+            inline public function new() this = new Style($v{rule.name});
           }).fields
         else 
           (macro class {
-            public inline function new() this = new pilot.Style($v{rule.name});
+            inline public function new() this = new pilot.Style($v{rule.name});
           }).fields,
       pos: Context.currentPos()
     };

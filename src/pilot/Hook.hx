@@ -3,28 +3,16 @@ package pilot;
 enum Hook {
 
   /**
-    Run at the start of every patch, for every VNode, regardless
-    of if the VNode needs to be patched or not.
-  **/
-  HookPre(cb:()->Void);
-
-  /**
-    Run at the end of every patch, for every VNode, regardless
-    of if the VNode needs to be patched or not.
-  **/
-  HookPost(cb:()->Void);
-
-  /**
     Invoked before a VNode is patched. If the differ did not
     detect any changes, this won't be invoked.
   **/
-  HookPrePatch(cb:(oldVn:VNode, newVn:VNode)->Void);
+  HookBefore(cb:(oldVn:VNode, newVn:VNode)->Void);
 
   /**
     Invoked after a VNode is patched. If the differ did not
     detect any changes, this won't be invoked.
   **/
-  HookPostPatch(cb:(oldVn:VNode, newVn:VNode)->Void);
+  HookAfter(cb:(oldVn:VNode, newVn:VNode)->Void);
 
   /**
     Invoked when a node is removed from the dom. Does NOT

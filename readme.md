@@ -20,7 +20,7 @@ class Example extends Widget {
     padding: '12px'
   };
 
-  @:hook.prePatch
+  @:hook.before
   public function beforePatching(vn:VNode) {
     trace('About to patch!');
   }
@@ -46,4 +46,8 @@ class Example extends Widget {
 
 ```
 
-... and I'll get around to explaining all that one day...
+Hook Lifecycle
+--------------
+
+Hooks can be added in two ways: 
+

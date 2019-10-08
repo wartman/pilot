@@ -26,22 +26,26 @@ class PortalTarget implements Renderable {
     return new VNode({
       name: 'div',
       props: { id: id },
-      children: [ child ]
+      children: child != null ? [ child ] : []
     });
   }
 
-  public function set(child:VNode) {
-    if (vNode != null) {
-      context.differ.subPatch(vNode, buildNode(child));
-    }
-  }
+  #if js
 
-  public function clear() {
-    if (vNode != null) {
-      context.differ.subPatch(vNode, buildNode());
+    public function set(child:VNode) {
+      if (vNode != null) {
+        context.differ.subPatch(vNode, buildNode(child));
+      }
     }
-  }
+
+    public function clear() {
+      if (vNode != null) {
+        context.differ.subPatch(vNode, buildNode());
+      }
+    }
   
+  #end
+
   public function render(context:Context):VNode {
     this.context = context;
     vNode = buildNode();

@@ -38,7 +38,7 @@ abstract VNode(VNodeObject) from VNodeObject {
   }
 
   @:from public static function ofArray(children:Array<VNode>):VNode {
-    return { type: VNodeFragment(children), hooks: [] };
+    return { type: VNodeFragment(children.filter(c -> c != null)), hooks: [] };
   }
 
   @:from public static function ofText(content:String):VNode {
@@ -66,7 +66,7 @@ abstract VNode(VNodeObject) from VNodeObject {
       type: VNodeElement(
         options.name,
         options.props != null ? options.props : {},
-        options.children != null ? options.children : []
+        options.children != null ? options.children.filter(c -> c != null) : []
       ),
       key: options.key == null
         ? options.props != null && options.props.hasField('key')

@@ -22,11 +22,8 @@ class Renderer {
     `Hooks` to mimic nodes being created by `Differ.patch`.
   **/
   public function render(vNode:VNode) {
-    vNode.hooks.doPreHook();
-    context.hooks.doPreHook();
-
-    vNode.hooks.doPrePatchHook(null, vNode);
-    context.hooks.doPrePatchHook(null, vNode);
+    vNode.hooks.doBeforeHook(null, vNode);
+    context.hooks.doBeforeHook(null, vNode);
 
     vNode.hooks.doCreateHook(vNode);
     context.hooks.doCreateHook(vNode);
@@ -73,11 +70,8 @@ class Renderer {
         
     }
 
-    vNode.hooks.doPostPatchHook(null, vNode);
-    context.hooks.doPostPatchHook(null, vNode);
-
-    vNode.hooks.doPostHook();
-    context.hooks.doPostHook();
+    vNode.hooks.doAfterHook(null, vNode);
+    context.hooks.doAfterHook(null, vNode);
 
     return out;
   }

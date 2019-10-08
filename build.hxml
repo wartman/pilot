@@ -3,16 +3,15 @@
 -dce full
 -D analyzer-optimize
 
-# -main TodoApp
 -main Test
 
-# --each
+--each
 
-# -D pilot-skip
-# -D real-position
-# -php dist/php
+-D pilot-skip
+-D real-position
+-php dist/php
 
-# --next
+--next
 
 -D js-es=6
 -js dist/assets/app.js

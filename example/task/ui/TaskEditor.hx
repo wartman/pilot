@@ -8,19 +8,15 @@ class TaskEditor extends Widget {
   
   @:prop var id:String;
   @:prop var value:String;
-
   #if js
-
     @:prop var requestClose:()->Void;
     @:prop var onSave:(value:String)->Void;
     var inputNode:js.html.InputElement;
-
   #end
 
   override function build():VNode {
     #if js
       function clickOff() {
-        trace('click');
         requestClose();
         js.Browser.document.removeEventListener('click', clickOff);
       }
@@ -40,9 +36,7 @@ class TaskEditor extends Widget {
           #if js
             hooks: [
               HookInsert(vn -> {
-                // trace('input insert');
                 inputNode = cast vn.node;
-                // trace(inputNode); 
                 inputNode.focus();
               })
             ],
@@ -58,7 +52,7 @@ class TaskEditor extends Widget {
                   var input:js.html.InputElement = cast e.target;
                   onSave(input.value);
                 } else if (e.key == 'Escape') {
-                  requestClose();
+                  clickOff();
                 }
               }
             #end
@@ -77,7 +71,7 @@ class TaskEditor extends Widget {
           name: 'button',
           props: {
             #if js
-              onClick: _ -> requestClose(),
+              onClick: _ -> clickOff(),
             #end
           },
           children: [ 'Cancel' ]
