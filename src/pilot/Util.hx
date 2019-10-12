@@ -1,12 +1,12 @@
 package pilot;
 
-class Scheduler {
+class Util {
 
   #if js
     static var hasRaf:Bool = js.Syntax.code("typeof window != 'undefined' && 'requestAnimationFrame' in window");
   #end
 
-  public static function enqueue(cb:()->Void) {
+  public static function nextFrame(cb:()->Void) {
     #if js
       if (hasRaf) {
         js.Browser.window.requestAnimationFrame(_ -> cb());

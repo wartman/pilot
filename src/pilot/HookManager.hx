@@ -50,7 +50,7 @@ abstract HookManager(Array<Hook>) from Array<Hook> {
     the node has been inserted into the DOM. This might change in the
     future with a more robust implementation.
   **/
-  public function doInsertHook(vn:VNode) Scheduler.enqueue(() -> {
+  public function doInsertHook(vn:VNode) Util.nextFrame(() -> {
     for (hook in this) switch hook {
       case HookInsert(cb): cb(vn);
       default:
