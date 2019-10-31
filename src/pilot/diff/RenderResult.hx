@@ -1,9 +1,10 @@
-package pilot2.diff;
+package pilot.diff;
 
 import haxe.ds.Map;
 
 typedef RenderResultImpl<Real:{}> = {
   root:RNode<Real>,
+  keyed:Map<Key, RNode<Real>>,
   typeList:Map<{}, Array<RNode<Real>>>,
   childList:Array<RNode<Real>>
 } 
@@ -14,6 +15,7 @@ abstract RenderResult<Real:{}>(RenderResultImpl<Real>) from RenderResultImpl<Rea
   inline public function new(root, typeList, childList) {
     this = {
       root: root,
+      keyed: new Map(),
       typeList: typeList,
       childList: childList
     };
@@ -36,12 +38,9 @@ abstract RenderResult<Real:{}>(RenderResultImpl<Real>) from RenderResultImpl<Rea
     return n;
   }
 
-  public function set(type:{}, key:Null<Key>, node:RNode<Real>) {
-    if (key != null) {
-      add(type, RKeyed(key, node));
-    } else {
-      add(type, node);
-    }
+  public function set(type:{}, ?key:Key, node:RNode<Real>) {
+    if (key != null) this.keyed.set(key, node);
+    add(type, node);
   }
 
   public function remaining() {
@@ -51,12 +50,11 @@ abstract RenderResult<Real:{}>(RenderResultImpl<Real>) from RenderResultImpl<Rea
   public function resolve(type:{}, ?key:Key) {
     var nodes = this.typeList.get(type);
     if (nodes == null) return null;
-    for (n in nodes) switch n {
-      case RKeyed(k, _) if (k == key):
-        nodes.remove(n); 
-        this.childList.remove(n);
-        return n;
-      default:
+    if (key != null) {
+      var n = this.keyed.get(key);
+      nodes.remove(n);
+      this.childList.remove(n);
+      return n;
     }
     return pull(type);
   }

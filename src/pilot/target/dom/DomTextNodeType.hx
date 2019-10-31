@@ -1,8 +1,8 @@
-package pilot2.target.dom;
+package pilot.target.dom;
 
 import js.Browser;
 import js.html.Node;
-import pilot2.diff.NodeType;
+import pilot.diff.NodeType;
 
 class DomTextNodeType implements NodeType<String, Node> {
   

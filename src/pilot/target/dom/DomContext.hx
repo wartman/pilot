@@ -1,7 +1,7 @@
-package pilot2.target.dom;
+package pilot.target.dom;
 
 import js.html.Node;
-import pilot2.diff.*;
+import pilot.diff.*;
 
 class DomContext implements Context<Node> {
   
@@ -44,11 +44,7 @@ class DomContext implements Context<Node> {
   }
 
   function recycleNode(node:Node):RenderResult<Node> {
-    var res = new RenderResult(
-      RNative(node, {}), 
-      [], 
-      []
-    );
+    var res = new RenderResult(RNative(node, {}), [], []);
     for (n in node.childNodes) {
       res.add(DomFactory.getNodeType(n.nodeName), RNative(n, {}));
     }

@@ -1,11 +1,11 @@
-package pilot2;
+package pilot;
 
 #if !macro
 
 import js.html.Node;
-import pilot2.diff.Widget;
+import pilot.diff.Widget;
 
-@:autoBuild(pilot2.Component.build())
+@:autoBuild(pilot.Component.build())
 class Component extends 
   #if (js && !nodejs)
     Widget<Node>

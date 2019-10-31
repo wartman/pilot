@@ -1,6 +1,6 @@
-package pilot2.diff;
+package pilot.diff;
 
-@:allow(pilot2.diff.Differ, pilot2.diff.WidgetType)
+@:allow(pilot.diff.Differ, pilot.diff.WidgetType)
 class Widget<Real:{}> {
   
   var _pilot_real:Real;

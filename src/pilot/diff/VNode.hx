@@ -1,4 +1,4 @@
-package pilot2.diff;
+package pilot.diff;
 
 enum VNode<Real:{}> {
   VNative<Attrs>(type:NodeType<Attrs, Real>, attrs:Attrs, children:Array<VNode<Real>>, ?key:Key);

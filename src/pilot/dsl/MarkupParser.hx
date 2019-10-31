@@ -1,6 +1,6 @@
-package pilot2.dsl;
+package pilot.dsl;
 
-import pilot2.dsl.MarkupNode;
+import pilot.dsl.MarkupNode;
 
 using StringTools;
 

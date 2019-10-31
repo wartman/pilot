@@ -1,4 +1,4 @@
-package pilot2.diff;
+package pilot.diff;
 
 interface NodeType<Attrs, Real:{}> {
   public function create(attrs:Attrs):Real;

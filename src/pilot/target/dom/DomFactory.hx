@@ -1,7 +1,7 @@
-package pilot2.target.dom;
+package pilot.target.dom;
 
 import js.html.Node;
-import pilot2.diff.*;
+import pilot.diff.*;
 
 class DomFactory {
   

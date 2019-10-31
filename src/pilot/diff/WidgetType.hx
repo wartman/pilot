@@ -1,4 +1,4 @@
-package pilot2.diff;
+package pilot.diff;
 
 interface WidgetType<Attrs, Real:{}> {
   public function create(attrs:Attrs):Widget<Real>;

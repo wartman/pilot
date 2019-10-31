@@ -1,6 +1,6 @@
-package pilot2;
+package pilot;
 
 import js.html.Node;
-import pilot2.diff.VNode;
+import pilot.diff.VNode;
 
 typedef PureComponent = VNode<Node>;

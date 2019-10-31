@@ -1,4 +1,4 @@
-package pilot2.diff;
+package pilot.diff;
 
 interface Context<Real:{}> {
   public function setPreviousRender(node:Real, render:RenderResult<Real>):Void;

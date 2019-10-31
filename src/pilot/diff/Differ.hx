@@ -1,4 +1,4 @@
-package pilot2.diff;
+package pilot.diff;
 
 import haxe.DynamicAccess;
 
@@ -89,6 +89,8 @@ class Differ<Real:{}> {
 
     function process(nodes:Array<VNode<Real>>) for (n in nodes) switch n {
 
+      case null:
+
       case VNative(type, attrs, children, key): switch previous.resolve(type, key) {
         case null:
           var el = type.create(attrs);
@@ -132,7 +134,6 @@ class Differ<Real:{}> {
           context.removePreviousRender(widget._pilot_real, true);
           context.removeChild(parent, widget._pilot_real);
           widget.dispose();
-        case RKeyed(_, node): remove(node);
       }
       for (n in previous.childList) remove(n);
     }

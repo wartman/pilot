@@ -1,4 +1,4 @@
-package pilot2.dsl;
+package pilot.dsl;
 
 class Parser<T> {
   

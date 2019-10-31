@@ -1,10 +1,10 @@
 #if macro
 
-package pilot2.target.dom;
+package pilot.target.dom;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import pilot2.dsl.MarkupNode;
+import pilot.dsl.MarkupNode;
 
 using StringTools;
 using haxe.macro.PositionTools;
@@ -24,7 +24,7 @@ class DomGenerator {
     var exprs:Array<Expr> = [ for (node in nodes)
       generateNode(node)
     ].filter(e -> e != null);
-    var eType = exprs.length == 1 ? exprs[0] : macro pilot2.target.dom.DomFactory.f([ $a{exprs} ]);
+    var eType = exprs.length == 1 ? exprs[0] : macro pilot.target.dom.DomFactory.f([ $a{exprs} ]);
 
     return macro @:pos(pos) ${eType};
   }
@@ -62,7 +62,7 @@ class DomGenerator {
         var children:Array<Expr> = children == null ? [] : [ for (c in children)
           generateNode(c)
         ].filter(e -> e != null);
-        macro @:pos(pos) pilot2.target.dom.DomFactory.h(
+        macro @:pos(pos) pilot.target.dom.DomFactory.h(
           $v{name}, 
           ${attrs}, 
           [ $a{children} ],
@@ -113,13 +113,13 @@ class DomGenerator {
           pos: pos
         };
 
-        if (Context.unify(type, Context.getType('pilot2.diff.VNode'))) {
+        if (Context.unify(type, Context.getType('pilot.diff.VNode'))) {
           macro @:pos(pos) new $tp($attrs);
         } else {
-          if (!Context.unify(type, Context.getType('pilot2.diff.Widget'))) {
-            Context.error('Components must implement pilot2.diff.Widget', pos);
+          if (!Context.unify(type, Context.getType('pilot.diff.Widget'))) {
+            Context.error('Components must implement pilot.diff.Widget', pos);
           }
-          macro @:pos(pos) pilot2.target.dom.DomFactory.w(
+          macro @:pos(pos) pilot.target.dom.DomFactory.w(
             Type.getClassName($p{tp.pack.concat([ tp.name ])}),
             $p{tp.pack.concat([ tp.name ])}.new,
             ${attrs},
@@ -130,19 +130,19 @@ class DomGenerator {
       case MCode(v):
         var e = Context.parse(v, pos);
         var t = Context.typeof(e);
-        if (Context.unify(t, Context.getType('pilot2.Children'))) {
-          macro @:pos(pos) pilot2.target.dom.DomFactory.f(${e});
+        if (Context.unify(t, Context.getType('pilot.Children'))) {
+          macro @:pos(pos) pilot.target.dom.DomFactory.f(${e});
         } else {
-          macro @:pos(pos) pilot2.target.dom.DomFactory.txt(${e});
+          macro @:pos(pos) pilot.target.dom.DomFactory.txt(${e});
         }
 
       case MText(value):
-        macro @:pos(pos) pilot2.target.dom.DomFactory.txt($v{value});
+        macro @:pos(pos) pilot.target.dom.DomFactory.txt($v{value});
 
       case MFor(it, children):
         switch Context.parse(it, pos) {
           case macro $i{name} in $target:
-            macro @:pos(pos) [ for ($i{name} in ${target}) ${new DomGenerator(children, pos).generate()} ];
+            macro @:pos(pos) pilot.target.dom.DomFactory.f([ for ($i{name} in ${target}) ${new DomGenerator(children, pos).generate()} ]);
           default:
             Context.error('Invalid loop iterator', pos);
             macro null;
@@ -158,7 +158,7 @@ class DomGenerator {
 
       case MFragment(children):
         var exprs:Array<Expr> = [ for (c in children) generateNode(c) ];
-        return macro @:pos(pos) pilot2.target.dom.DomFactory.f([ $a{exprs} ]);
+        return macro @:pos(pos) pilot.target.dom.DomFactory.f([ $a{exprs} ]);
 
       case MNone: null;
 

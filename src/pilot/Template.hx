@@ -1,4 +1,4 @@
-package pilot2;
+package pilot;
 
 class Template {
   
@@ -12,9 +12,9 @@ class Template {
     switch expr.expr {
       case EConst(CString(s)):
         try {
-          var ast = new pilot2.dsl.MarkupParser(s, info.file, info.min).parse();
-          return new pilot2.target.dom.DomGenerator(ast, expr.pos).generate();
-        } catch (e:pilot2.dsl.DslError) {
+          var ast = new pilot.dsl.MarkupParser(s, info.file, info.min).parse();
+          return new pilot.target.dom.DomGenerator(ast, expr.pos).generate();
+        } catch (e:pilot.dsl.DslError) {
           haxe.macro.Context.error(e.message, haxe.macro.Context.makePosition({
             min: e.pos.min,
             max: e.pos.max,
