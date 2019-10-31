@@ -7,6 +7,15 @@ import pilot.diff.*;
 
 class DomNodeType<Attrs:{}> implements NodeType<Attrs, Node> {
 
+  static final tags:Map<String, DomNodeType<Dynamic>> = [];
+
+  static public function get(name:String):DomNodeType<Dynamic> {
+    if (!tags.exists(name)) {
+      tags.set(name, new DomNodeType(name));
+    } 
+    return tags.get(name);
+  }
+
   final name:String;
   // todo: handle svg
 

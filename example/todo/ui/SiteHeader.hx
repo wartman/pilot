@@ -6,7 +6,7 @@ import todo.data.*;
 
 abstract SiteHeader(PureComponent) to PureComponent {
   
-  inline public function new(props:{
+  public function new(props:{
     store:Store
   }) {
     this = html(<header class="todo-header">

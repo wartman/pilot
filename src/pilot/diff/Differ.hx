@@ -4,7 +4,7 @@ import haxe.DynamicAccess;
 
 class Differ<Real:{}> {
 
-  static final empty = {};
+  static final EMPTY = {};
 
   inline public static function patchObject(
     oldProps:DynamicAccess<Dynamic>,
@@ -14,10 +14,10 @@ class Differ<Real:{}> {
     if (oldProps == newProps) return;
 
     var keys = (if (newProps == null) {
-      newProps = empty;
+      newProps = EMPTY;
       oldProps;
     } else if (oldProps == null) {
-      oldProps = empty;
+      oldProps = EMPTY;
       newProps;
     } else {
       var ret = newProps.copy();
@@ -62,12 +62,12 @@ class Differ<Real:{}> {
 
       case VWidget(type, attrs, _): switch previous.root {
         case null:
-          var w = type.create(attrs);
+          var w = type._pilot_create(attrs);
           w._pilot_init(this);
           result.root = RWidget(w);
           w._pilot_real;
         case RWidget(w):
-          type.update(w, attrs);
+          w._pilot_update(attrs);
           result.root = RWidget(w);
           w._pilot_real;
         default:
@@ -107,12 +107,12 @@ class Differ<Real:{}> {
 
       case VWidget(type, attrs, key): switch previous.resolve(type, key) {
         case null:
-          var w = type.create(attrs);
+          var w = type._pilot_create(attrs);
           w._pilot_init(this);
           context.addChild(parent, w._pilot_real);
           result.set(type, key, RWidget(w));
         case RWidget(w):
-          type.update(w, attrs);
+          w._pilot_update(attrs);
           result.set(type, key, RWidget(w));
         default:
 

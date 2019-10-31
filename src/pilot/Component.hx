@@ -25,6 +25,11 @@ using haxe.macro.ComplexTypeTools;
 class Component {
 
   public static function build() {
+    var cls = Context.getLocalClass().get();
+    var clsTp:TypePath = {
+      pack: cls.pack,
+      name: cls.name
+    };
     var fields = Context.getBuildFields();
     var newFields:Array<Field> = [];
     var props:Array<Field> = [];
@@ -45,7 +50,7 @@ class Component {
           newFields = newFields.concat((macro class {
             function $setName(value) {
               _pilot_props.$name = value;
-              _pilot_update();
+              _pilot_patch();
               return value;
             }
             function $getName() return _pilot_props.$name;
@@ -66,6 +71,10 @@ class Component {
     newFields = newFields.concat((macro class {
       
       @:noCompletion var _pilot_props:$propType;
+
+      public static function _pilot_create(props) {
+        return new $clsTp(props);
+      } 
       
       public function new(__props:$propType) {
         _pilot_props = cast {};

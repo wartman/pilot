@@ -24,9 +24,9 @@ class DomGenerator {
     var exprs:Array<Expr> = [ for (node in nodes)
       generateNode(node)
     ].filter(e -> e != null);
-    var eType = exprs.length == 1 ? exprs[0] : macro pilot.target.dom.DomFactory.f([ $a{exprs} ]);
+    var eType = exprs.length == 1 ? exprs[0] : macro VFragment([ $a{exprs} ]);
 
-    return macro @:pos(pos) ${eType};
+    return macro @:pos(pos) (${eType}:pilot.diff.VNode<js.html.Node>);
   }
 
   function generateNode(node:MarkupNode):Expr {
@@ -62,8 +62,8 @@ class DomGenerator {
         var children:Array<Expr> = children == null ? [] : [ for (c in children)
           generateNode(c)
         ].filter(e -> e != null);
-        macro @:pos(pos) pilot.target.dom.DomFactory.h(
-          $v{name}, 
+        macro @:pos(pos) VNative(
+          pilot.target.dom.DomNodeType.get($v{name}), 
           ${attrs}, 
           [ $a{children} ],
           ${key}  
@@ -119,9 +119,8 @@ class DomGenerator {
           if (!Context.unify(type, Context.getType('pilot.diff.Widget'))) {
             Context.error('Components must implement pilot.diff.Widget', pos);
           }
-          macro @:pos(pos) pilot.target.dom.DomFactory.w(
-            Type.getClassName($p{tp.pack.concat([ tp.name ])}),
-            $p{tp.pack.concat([ tp.name ])}.new,
+          macro @:pos(pos) VWidget(
+            $p{tp.pack.concat([ tp.name ])},
             ${attrs},
             ${key}
           );
@@ -131,18 +130,18 @@ class DomGenerator {
         var e = Context.parse(v, pos);
         var t = Context.typeof(e);
         if (Context.unify(t, Context.getType('pilot.Children'))) {
-          macro @:pos(pos) pilot.target.dom.DomFactory.f(${e});
+          macro @:pos(pos) VFragment(${e});
         } else {
-          macro @:pos(pos) pilot.target.dom.DomFactory.txt(${e});
+          macro @:pos(pos) VNative(pilot.target.dom.DomTextNodeType.inst, ${e}, []);
         }
 
       case MText(value):
-        macro @:pos(pos) pilot.target.dom.DomFactory.txt($v{value});
+        macro @:pos(pos) VNative(pilot.target.dom.DomTextNodeType.inst, $v{value}, []);
 
       case MFor(it, children):
         switch Context.parse(it, pos) {
           case macro $i{name} in $target:
-            macro @:pos(pos) pilot.target.dom.DomFactory.f([ for ($i{name} in ${target}) ${new DomGenerator(children, pos).generate()} ]);
+            macro @:pos(pos) VFragment([ for ($i{name} in ${target}) ${new DomGenerator(children, pos).generate()} ]);
           default:
             Context.error('Invalid loop iterator', pos);
             macro null;
@@ -158,7 +157,7 @@ class DomGenerator {
 
       case MFragment(children):
         var exprs:Array<Expr> = [ for (c in children) generateNode(c) ];
-        return macro @:pos(pos) pilot.target.dom.DomFactory.f([ $a{exprs} ]);
+        return macro @:pos(pos) VFragment([ $a{exprs} ]);
 
       case MNone: null;
 

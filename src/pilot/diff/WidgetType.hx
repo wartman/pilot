@@ -1,6 +1,5 @@
 package pilot.diff;
 
-interface WidgetType<Attrs, Real:{}> {
-  public function create(attrs:Attrs):Widget<Real>;
-  public function update(widget:Widget<Real>, attrs:Attrs):Void;
+typedef WidgetType<Attrs, Real:{}> = {
+  public function _pilot_create(attrs:Attrs):Widget<Real>;
 }

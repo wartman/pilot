@@ -6,6 +6,8 @@ import pilot.diff.NodeType;
 
 class DomTextNodeType implements NodeType<String, Node> {
   
+  static public final inst = new DomTextNodeType();
+
   public function new() {}
 
   public function create(attrs:String):Node {

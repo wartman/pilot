@@ -19,7 +19,12 @@ class Widget<Real:{}> {
     _pilot_real = _pilot_differ.patchRoot(null, render());
   }
 
-  function _pilot_update() {
+  function _pilot_update(props:Dynamic) {
+    _pilot_setProperties(props);
+    _pilot_patch();
+  }
+
+  function _pilot_patch() {
     if (_pilot_alive == null) {
       throw 'Widget cannot be updated as it was already disposed';
     }

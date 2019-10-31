@@ -46,7 +46,7 @@ class DomContext implements Context<Node> {
   function recycleNode(node:Node):RenderResult<Node> {
     var res = new RenderResult(RNative(node, {}), [], []);
     for (n in node.childNodes) {
-      res.add(DomFactory.getNodeType(n.nodeName), RNative(n, {}));
+      res.add(DomNodeType.get(n.nodeName), RNative(n, {}));
     }
     return res;
   }
