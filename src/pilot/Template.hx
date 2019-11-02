@@ -13,7 +13,10 @@ class Template {
       case EConst(CString(s)):
         try {
           var ast = new pilot.dsl.MarkupParser(s, info.file, info.min).parse();
-          return new pilot.target.dom.DomGenerator(ast, expr.pos).generate();
+          if (haxe.macro.Context.defined('js'))
+            return new pilot.target.dom.DomGenerator(ast, expr.pos).generate();
+          else 
+            return new pilot.target.sys.SysGenerator(ast, expr.pos).generate();
         } catch (e:pilot.dsl.DslError) {
           haxe.macro.Context.error(e.message, haxe.macro.Context.makePosition({
             min: e.pos.min,

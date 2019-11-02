@@ -1,4 +1,3 @@
-import js.Browser;
 import pilot.Template.html;
 import todo.data.Store;
 import todo.ui.App;
@@ -6,11 +5,19 @@ import todo.ui.App;
 class TodoApp {
 
   static function main() {
-    var store = new Store(
-      store -> html(<App store={store} />),
-      Browser.document.getElementById('root')
-    );
+    #if js 
+      var root = js.Browser.document.getElementById('root');
+    #else
+      var root = new pilot.Node('div');
+      root.setAttribute('id', 'root');
+    #end
+
+    var store = new Store(store -> html(<App store={store} />), root);
     store.update();
+
+    #if !js
+      Sys.print(root.toString());
+    #end
   }
 
 }

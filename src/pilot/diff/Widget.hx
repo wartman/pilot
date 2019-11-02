@@ -1,13 +1,13 @@
 package pilot.diff;
 
-@:allow(pilot.diff.Differ, pilot.diff.WidgetType)
+@:allow(pilot.diff.Differ)
 class Widget<Real:{}> {
   
-  var _pilot_real:Real;
-  var _pilot_alive:Bool = false;
-  var _pilot_differ:Differ<Real>;
+  @:noCompletion var _pilot_real:Real;
+  @:noCompletion var _pilot_alive:Bool = false;
+  @:noCompletion var _pilot_differ:Differ<Real>;
 
-  function _pilot_init(differ:Differ<Real>) {
+  @:noCompletion final function _pilot_init(differ:Differ<Real>) {
     if (_pilot_alive == null) {
       throw 'Widget cannot be used as it was already disposed';
     }
@@ -19,12 +19,12 @@ class Widget<Real:{}> {
     _pilot_real = _pilot_differ.patchRoot(null, render());
   }
 
-  function _pilot_update(props:Dynamic) {
+  @:noCompletion final function _pilot_update(props:Dynamic) {
     _pilot_setProperties(props);
     _pilot_patch();
   }
 
-  function _pilot_patch() {
+  @:noCompletion final function _pilot_patch() {
     if (_pilot_alive == null) {
       throw 'Widget cannot be updated as it was already disposed';
     }
@@ -34,7 +34,7 @@ class Widget<Real:{}> {
     _pilot_differ.patchRoot(_pilot_real, render());
   }
 
-  function _pilot_setProperties(props:Dynamic) {
+  @:noCompletion function _pilot_setProperties(props:Dynamic) {
     // noop
   }
 

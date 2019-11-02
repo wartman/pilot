@@ -6,14 +6,14 @@
 
 -main TodoApp
 
-# --each
+--each
 
 # -D pilot-output=app.css
 -D js-es=6
 -js dist/assets/app.js
 
-# --next
+--next
 
-# -D pilot-skip
-# -D real-position
-# -php dist/php
+-D pilot-skip
+-D real-position
+-php dist/php

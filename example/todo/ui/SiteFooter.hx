@@ -43,10 +43,12 @@ abstract SiteFooter(PureComponent) to PureComponent {
     }
   }
 
-  static function setFilter(store:Store, e:js.html.Event, filter:VisibleTodos) {
-    e.preventDefault();
-    store.setFilter(filter);
-  }
+  #if js
+    static function setFilter(store:Store, e:js.html.Event, filter:VisibleTodos) {
+      e.preventDefault();
+      store.setFilter(filter);
+    }
+  #end
 
 }
 

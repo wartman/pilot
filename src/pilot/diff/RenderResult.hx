@@ -52,6 +52,7 @@ abstract RenderResult<Real:{}>(RenderResultImpl<Real>) from RenderResultImpl<Rea
     if (nodes == null) return null;
     if (key != null) {
       var n = this.keyed.get(key);
+      this.keyed.remove(key);
       nodes.remove(n);
       this.childList.remove(n);
       return n;

@@ -2,17 +2,10 @@ package pilot;
 
 #if !macro
 
-import js.html.Node;
 import pilot.diff.Widget;
 
 @:autoBuild(pilot.Component.build())
-class Component extends 
-  #if (js && !nodejs)
-    Widget<Node>
-  #else
-    Widget<String>
-  #end
-{ }
+class Component extends Widget<Node>{ }
 
 #else
 

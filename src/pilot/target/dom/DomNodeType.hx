@@ -33,7 +33,7 @@ class DomNodeType<Attrs:{}> implements NodeType<Attrs, Node> {
     Differ.patchObject(oldAttrs, newAttrs, setAttribute.bind(cast node));
   }
 
-  public function setAttribute(el:Element, key:String, oldValue:Dynamic, newValue:Dynamic) {
+  function setAttribute(el:Element, key:String, oldValue:Dynamic, newValue:Dynamic) {
     switch key {
       case 'value' | 'selected' | 'checked':
         js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
