@@ -2,11 +2,7 @@ package todo.data;
 
 import pilot.PureComponent;
 import pilot.Renderer;
-#if js
-  import js.html.Node;  
-#else
-  import pilot.target.sys.Node;
-#end
+import pilot.Node;
 
 class Store {
 

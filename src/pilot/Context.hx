@@ -1,9 +1,9 @@
-package pilot.target.dom;
+package pilot;
 
-import js.html.Node;
-import pilot.diff.*;
+import pilot.diff.RenderResult;
+import pilot.diff.Context as ContextBase;
 
-class DomContext implements Context<Node> {
+class Context implements ContextBase<Node> {
   
   public function new() {}
 
@@ -12,7 +12,11 @@ class DomContext implements Context<Node> {
   }
 
   public function getPreviousRender(node:Node):RenderResult<Node> {
-    var res:RenderResult<Node> = untyped node._pilot_result;
+    #if js
+      var res:RenderResult<Node> = untyped node._pilot_result;
+    #else
+      var res = node.result;
+    #end
     if (res == null) {
       res = recycleNode(node);
       setPreviousRender(node, res);
@@ -22,9 +26,13 @@ class DomContext implements Context<Node> {
 
   public function removePreviousRender(node:Node, recursive:Bool = false) {
     if (recursive) for (n in node.childNodes) removePreviousRender(n, true);
-    var res:RenderResult<Node> = untyped node._pilot_result;
+    var res:RenderResult<Node> = #if js untyped node._pilot_result #else node.result #end;
     if (res != null) res.dispose();
-    js.Syntax.code('delete {0}._pilot_result', node);
+    #if js
+      js.Syntax.code('delete {0}._pilot_result', node);
+    #else
+      node.result = null;
+    #end
   }
 
   public function getChildren(node:Node):Array<Node> {
@@ -46,7 +54,7 @@ class DomContext implements Context<Node> {
   function recycleNode(node:Node):RenderResult<Node> {
     var res = new RenderResult(RNative(node, {}), [], []);
     for (n in node.childNodes) {
-      res.add(DomNodeType.get(n.nodeName), RNative(n, {}));
+      res.add(NodeType.get(n.nodeName), RNative(n, {}));
     }
     return res;
   }

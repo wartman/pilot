@@ -1,16 +1,20 @@
-package pilot.target.sys;
+package pilot;
 
 import pilot.diff.NodeType;
 
-class SysTextNodeType implements NodeType<String, Node> {
+class TextNodeType implements NodeType<String, Node> {
   
-  static public final inst = new SysTextNodeType();
+  static public final inst = new TextNodeType();
 
   public function new() {}
 
   public function create(attrs:String):Node {
-    var node = new Node(Node.TEXT);
-    node.textContent = attrs;
+    #if js
+      var node = js.Browser.document.createTextNode(attrs);
+    #else
+      var node = new Node(Node.TEXT);
+      node.textContent = attrs;
+    #end
     return node;
   }
 

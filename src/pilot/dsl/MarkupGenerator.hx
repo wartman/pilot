@@ -132,8 +132,10 @@ class MarkupGenerator {
   }
 
   function generateNodeType(name:String, pos:Position):Expr {
-    Context.error('Cannot generate NodeType: invalid generator', pos);
-    return macro null;
+    return switch name {
+      case 'text': macro @:pos(pos) pilot.TextNodeType.inst;
+      default: macro @:pos(pos) pilot.NodeType.get($v{name});
+    }
   }
 
   function generateChildren(children:Array<MarkupNode>, pos:Position):Expr {
@@ -162,6 +164,7 @@ class MarkupGenerator {
   }
 
   function allowKey(key:String) {
+    if (!Context.defined('js')) return !key.startsWith('on');
     return true;
   }
 
