@@ -1,27 +1,11 @@
 package pilot;
 
-import pilot.diff.NodeType;
+import pilot.core.Wire;
 
-class TextNodeType implements NodeType<String, Node> {
+class TextNodeType {
   
-  static public final inst = new TextNodeType();
-
-  public function new() {}
-
-  public function create(attrs:String):Node {
-    #if js
-      var node = js.Browser.document.createTextNode(attrs);
-    #else
-      var node = new Node(Node.TEXT);
-      node.textContent = attrs;
-    #end
-    return node;
-  }
-
-  public function update(node:Node, oldAttrs:String, newAttrs:String) {
-    if (oldAttrs != newAttrs) {
-      node.textContent = newAttrs;
-    }
+  public static function _pilot_create(attrs:String):Wire<String, RealNode> {
+    return new TextNode(attrs);
   }
 
 }

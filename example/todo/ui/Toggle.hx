@@ -1,7 +1,7 @@
 package todo.ui;
 
 import pilot.PureComponent;
-import pilot.Template.html;
+import Pilot.html;
 
 abstract Toggle(PureComponent) to PureComponent {
 

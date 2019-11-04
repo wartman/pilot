@@ -1,5 +1,5 @@
 package pilot;
 
-import pilot.diff.VNode;
+import pilot.core.VNode;
 
-typedef Children = Array<VNode<Node>>;
+typedef Children = Array<VNode<RealNode>>;

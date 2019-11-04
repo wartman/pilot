@@ -1,7 +1,7 @@
 package todo.ui;
 
+import pilot.RealNode;
 import pilot.Component;
-import pilot.Template.html;
 
 class TodoInput extends Component {
   
@@ -9,23 +9,53 @@ class TodoInput extends Component {
   @:attribute var placeholder:String = 'What needs doing?';
   @:attribute var value:String;
   @:attribute var save:(value:String)->Void;
+  @:attribute var requestClose:()->Void = null;
 
-  override function render() return html(
-    <input 
-      class={inputClass}
-      value={value}
-      placeholder={placeholder}
-      onKeyDown={e -> {
-        var input:js.html.InputElement = cast e.target;
-        var keyboardEvent:js.html.KeyboardEvent = cast e;
-        if (keyboardEvent.key == 'Enter') {
-          save(input.value);
-          input.value = '';
-          input.blur();
+  override function render() {
+    return html(
+      <input 
+        class={inputClass}
+        value={value}
+        placeholder={placeholder}
+        onClick={e -> e.stopPropagation()}
+        onKeyDown={e -> {
+          var input:js.html.InputElement = cast e.target;
+          var keyboardEvent:js.html.KeyboardEvent = cast e;
+          if (keyboardEvent.key == 'Enter') {
+            save(input.value);
+            input.value = '';
+            input.blur();
+          }
+        }}
+      />
+    );
+  }
+
+  #if js
+
+    var handler:(e:js.html.Event)->Void;
+
+    // todo: this should be called only when the element is mounted
+    //       in the Dom. requestAnimationFrame is a hack.
+    override function componentDidMount(node:RealNode) {
+      js.Browser.window.requestAnimationFrame(_ -> {
+        var el:js.html.InputElement = cast node;
+        el.focus();
+      });
+      if (requestClose != null) {
+        handler = function (_) {
+          js.Browser.window.removeEventListener('click', handler);
+          requestClose();
         }
-      }}
-    />
-  );
+        js.Browser.window.addEventListener('click', handler);
+      }
+    }
+    
+    override function componentWillUnmount(el:RealNode) {
+      js.Browser.window.removeEventListener('click', handler);
+    }
+  
+  #end
 
 }
 

@@ -24,7 +24,7 @@ class MarkupGenerator {
     ].filter(e -> e != null);
     var eType = exprs.length == 1 ? exprs[0] : macro VFragment([ $a{exprs} ]);
 
-    return macro @:pos(pos) (${eType}:pilot.diff.VNode<pilot.Node>);
+    return macro @:pos(pos) (${eType}:pilot.core.VNode<pilot.RealNode>);
   }
 
   function generateNode(node:MarkupNode):Expr {
@@ -79,13 +79,13 @@ class MarkupGenerator {
           pos: pos
         };
 
-        if (Context.unify(type, Context.getType('pilot.diff.VNode'))) {
+        if (Context.unify(type, Context.getType('pilot.core.VNode'))) {
           macro @:pos(pos) new $tp($attrs);
         } else {
-          if (!Context.unify(type, Context.getType('pilot.diff.Widget'))) {
-            Context.error('Components must implement pilot.diff.Widget', pos);
+          if (!Context.unify(type, Context.getType('pilot.core.Component'))) {
+            Context.error('Components must implement pilot.core.Component', pos);
           }
-          macro @:pos(pos) VWidget(
+          macro @:pos(pos) VComponent(
             $p{tp.pack.concat([ tp.name ])},
             ${attrs},
             ${key}
@@ -133,7 +133,7 @@ class MarkupGenerator {
 
   function generateNodeType(name:String, pos:Position):Expr {
     return switch name {
-      case 'text': macro @:pos(pos) pilot.TextNodeType.inst;
+      case 'text': macro @:pos(pos) pilot.TextNodeType;
       default: macro @:pos(pos) pilot.NodeType.get($v{name});
     }
   }
@@ -164,8 +164,8 @@ class MarkupGenerator {
   }
 
   function allowKey(key:String) {
-    if (!Context.defined('js')) return !key.startsWith('on');
-    return true;
+    if (Context.defined('js') && !Context.defined('nodejs')) return true;
+    return !key.startsWith('on');
   }
 
   function extractKey(attrs:Array<MarkupAttribute>) {

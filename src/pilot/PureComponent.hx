@@ -1,5 +1,5 @@
 package pilot;
 
-import pilot.diff.VNode;
+import pilot.core.VNode;
 
-typedef PureComponent = VNode<Node>;
+typedef PureComponent = VNode<RealNode>;

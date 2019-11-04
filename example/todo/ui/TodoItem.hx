@@ -1,7 +1,6 @@
 package todo.ui;
 
 import pilot.Component;
-import pilot.Template.html;
 import todo.data.*;
 
 class TodoItem extends Component {
@@ -15,6 +14,7 @@ class TodoItem extends Component {
       <if {editing}>
         <TodoInput 
           value={todo.content}
+          requestClose={ () -> editing = false }
           save={value -> {
             todo.content = value;
             editing = false;

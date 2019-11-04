@@ -1,12 +1,5 @@
-package pilot;
+package pilot.sys;
 
-#if js
-
-typedef Node = js.html.Node;
-
-#else
-  
-import pilot.diff.RenderResult;
 import haxe.DynamicAccess;
 
 using StringTools;
@@ -15,11 +8,10 @@ class Node {
 
   public static final TEXT = '__text__';
   
-  public var result:RenderResult<Node> = null;
   public final nodeName:String;
   public final childNodes:Array<Node> = [];
   public var textContent:String;
-  var parentNode:Node;
+  public var parentNode:Node;
   var attributes:DynamicAccess<Dynamic> = {};
 
   public function new(nodeName) {
@@ -78,5 +70,3 @@ class Node {
   }
 
 }
-
-#end

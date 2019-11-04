@@ -1,8 +1,9 @@
 package todo.data;
 
 import pilot.PureComponent;
-import pilot.Renderer;
-import pilot.Node;
+// import pilot.Renderer;
+// import pilot.Node;
+import pilot.Root;
 
 class Store {
 
@@ -38,17 +39,20 @@ class Store {
   public var remainingTodos(get, never):Int;
   inline function get_remainingTodos() return todos.filter(todo -> !todo.complete).length;
 
-  final node:Node;
+  // final node:Node;
+  final root:Root;
 
   public function new(build, node) {
-    this.node = node;
+    // this.node = node;
+    this.root = new Root(node);
     this.build = build;
   }
   
   public function update() {
     _visibleTodos = null;
     _allSelected = null;
-    Renderer.mount(node, build(this));
+    root.update(build(this));
+    // Renderer.mount(node, build(this));
   }
 
   public function getTodos() {

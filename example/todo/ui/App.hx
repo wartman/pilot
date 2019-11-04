@@ -1,7 +1,6 @@
 package todo.ui;
 
 import pilot.PureComponent;
-import pilot.Template.html;
 import todo.data.Store;
 
 abstract App(PureComponent) to PureComponent {
@@ -9,7 +8,7 @@ abstract App(PureComponent) to PureComponent {
   public function new(props:{
     store:Store
   }) {
-    this = html(<div id="App">
+    this = Pilot.html(<div id="App">
       <SiteHeader store={props.store} />
       <if {props.store.getTodos().length > 0}>
         <TodoList store={props.store} />

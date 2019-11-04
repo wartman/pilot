@@ -1,6 +1,6 @@
 package todo.ui;
 
-import pilot.Template.html;
+import Pilot.html;
 import pilot.PureComponent;
 import todo.data.Store;
 
