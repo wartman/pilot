@@ -19,6 +19,15 @@ class MarkupGenerator {
         case Code(value):
           Css.parse(macro @:pos(pos) $v{value});
       }
+    },
+    'style-embed' => (attr, pos) -> {
+      field: attr.name,
+      expr: switch attr.value.value {
+        case Raw(_):
+          throw new DslError('@style does not accept raw values', attr.pos);
+        case Code(value):
+          Css.parse(macro @:pos(pos) $v{value}, true);
+      }
     }
   ];
 

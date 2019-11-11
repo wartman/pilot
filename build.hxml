@@ -8,7 +8,7 @@
 
 --each
 
-# -D pilot-output=app.css
+-D pilot-output=app.css
 -D js-es=6
 -js dist/assets/app.js
 

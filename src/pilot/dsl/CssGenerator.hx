@@ -14,6 +14,7 @@ class CssGenerator {
   final root:String;
   final rules:Array<CssExpr>;
   final pos:Position;
+  var indentSize:Int = 0;
   var decls:Array<String> = [];
 
   public function new(root, rules, pos) {
@@ -54,8 +55,10 @@ class CssGenerator {
     }
 
     if (props.length > 0) {
-      var p = props.map(p -> '  $p').join('\n');
-      var decl = '${sel} {\n${p}\n}';
+      indent();
+      var p = props.map(p -> '${getIndent()}$p').join('\n');
+      outdent();
+      var decl = '${getIndent()}${sel} {\n${p}\n${getIndent()}}';
       decls.unshift(decl);
     }
 
@@ -144,6 +147,7 @@ class CssGenerator {
     
     query += [ for (c in conditions) generateMediaQueryCondition(c) ].join(', ');
     
+    indent();
     for (prop in properties) switch prop.expr {
       case CPropety(name, value):
         props.push(generateProperty(name, value));
@@ -158,12 +162,15 @@ class CssGenerator {
 
     if (props.length > 0) {
       if (sel == null) {
-        throw new DslError('Media queries must be nested if root properties are used', properties[0].pos);
+        throw new DslError('Media queries must have a parent selector if properties are used', properties[0].pos);
       }
-      var p = props.map(p -> '    $p').join('\n');
-      var decl = '${sel} {\n${p}\n}';
+      indent();
+      var p = props.map(p -> '${getIndent()}$p').join('\n');
+      outdent();
+      var decl = '${getIndent()}${sel} {\n${p}\n${getIndent()}}';
       decls.unshift(decl);
     }
+    outdent();
 
     return decls.length > 0 
       ? query + ' {\n' + decls.join('\n') + '\n}' 
@@ -314,85 +321,22 @@ class CssGenerator {
     }
   }
 
+  function indent() {
+    indentSize++;
+  }
+
+  function outdent() {
+    if (indentSize > 0) indentSize--;
+  }
+
+  function getIndent() {
+    var out = '';
+    for (i in 0...indentSize) {
+      out += '  ';
+    }
+    return out;
+  }
+
 }
 
 #end
-
-// class CssGenerator {
-  
-//   final root:String;
-//   final rules:Array<CssExpr>;
-//   final pos:Position;
-//   var decls:Array<String> = [];
-
-//   public function new(root, rules, pos) {
-//     this.root = root;
-//     this.rules = rules;
-//     this.pos = pos;
-//   }
-
-//   public function generate():String {
-//     var rootProps = [];
-//     for (rule in rules) switch rule.expr {
-//       case CRule(selector, properties):
-//         generateRule(selector, properties, root);
-//       case CPropety(name, value):
-//         rootProps.push(rule);
-//       case CValue(value): trace(value);
-//     }
-//     if (rootProps.length > 0) {
-//       generateRule(SRoot, rootProps, root);
-//     }
-//     return decls.join('');
-//   }
-
-//   // this is bad
-//   // the prefix stuff does not really work
-//   function generateSelector(selector:CssSelector, ?parent:String):String {
-//     if (selector == null) return '';
-//     var prefix = '';
-//     if (parent != null) prefix = '$parent ';
-//     return switch selector {
-//       case SRoot: root;
-//       case SClass(name): '$prefix.${getValue(name)}';
-//       case SId(name): '$prefix#${getValue(name)}';
-//       case SAt(type): '// TODO';
-//       case SAttr(key, value): '$prefix[${key} = "${getValue(value)}"]';
-//       case SNode(name): prefix + getValue(name);
-//       case SPath(a, b): prefix + generateSelector(a, null) + generateSelector(b, null);
-//       case SChild(up, child): prefix + generateSelector(up, null) + ' ' + generateSelector(child, null);
-//       case SAnd(a, b): generateSelector(a, parent) + ', ' + generateSelector(b, parent);
-//       case SModifier(modifier, target): switch modifier {
-//         // todo: this is BAD and should be replaced with some kind of BinOp and UnOp.
-//         //       also MPlaceholder does not belong with the rest.
-//         case MAdd: ' + ${generateSelector(target, null)}';
-//         case MPlaceholder: '${parent}${generateSelector(target, null)}';
-//         case MPseudo(value): '${generateSelector(target, parent)}:${getValue(value)}';
-//       }
-//     }
-//   }
-
-//   function getValue(value:CssValue) {
-//     return switch value.value {
-//       case Raw(v): v;
-//       case Code(v): '// todo';
-//     }
-//   }
-
-//   function generateRule(selector:CssSelector, properties:Array<CssExpr>, ?parent:String) {
-//     var sel = generateSelector(selector, parent);
-//     var props:Array<String> = [];
-//     for (p in properties) switch p.expr {
-//       case CPropety(name, value): 
-//         props.push('${name}: ${getValue(value)};');
-//       case CRule(selector, properties):
-//         generateRule(selector, properties, sel);
-//       default: // todo
-//     }
-//     if (props.length > 0) {
-//       decls.push('${sel} {${props.join('')}}');
-//     }
-//   }
-
-// }
-// #end
