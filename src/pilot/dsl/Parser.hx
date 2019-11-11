@@ -1,5 +1,7 @@
 package pilot.dsl;
 
+import haxe.ds.Option;
+
 class Parser<T> {
   
   final source:String;
@@ -27,7 +29,7 @@ class Parser<T> {
   }
 
   function whitespace() {
-    while (isWhitespace(peek()) && !isAtEnd()) advance();
+    readWhile(isWhitespace);
   }
   
   function isWhitespace(c:String) {
@@ -52,22 +54,112 @@ class Parser<T> {
     return isAlpha(c) || isDigit(c);
   }
 
+  function string(delimiter:String) {
+    var out = '';
+    var start = position;
+
+    while (!isAtEnd() && !match(delimiter)) {
+      out += advance();
+      if (previous() == '\\' && !isAtEnd()) {
+        out += '\\${advance()}';
+      }
+    }
+
+    if (isAtEnd()) 
+      throw error('Unterminated string', start, position);
+    
+    return out;
+  }
+
+  function ident() {
+    return readWhile(isAllowedInIdentifier);
+  }
+
+  function isAllowedInIdentifier(s:String) {
+    return isAlphaNumeric(s) || checkAny([ '-', '_' ]);
+  }
+
+  function parseCode(braces:Int):String {
+    var out:String = '';
+    if (match('{')) braces++;
+    
+    if (braces >= 1) {
+      while (!isAtEnd() && braces != 0) {
+        var add = advance();
+        if (add == '{') braces++;
+        if (add == '}') braces--;
+        if (braces == 0) break;
+        out += add;
+      }
+    } else {
+      out = ident();
+    }
+
+    return out;
+  }
+
+  function attempt<T>(cb:()->Option<T>):Option<T> {
+    var start = position;
+    var o = try cb() catch (e:DslError) None;
+    return switch o {
+      case Some(v): 
+        Some(v);
+      case None: 
+        position = start;
+        None;
+    }
+  }
+
+  function readWhile(compare:(a:String)->Bool):String {
+    var out = [ while (!isAtEnd() && compare(peek())) advance() ];
+    return out.join('');
+  }
+
   function ignore(names:Array<String>) {
     for (name in names) match(name);
   }
 
+  /**
+    Check a value AND consume it.
+  **/
   function match(value:String) {
-    var check = source.substr(position, value.length);
-    if (check == value) {
+    if (check(value)) {
       position = position + value.length;
       return true;
     }
     return false;
   }
 
+  /**
+    Check against a number of values value AND consume it.
+  **/
+  function matchAny(values:Array<String>) {
+    for (v in values) {
+      if (match(v)) return true;
+    }
+    return false;
+  }
+
+  /**
+    Check if the value is coming up next (and do NOT consume it).
+  **/
+  function check(value:String) {
+    var found = source.substr(position, value.length);
+    return found == value;
+  }
+
+  /**
+    Check if any of the values are coming up next (and do NOT consume it).
+  **/
+  function checkAny(values:Array<String>) {
+    for (v in values) {
+      if (check(v)) return true;
+    }
+    return false;
+  }
+
   function consume(value:String) {
-    var start = position;
-    if (!match(value)) error('Expected ${value}', start, position);
+    if (!match(value)) throw expected(value);
   }
 
   function peek() {
@@ -88,10 +180,22 @@ class Parser<T> {
   }
 
   function error(msg:String, min:Int, max:Int) {
-    throw new DslError(msg, getPos(min, max));
+    return new DslError(msg, getPos(min, max));
   }
 
-  function getPos(min:Int, max:Int):{ min:Int, max:Int } {
+  function errorAt(msg:String, value:String) {
+    return error(msg, position - value.length, position);
+  }
+
+  function reject(s:String) {
+    return errorAt('Unexpected [${s}]', s);
+  }
+
+  function expected(s:String) {
+    return error('Expected [${s}]', position, position + 1);
+  }
+
+  function getPos(min:Int, max:Int):DslPosition {
     return {
       min: filePos + min,
       max: filePos + max

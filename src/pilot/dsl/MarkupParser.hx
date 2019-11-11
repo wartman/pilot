@@ -27,7 +27,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       case '<' if (match('for')): parseFor();
       case '<' if (match('if')): parseIf();
       case '<' if (match('/')): 
-        throw error('Unexpected close tag', position - 1, position + 1);
+        throw errorAt('Unexpected close tag', '</');
       case '<': parseNode();
       case '$': parseCodeBlock(0);
       case '{': parseCodeBlock(1);
@@ -44,7 +44,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       case '{': parseCode(1);
       case '$': parseCode(0);
       default:
-        throw error('<for> requires an iterator', position - 1, position);
+        throw errorAt('<for> requires an iterator', previous());
     }
 
     whitespace();
@@ -147,32 +147,37 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     
     whitespace();
 
-    while (!(peek() == '>') && !isAtEnd()) {
+    while (!check('>') && !isAtEnd()) {
       if (match('//')) {
         ignoreLine();
         whitespace();
         continue;
       }
 
-      if (peek() == '/') {
+      if (check('/')) {
         break;
       }
 
       var attrStart = position;
       var key:String = ident();
+      if (key.length <= 0) {
+        throw errorAt('Expected an identifier', peek());
+      }
+      var macroName = if (match('@')) ident() else null;
 
-      // whitespace();
-      // if (match('.')) key = '.';
-      // key += ident();
-      // whitespace();
       consume('=');
       whitespace();
-      var value = parseValue();
+      var valueStart = position;
+      var value = {
+        value: parseValue(),
+        pos: getPos(valueStart, position)
+      };
       whitespace();
 
       attrs.push({
         name: key,
         value: value,
+        macroName: macroName,
         pos: getPos(attrStart, position)
       });
     }
@@ -216,17 +221,8 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
 
   function parseText(init:String):MarkupNode {
     var start = position;
-    var out = init;
-
-    while (
-      !isAtEnd() 
-      // todo: allow escapes
-      && peek() != '<'
-      && peek() != '$'
-      && peek() != '{'
-    ) {
-      out += advance();
-    }
+    // todo: allow escapes
+    var out = init + readWhile(_ -> !checkAny([ '<', '$', '{' ]));
 
     if (out.trim().length == 0) {
       return {
@@ -258,60 +254,16 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       case '"': Raw(string('"'));
       case "'": Raw(string("'"));
       default: 
-        if (peek() == '{') {
+        if (check('{')) {
           Code(parseCode(0));
         } else {
-          throw error('Expected a string, `$${...}` or `{...}`', position, position);
+          throw errorAt('Expected a string, `$${...}` or `{...}`', peek());
         }
     }
   }
 
-  function string(delimiter:String) {
-    var out = '';
-    var start = position;
-
-    while (!isAtEnd() && !match(delimiter)) {
-      out += advance();
-      if (previous() == '\\' && !isAtEnd()) {
-        out += '\\${advance()}';
-      }
-    }
-
-    if (isAtEnd()) 
-      throw error('Unterminated string', start, position);
-    
-    return out;
-  }
-
-  function parseCode(braces:Int):String {
-    var out:String = '';
-    if (match('{')) braces++;
-    
-    if (braces >= 1) {
-      while (!isAtEnd() && braces != 0) {
-        var add = advance();
-        if (add == '{') braces++;
-        if (add == '}') braces--;
-        if (braces == 0) break;
-        out += add;
-      }
-    } else {
-      out = ident();
-    }
-
-    return out;
-  }
-
-  function ident() {
-    return [ 
-      while ((isAlphaNumeric(peek()) || peek() == '-') && !isAtEnd()) advance() 
-    ].join('');
-  }
-
   function path() {
-    return [ 
-      while ((isAlphaNumeric(peek()) || peek() == '.' || peek() == '-') && !isAtEnd()) advance() 
-    ].join('');
+    return readWhile(s -> isAlphaNumeric(s) || checkAny([ '.', '-', '_' ]));
   }
 
 }

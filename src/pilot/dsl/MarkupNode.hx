@@ -1,14 +1,13 @@
 package pilot.dsl;
 
-typedef MarkupPosition = { 
-  min:Int,
-  max:Int 
-}
-
 typedef MarkupAttribute = { 
   name:String,
-  value:MarkupAttributeValue, 
-  pos:MarkupPosition 
+  value:{
+    value:MarkupAttributeValue,
+    pos:DslPosition
+  },
+  ?macroName:String,
+  pos:DslPosition
 }
 
 enum MarkupAttributeValue {
@@ -40,5 +39,5 @@ enum MarkupNodeDef {
 
 typedef MarkupNode = {
   node:MarkupNodeDef,
-  pos:MarkupPosition
+  pos:DslPosition
 }

@@ -2,7 +2,7 @@ package pilot.core;
 
 class NodeTypeRegistry<Real:{}> implements Registry<Key, Wire<Dynamic, Real>> {
 
-  var keyed:KeyRegistry<Wire<Dynamic, Real>>;
+  var keyed:KeyRegistry<Real>;
   var unkeyed:Array<Wire<Dynamic, Real>>;
 
   public function new() {}
@@ -28,5 +28,11 @@ class NodeTypeRegistry<Real:{}> implements Registry<Key, Wire<Dynamic, Real>> {
   public function exists(key:Key):Bool {
     return if (keyed == null) false else keyed.exists(key);
   }
+
+  // public function dispose() {
+  //   for (wire in unkeyed) wire._pilot_dispose();
+  //   unkeyed = [];
+  //   keyed.dispose();
+  // }
 
 }

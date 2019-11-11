@@ -10,7 +10,18 @@ abstract SiteHeader(PureComponent) to PureComponent {
     store:Store
   }) {
     this = html(<header class="todo-header">
-      <h1>Todos</h1>
+      <h1 class@style={
+        position: absolute;
+        top: -155px;
+        width: 100%;
+        font-size: 100px;
+        font-weight: 100;
+        text-align: center;
+        color: rgba(175, 47, 47, 0.15);
+        -webkit-text-rendering: optimizeLegibility;
+        -moz-text-rendering: optimizeLegibility;
+        text-rendering: optimizeLegibility;
+      }>Todos</h1>
       <TodoInput
         inputClass="new-todo"
         value=""

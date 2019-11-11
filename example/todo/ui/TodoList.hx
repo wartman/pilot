@@ -9,8 +9,12 @@ abstract TodoList(PureComponent) to PureComponent {
   public function new(props:{
     store:Store
   }) {
-    this = html(<div>
-      <Toggle 
+    this = html(<div class@style={
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid #e6e6e6;
+    }>
+      <ToggleAll
         checked={props.store.allSelected}
         id="toggle-all"
         onClick={e -> {
@@ -21,7 +25,11 @@ abstract TodoList(PureComponent) to PureComponent {
         }}
       />
       <label for="toggle-all">Toggle All</label>
-      <ul>
+      <ul class@style={
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }>
         <for {todo in props.store.visibleTodos}>
           <TodoItem todo={todo} store={props.store} />
         </for>

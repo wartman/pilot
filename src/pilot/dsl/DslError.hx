@@ -3,9 +3,9 @@ package pilot.dsl;
 class DslError {
   
   public final message:String;
-  public final pos:{ min:Int, max:Int };
+  public final pos:DslPosition;
 
-  public function new(message:String, pos:{ min:Int, max:Int }) {
+  public function new(message, pos) {
     this.message = message;
     this.pos = pos;
   }

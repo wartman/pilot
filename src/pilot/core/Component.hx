@@ -134,6 +134,10 @@ using haxe.macro.ComplexTypeTools;
 
 class Component {
 
+  static final initMeta = [ ':init' ];
+  static final attrsMeta = [ ':attr', ':attribute' ];
+  static final styleMeta = [ ':style' ];
+
   // this is weird
   static function html(_, e) {
     return pilot.dsl.Markup.parse(e);
@@ -148,20 +152,52 @@ class Component {
     var fields = Context.getBuildFields();
     var newFields:Array<Field> = [];
     var props:Array<Field> = [];
-    var initializers:Array<Expr> = [];
+    var initializers:Array<ObjectField> = [];
     
     for (f in fields) switch (f.kind) {
-      case FVar(t, e):
-        if (f.meta.exists(m -> m.name == ':attribute' || m.name == ':attr')) {
-          f.kind = FProp('get', 'set', t, null);
-          var name = f.name;
-          var getName = 'get_${name}';
-          var setName = 'set_${name}';
-          if (e != null) {
-            initializers.push(macro _pilot_props.$name = __props.$name != null ? __props.$name : $e);
-          } else {
-            initializers.push(macro _pilot_props.$name = __props.$name);
+      case FVar(t, e) if (f.meta.exists(m -> attrsMeta.has(m.name))):
+
+        if (f.meta.filter(m -> attrsMeta.has(m.name)).length > 1) {
+          Context.error('More than one `@:attribute` is not allowed per var', f.pos);
+        }
+
+        var name = f.name;
+        var params = f.meta.find(m -> attrsMeta.has(m.name)).params;
+        var getName = 'get_${name}';
+        var setName = 'set_${name}';
+        var isState = false;
+
+        for (param in params) switch param {
+          case macro mutable = ${e}: switch e {
+            case macro false: isState = false;
+            case macro true: isState = true;
+            default: 
+              Context.error('Attribute option `mutable` must be Bool', param.pos);
           }
+          default:
+            Context.error('Invalid attribute option', param.pos);
+        }
+        
+        f.kind = isState 
+          ? FProp('get', 'set', t, null)
+          : FProp('get', 'never', t, null);
+
+        if (e != null) {
+          initializers.push({
+            field: name,
+            expr: macro __props.$name != null ? __props.$name : $e
+          });
+        } else {
+          initializers.push({
+            field: name,
+            expr: macro __props.$name
+          });
+        }
+        newFields = newFields.concat((macro class {
+          function $getName() return _pilot_props.$name;
+        }).fields);
+
+        if (isState) {
           newFields = newFields.concat((macro class {
             function $setName(value) {
               var props = Reflect.copy(_pilot_props);
@@ -169,24 +205,53 @@ class Component {
               _pilot_update(props);
               return value;
             }
-            function $getName() return _pilot_props.$name;
           }).fields);
-          props.push({
-            name: name,
-            kind: FVar(t, null),
-            access: [ APublic ],
-            meta: e != null ? [ { name: ':optional', pos: f.pos } ] : [],
+        }
+
+        props.push({
+          name: name,
+          kind: FVar(t, null),
+          access: [ APublic ],
+          meta: e != null ? [ { name: ':optional', pos: f.pos } ] : [],
+          pos: f.pos
+        });
+
+      case FVar(t, e) if (f.meta.exists(m -> styleMeta.has(m.name))):
+        
+        if (f.meta.filter(m -> styleMeta.has(m.name)).length > 1) {
+          Context.error('More than one `@:style` is not allowed per var', f.pos);
+        }
+
+        if (e == null) {
+          Context.error('An expression is required for @:style', f.pos);
+        }
+
+        var forceEmbedding = false;
+        var isGlobal = false;
+        var params = f.meta.find(m -> styleMeta.has(m.name)).params;
+
+        for (param in params) switch param {
+          case macro embed = ${e}: switch e {
+            case macro true: forceEmbedding = true;
+            default:
+          }
+          case macro global = ${e}: switch e {
+            case macro true: isGlobal = true;
+            default:
+          }
+          default:
+            Context.error('Invalid attribute option', param.pos);
+        }
+
+        f.kind = FVar(macro:pilot.Style, pilot.dsl.Css.parse(e, forceEmbedding, isGlobal));
+        if (isGlobal) {
+          f.meta.push({
+            name: '@:keep',
+            params: [],
             pos: f.pos
           });
         }
 
-      // case FFun(func) if (f.name == 'render'):
-      //   switch func.expr {
-      //     case macro @:markup ${e}:
-      //       func.expr = macro return pilot.Template.html(${func.expr});
-      //     default:
-      //   }
-      
       default:
     }
 
@@ -201,13 +266,14 @@ class Component {
       } 
       
       public function new(__props:$propType) {
-        _pilot_props = cast {};
-        $b{initializers};
-        _pilot_update(_pilot_props);
+        _pilot_update(__props);
       }
 
       override function _pilot_setProperties(__props:Dynamic) {
-        _pilot_props = __props;
+        _pilot_props = ${ {
+          expr: EObjectDecl(initializers),
+          pos: Context.currentPos()
+        } };
       }
 
     }).fields);

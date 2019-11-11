@@ -1,13 +1,13 @@
 package pilot.core;
 
-class KeyRegistry<T> implements Registry<Key, T> {
+class KeyRegistry<Real:{}> implements Registry<Key, Wire<Dynamic, Real>> {
   
-  var strings:Map<String, T>;
-  var objects:Map<{}, T>;
+  var strings:Map<String, Wire<Dynamic, Real>>;
+  var objects:Map<{}, Wire<Dynamic, Real>>;
 
   public function new() {}
 
-  public function put(?key:Key, value:T):Void {
+  public function put(?key:Key, value:Wire<Dynamic, Real>):Void {
     if (key == null) {
       throw 'Key cannot be null';
     } if (key.isString()) {
@@ -19,9 +19,9 @@ class KeyRegistry<T> implements Registry<Key, T> {
     }
   }
 
-  public function pull(?key:Key):T {
+  public function pull(?key:Key):Wire<Dynamic, Real> {
     if (key == null) return null;
-    var map:Map<Dynamic, T> = if (key.isString()) strings else objects;
+    var map:Map<Dynamic, Wire<Dynamic, Real>> = if (key.isString()) strings else objects;
     if (map == null) return null;
     var out = map.get(key);
     map.remove(key);
@@ -29,9 +29,16 @@ class KeyRegistry<T> implements Registry<Key, T> {
   }
 
   public function exists(key:Key):Bool {
-    var map:Map<Dynamic, T> = if (key.isString()) strings else objects;
+    var map:Map<Dynamic, Wire<Dynamic, Real>> = if (key.isString()) strings else objects;
     if (map == null) return false;
     return map.exists(key);
   }
+
+  // public function dispose() {
+  //   if (strings != null) for (_ => wire in strings) wire._pilot_dispose();
+  //   if (objects != null) for (_ => wire in objects) wire._pilot_dispose();
+  //   strings = null;
+  //   objects = null; 
+  // }
 
 }

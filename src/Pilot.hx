@@ -8,6 +8,10 @@ class Pilot {
     return pilot.dsl.Markup.parse(expr);
   }
 
+  macro public static function css(expr) {
+    return pilot.dsl.Css.parse(expr);
+  }
+
   static final rootNodes:Map<RealNode, Root> = [];
 
   inline public static function mount(node:RealNode, vNode:VNode<RealNode>) {

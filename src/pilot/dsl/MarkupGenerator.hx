@@ -10,12 +10,29 @@ using haxe.macro.PositionTools;
 
 class MarkupGenerator {
   
+  static final attributeMacros:Map<String, (attr:MarkupAttribute, pos:Position)->ObjectField> = [
+    'style' => (attr, pos) -> {
+      field: attr.name,
+      expr: switch attr.value.value {
+        case Raw(_):
+          throw new DslError('@style does not accept raw values', attr.pos);
+        case Code(value):
+          Css.parse(macro @:pos(pos) $v{value});
+      }
+    }
+  ];
+
+  static public function registerMacro(name, handler) {
+    attributeMacros.set(name, handler);
+  }
+  
   final nodes:Array<MarkupNode>;
   final pos:Position;
 
   public function new(nodes, pos) {
     this.nodes = nodes;
     this.pos = pos;
+    // todo: allow custom macros
   }
 
   public function generate():Expr {
@@ -149,15 +166,22 @@ class MarkupGenerator {
   function generateAttrs(attrs:Array<MarkupAttribute>) {
     var fields:Array<ObjectField> = [];
     for (attr in attrs) { 
-      var pos = makePos(attr.pos);
-      if (attr.name != 'key' && allowKey(attr.name)) { 
-        fields.push({
-          field: attr.name,
-          expr: switch attr.value {
-            case Raw(v): macro @:pos(pos) $v{v};
-            case Code(v): Context.parse(v, pos);
+      var pos = makePos(attr.value.pos);
+      if (attr.name != 'key' && allowKey(attr.name)) {
+        if (attr.macroName != null) {
+          if (!attributeMacros.exists(attr.macroName)) {
+            throw new DslError('Undefined macro @${attr.macroName}', attr.pos);
           }
-        });
+          fields.push(attributeMacros[attr.macroName](attr, pos));
+        } else {
+          fields.push({
+            field: attr.name,
+            expr: switch attr.value.value {
+              case Raw(v): macro @:pos(pos) $v{v};
+              case Code(v): Context.parse(v, pos);
+            }
+          });
+        }
       }
     }
     return fields;
@@ -171,7 +195,7 @@ class MarkupGenerator {
   function extractKey(attrs:Array<MarkupAttribute>) {
     for (attr in attrs) if (attr.name == 'key') {
       var pos = makePos(attr.pos);
-      return switch attr.value {
+      return switch attr.value.value {
         case Raw(v): macro @:pos(pos) $v{v};
         case Code(v): Context.parse(v, pos);
       }
@@ -179,7 +203,7 @@ class MarkupGenerator {
     return macro null;
   }
 
-  function makePos(pos:MarkupPosition):Position {
+  function makePos(pos:DslPosition):Position {
     return Context.makePosition({
       min: pos.min,
       max: pos.max,
