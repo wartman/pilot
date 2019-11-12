@@ -5,7 +5,7 @@ import todo.data.Store;
 
 class App extends Component {
   
-  @:attribute var store:Store;
+  @:attribute(inject = true) var store:Store;
   @:style(global = true) var root = '
 
     html, body {

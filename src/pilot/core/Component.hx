@@ -7,65 +7,70 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
   
   var _pilot_type:NodeType<Dynamic, Real>;
   var _pilot_wire:Wire<Dynamic, Real>;
+  var _pilot_context:Context;
 
-  public function _pilot_update(attrs:Dynamic) {
+  public function _pilot_update(attrs:Dynamic, context:Context) {
+    _pilot_context = context;
     if (_pilot_wire == null && componentShouldRender(attrs)) {
-      _pilot_setProperties(attrs);
-      componentWillMount();
-
-      switch render() {
-
-        case VNative(type, attrs, children, _):
-          _pilot_type = type;
-          _pilot_wire = type._pilot_create(attrs);
-          _pilot_wire._pilot_updateChildren(children);
-
-        case VComponent(type, attrs, _):
-          _pilot_type = type;
-          _pilot_wire = type._pilot_create(attrs);
-
-        case VFragment(_):
-          throw 'Fragment is not a valid root node';
-      }
-      
-      componentDidMount(_pilot_getReal());
+      _pilot_setProperties(attrs, context);
+      _pilot_doInitialRender(render(), context);
     } else if (componentShouldRender(attrs)) {
-      _pilot_setProperties(attrs);
-      componentWillUpdate();
+      _pilot_setProperties(attrs, context);
+      _pilot_doDiffRender(render(), context);
+    }
+  }
 
-      switch render() {
+  function _pilot_doInitialRender(rendered:VNode<Real>, context:Context) {
+    componentWillMount();
+    switch rendered {
+      case VNative(type, attrs, children, _):
+        _pilot_type = type;
+        _pilot_wire = type._pilot_create(attrs, context);
+        _pilot_wire._pilot_updateChildren(children, context);
 
-        case VNative(type, attrs, children, _):
-          var didMount:Bool = false;
+      case VComponent(type, attrs, _):
+        _pilot_type = type;
+        _pilot_wire = type._pilot_create(attrs, context);
 
-          if (_pilot_type != type) {
-            componentWillUnmount(_pilot_getReal());
-            didMount = true;
-            _pilot_wire._pilot_dispose();
-            _pilot_type = type;
-            _pilot_wire = type._pilot_create(attrs);
-          } else {
-            _pilot_wire._pilot_update(attrs);
-          }
+      case VFragment(_):
+        throw 'Fragment is not a valid root node';
 
-          _pilot_wire._pilot_updateChildren(children);
-          if (didMount) componentDidMount(_pilot_getReal());
+    }
+    context.later(() -> componentDidMount(_pilot_getReal()));
+  }
 
-        case VComponent(type, attrs, _):
-          if (_pilot_type != type) {
-            componentWillUnmount(_pilot_getReal());
-            _pilot_wire._pilot_dispose();
-            _pilot_type = type;
-            _pilot_wire = type._pilot_create(attrs);
-            componentDidMount(_pilot_getReal());
-          } else {
-            _pilot_wire._pilot_update(attrs);
-          }
+  function _pilot_doDiffRender(rendered:VNode<Real>, context:Context) {
+    componentWillUpdate();
+    switch rendered {
+      case VNative(type, attrs, children, _):
+        var didMount:Bool = false;
 
-        case VFragment(_):
-          throw 'Fragment is not a valid root node';
+        if (_pilot_type != type) {
+          componentWillUnmount(_pilot_getReal());
+          didMount = true;
+          _pilot_wire._pilot_dispose();
+          _pilot_type = type;
+          _pilot_wire = type._pilot_create(attrs, context);
+        } else {
+          _pilot_wire._pilot_update(attrs, context);
+        }
 
-      }
+        _pilot_wire._pilot_updateChildren(children, context);
+        if (didMount) context.later(() -> componentDidMount(_pilot_getReal()));
+
+      case VComponent(type, attrs, _):
+        if (_pilot_type != type) {
+          componentWillUnmount(_pilot_getReal());
+          _pilot_wire._pilot_dispose();
+          _pilot_type = type;
+          _pilot_wire = type._pilot_create(attrs, context);
+          context.later(() -> componentDidMount(_pilot_getReal()));
+        } else {
+          _pilot_wire._pilot_update(attrs, context);
+        }
+
+      case VFragment(_):
+        throw 'Fragment is not a valid root node';
     }
   }
 
@@ -81,8 +86,16 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
     if (_pilot_wire != null) _pilot_wire._pilot_removeChild(child);
   }
 
-  public function _pilot_updateChildren(children:Array<VNode<Real>>) {
-    throw 'Components cannot update children -- only use _pilot_update(...).';
+  public function _pilot_insertInto(parent:Wire<Dynamic, Real>) {
+    _pilot_wire._pilot_insertInto(parent);
+  }
+
+  public function _pilot_removeFrom(parent:Wire<Dynamic, Real>) {
+    _pilot_wire._pilot_removeFrom(parent);
+  }
+
+  public function _pilot_updateChildren(children:Array<VNode<Real>>, context:Context) {
+    _pilot_wire._pilot_updateChildren(children, context);
   }
 
   public function _pilot_dispose() {
@@ -92,8 +105,8 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
     _pilot_type = null;
   }
 
-  function _pilot_setProperties(attrs:Dynamic) {
-    // noop
+  function _pilot_setProperties(attrs:Dynamic, context:Context):Dynamic {
+    return {};
   }
 
   function componentWillMount() {
@@ -137,10 +150,10 @@ class Component {
   static final initMeta = [ ':init' ];
   static final attrsMeta = [ ':attr', ':attribute' ];
   static final styleMeta = [ ':style' ];
+  static final coreComponent = ':coreComponent';
 
-  // this is weird
   static function html(_, e) {
-    return pilot.dsl.Markup.parse(e);
+    return pilot.dsl.Markup.parse(e, true);
   }
 
   public static function build() {
@@ -153,6 +166,12 @@ class Component {
     var newFields:Array<Field> = [];
     var props:Array<Field> = [];
     var initializers:Array<ObjectField> = [];
+
+    // Don't implement core components: these are designed
+    // to provide extra functionality.
+    if (cls.meta.has(coreComponent)) {
+      return fields;
+    }
     
     for (f in fields) switch (f.kind) {
       case FVar(t, e) if (f.meta.exists(m -> attrsMeta.has(m.name))):
@@ -162,6 +181,7 @@ class Component {
         }
 
         var name = f.name;
+        var isOptional = e != null || f.meta.exists(m -> m.name == ':optional');
         var params = f.meta.find(m -> attrsMeta.has(m.name)).params;
         var getName = 'get_${name}';
         var setName = 'set_${name}';
@@ -173,6 +193,28 @@ class Component {
             case macro true: isState = true;
             default: 
               Context.error('Attribute option `mutable` must be Bool', param.pos);
+          }
+          case macro inject = ${injectExpr}: switch injectExpr {
+            case macro true:
+              isOptional = true;
+              e = e != null
+                ? macro @:pos(f.pos) __context.get($v{name}, $e)
+                : macro @:pos(f.pos) __context.get($v{name});
+            case macro false: 
+              // ignore
+            case { expr: EConst(CString(s, _)) | EConst(CIdent(s)), pos:_ }:
+              isOptional = true;
+              e = e != null
+                ? macro @:pos(f.pos) __context.get($v{s}, $e)
+                : macro @:pos(f.pos) __context.get($v{s});
+            default:
+              Context.error('Invalid argument for `inject`', param.pos);
+          }
+          case macro optional = ${e}: switch e {
+            case macro true: isOptional = true;
+            case macro false: isOptional = false;
+            default:
+              Context.error('Attribute option `optional` must be Bool', param.pos);
           }
           default:
             Context.error('Invalid attribute option', param.pos);
@@ -202,7 +244,9 @@ class Component {
             function $setName(value) {
               var props = Reflect.copy(_pilot_props);
               props.$name = value;
-              _pilot_update(props);
+              if (_pilot_context != null) {
+                _pilot_update(props, _pilot_context);
+              }
               return value;
             }
           }).fields);
@@ -212,7 +256,7 @@ class Component {
           name: name,
           kind: FVar(t, null),
           access: [ APublic ],
-          meta: e != null ? [ { name: ':optional', pos: f.pos } ] : [],
+          meta: isOptional ? [ { name: ':optional', pos: f.pos } ] : [],
           pos: f.pos
         });
 
@@ -261,16 +305,16 @@ class Component {
       
       @:noCompletion var _pilot_props:$propType;
 
-      public static function _pilot_create(props) {
-        return new $clsTp(props);
+      public static function _pilot_create(props, context:pilot.core.Context) {
+        return new $clsTp(props, context);
       } 
       
-      public function new(__props:$propType) {
-        _pilot_update(__props);
+      public function new(__props:$propType, context:pilot.core.Context) {
+        _pilot_update(__props, context);
       }
 
-      override function _pilot_setProperties(__props:Dynamic) {
-        _pilot_props = ${ {
+      override function _pilot_setProperties(__props:Dynamic, __context:pilot.core.Context) {
+        return _pilot_props = ${ {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };

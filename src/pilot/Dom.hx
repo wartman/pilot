@@ -1,9 +1,17 @@
 package pilot;
 
 class Dom {
+
+  inline public static function createFragment() {
+    #if (js && !nodejs)
+      return js.Browser.document.createDocumentFragment();
+    #else
+      return new pilot.sys.Node(pilot.sys.Node.FRAGMENT);
+    #end
+  }
   
   inline public static function createNode(name:String):RealNode {
-    #if js
+    #if (js && !nodejs)
       return js.Browser.document.createElement(name);
     #else
       return new pilot.sys.Node(name);
@@ -11,7 +19,7 @@ class Dom {
   }
 
   inline public static function createTextNode(content:String):RealNode {
-    #if js
+    #if (js && !nodejs)
       return js.Browser.document.createTextNode(content);
     #else
       var node = new pilot.sys.Node(pilot.sys.Node.TEXT);
@@ -21,7 +29,7 @@ class Dom {
   }
 
   inline public static function getElementById(id:String) {
-    #if js
+    #if (js && !nodejs)
       return js.Browser.document.getElementById(id);
     #else
       var node = new pilot.sys.Node('div');

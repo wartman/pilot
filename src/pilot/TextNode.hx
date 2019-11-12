@@ -1,10 +1,15 @@
 package pilot;
 
+import pilot.core.Context;
 import pilot.core.Wire;
 import pilot.core.VNode;
 
 class TextNode implements Wire<String, RealNode> {
 
+  public static function _pilot_create(attrs:String, context:Context):Wire<String, RealNode> {
+    return new TextNode(attrs);
+  }
+  
   public final real:RealNode;
 
   public function new(content:String) {
@@ -29,12 +34,20 @@ class TextNode implements Wire<String, RealNode> {
     }
   }
 
-  public function _pilot_update(attrs:String):Void {
+  public function _pilot_insertInto(parent:Wire<Dynamic, RealNode>) {
+    parent._pilot_appendChild(this);
+  }
+  
+  public function _pilot_removeFrom(parent:Wire<Dynamic, RealNode>) {
+    parent._pilot_removeChild(this);
+  }
+  
+  public function _pilot_update(attrs:String, context:Context):Void {
     if (attrs == real.textContent) return;
     real.textContent = attrs;
   }
 
-  public function _pilot_updateChildren(children:Array<VNode<RealNode>>):Void {
+  public function _pilot_updateChildren(children:Array<VNode<RealNode>>, context:Context):Void {
     // noop
   }
   

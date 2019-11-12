@@ -66,10 +66,8 @@ class TodoInput extends Component {
     // todo: this should be called only when the element is mounted
     //       in the Dom. requestAnimationFrame is a hack.
     override function componentDidMount(node:RealNode) {
-      js.Browser.window.requestAnimationFrame(_ -> {
-        var el:js.html.InputElement = cast node;
-        el.focus();
-      });
+      var el:js.html.InputElement = cast node;
+      el.focus();
       if (requestClose != null) {
         handler = function (_) {
           js.Browser.window.removeEventListener('click', handler);

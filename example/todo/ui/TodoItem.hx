@@ -6,7 +6,7 @@ import todo.data.*;
 class TodoItem extends Component {
   
   @:attribute var todo:Todo;
-  @:attribute var store:Store;
+  @:attribute(inject = true) var store:Store;
   @:attribute(mutable = true) var editing:Bool = false;
   @:keep @:style var root = '
     position: relative;
@@ -71,10 +71,15 @@ class TodoItem extends Component {
     }
   ';
 
-  override function render() return html(
+  // Note: this returns a fragment just to test that it works
+  override function render() return html(<>
     <li 
       id={Std.string(todo.id)} 
-      onDblClick={_ -> editing = !editing}
+      onDblClick={e -> {
+        e.preventDefault();
+        e.stopPropagation();
+        editing = !editing;
+      }}
       key={todo}
       class={root + (editing ? ' editing' : '')}
     >
@@ -102,6 +107,6 @@ class TodoItem extends Component {
         ></button>
       </if>
     </li>
-  );
+  </>);
 
 }

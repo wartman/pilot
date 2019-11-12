@@ -37,18 +37,27 @@ class MarkupGenerator {
   
   final nodes:Array<MarkupNode>;
   final pos:Position;
+  final noFragmentRoot:Bool;
 
-  public function new(nodes, pos) {
+  public function new(nodes, pos, noFragmentRoot = false) {
     this.nodes = nodes;
     this.pos = pos;
+    this.noFragmentRoot = noFragmentRoot;
     // todo: allow custom macros
   }
 
   public function generate():Expr {
-    var exprs:Array<Expr> = [ for (node in nodes)
-      generateNode(node)
-    ].filter(e -> e != null);
-    var eType = exprs.length == 1 ? exprs[0] : macro VFragment([ $a{exprs} ]);
+    var exprs:Array<Expr> = [ for (node in nodes) switch node.node {
+      case MFragment(children) if (noFragmentRoot):
+        var exprs:Array<Expr> = [ for (c in children) generateNode(c) ];
+        macro VNative(pilot.Fragment, {}, [ $a{exprs} ]);
+      default: generateNode(node);
+    } ].filter(e -> e != null);
+    var eType = exprs.length == 1 
+      ? exprs[0] 
+      : noFragmentRoot
+        ? macro VNative(pilot.Fragment, {}, [ $a{exprs} ])
+        : macro VFragment([ $a{exprs} ]);
 
     return macro @:pos(pos) (${eType}:pilot.core.VNode<pilot.RealNode>);
   }
@@ -159,7 +168,7 @@ class MarkupGenerator {
 
   function generateNodeType(name:String, pos:Position):Expr {
     return switch name {
-      case 'text': macro @:pos(pos) pilot.TextNodeType;
+      case 'text': macro @:pos(pos) pilot.TextNode;
       default: macro @:pos(pos) pilot.NodeType.get($v{name});
     }
   }

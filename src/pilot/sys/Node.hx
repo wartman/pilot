@@ -7,6 +7,7 @@ using StringTools;
 class Node {
 
   public static final TEXT = '__text__';
+  public static final FRAGMENT = '__fragment__';
   
   public final nodeName:String;
   public final childNodes:Array<Node> = [];
@@ -57,6 +58,9 @@ class Node {
 
   public function toString() {
     if (nodeName == TEXT) return textContent;
+    if (nodeName == FRAGMENT) {
+      return [ for (c in childNodes) c.toString() ].join('');
+    }
 
     var out = '<${nodeName}';
     var attrs = [ for (key => value in attributes) '${key} = "${Std.string(value).htmlEscape()}"' ];

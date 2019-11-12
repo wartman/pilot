@@ -1,5 +1,6 @@
 package pilot;
 
+import pilot.core.Wire;
 import pilot.core.NodeTypeRegistry;
 import pilot.core.WireBase;
 
@@ -29,6 +30,7 @@ class NativeNode<Attrs:{}> extends WireBase<Attrs, RealNode> {
   }
 
   override function _pilot_appendChildReal(child:RealNode) {
+    if (child == null) return;
     real.appendChild(child);
   }
 

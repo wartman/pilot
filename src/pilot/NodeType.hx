@@ -1,6 +1,7 @@
 package pilot;
 
 import pilot.core.Wire;
+import pilot.core.Context;
 
 class NodeType<Attrs:{}> {
   
@@ -20,9 +21,9 @@ class NodeType<Attrs:{}> {
     this.name = name;
   }
 
-  public function _pilot_create(attrs:Attrs):Wire<Attrs, RealNode> {
+  public function _pilot_create(attrs:Attrs, context:Context):Wire<Attrs, RealNode> {
     var node = new NativeNode(Dom.createNode(name));
-    node._pilot_update(attrs);
+    node._pilot_update(attrs, context);
     return node;
   }
 

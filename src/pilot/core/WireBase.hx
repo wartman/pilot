@@ -10,6 +10,14 @@ class WireBase<Attrs:{}, Real:{}> implements Wire<Attrs, Real> {
     return null;
   }
 
+  public function _pilot_insertInto(parent:Wire<Dynamic, Real>) {
+    parent._pilot_appendChild(this);
+  }
+  
+  public function _pilot_removeFrom(parent:Wire<Dynamic, Real>) {
+    parent._pilot_removeChild(this);
+  }
+
   public function _pilot_appendChild(child:Wire<Dynamic, Real>) {
     if (child == null) return;
     _pilot_appendChildReal(child._pilot_getReal());
@@ -43,14 +51,14 @@ class WireBase<Attrs:{}, Real:{}> implements Wire<Attrs, Real> {
     throw 'not implemented';
   }
 
-  public function _pilot_update(newAttrs:Attrs) {
+  public function _pilot_update(newAttrs:Attrs, context:Context) {
     var previous:Attrs = attrs;
     if (previous == null) previous = cast {};
     attrs = newAttrs;
     Util.diffObject(previous, newAttrs, applyAttribute);
   }
 
-  public function _pilot_updateChildren(children:Array<VNode<Real>>) {
+  public function _pilot_updateChildren(children:Array<VNode<Real>>, context:Context) {
     var newChildList:Array<Wire<Dynamic, Real>> = [];
     var newTypes:Map<NodeType<Dynamic, Real>, NodeTypeRegistry<Real>> = [];
 
@@ -67,23 +75,23 @@ class WireBase<Attrs:{}, Real:{}> implements Wire<Attrs, Real> {
 
       case VNative(type, attrs, children, key): switch resolveChildNode(type, key) {
         case null:
-          var node = type._pilot_create(attrs);
-          _pilot_appendChild(node);
-          node._pilot_updateChildren(children);
+          var node = type._pilot_create(attrs, context);
+          node._pilot_insertInto(this);
+          node._pilot_updateChildren(children, context);
           add(key, type, node);
         case previous:
-          previous._pilot_update(attrs);
-          previous._pilot_updateChildren(children);
+          previous._pilot_update(attrs, context);
+          previous._pilot_updateChildren(children, context);
           add(key, type, previous);
       }
 
       case VComponent(type, attrs, key): switch resolveChildNode(type, key) {
         case null:
-          var node = type._pilot_create(attrs);
-          _pilot_appendChild(node);
+          var node = type._pilot_create(attrs, context);
+          node._pilot_insertInto(this);
           add(key, type, node);
         case previous:
-          previous._pilot_update(attrs);
+          previous._pilot_update(attrs, context);
           add(key, type, previous);
       }
 
@@ -95,7 +103,7 @@ class WireBase<Attrs:{}, Real:{}> implements Wire<Attrs, Real> {
 
     if (childList.length > 0) {
       for (node in childList) {
-        _pilot_removeChild(node);
+        node._pilot_removeFrom(this);
       }
     }
 
