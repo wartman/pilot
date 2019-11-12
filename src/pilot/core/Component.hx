@@ -7,6 +7,7 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
   
   var _pilot_type:NodeType<Dynamic, Real>;
   var _pilot_wire:Wire<Dynamic, Real>;
+  var _pilot_parent:Wire<Dynamic, Real>;
   var _pilot_context:Context;
 
   public function _pilot_update(attrs:Dynamic, context:Context) {
@@ -32,47 +33,69 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
         _pilot_type = type;
         _pilot_wire = type._pilot_create(attrs, context);
 
-      case VFragment(_):
-        throw 'Fragment is not a valid root node';
-
+      case VFragment(children):
+        _pilot_type = WireFragment;
+        _pilot_wire = new WireFragment();
+        _pilot_wire._pilot_updateChildren(children, context);
     }
+
     context.later(() -> componentDidMount(_pilot_getReal()));
   }
 
+  
   function _pilot_doDiffRender(rendered:VNode<Real>, context:Context) {
     componentWillUpdate();
     switch rendered {
-      case VNative(type, attrs, children, _):
-        var didMount:Bool = false;
-
-        if (_pilot_type != type) {
-          componentWillUnmount(_pilot_getReal());
-          didMount = true;
-          _pilot_wire._pilot_dispose();
-          _pilot_type = type;
-          _pilot_wire = type._pilot_create(attrs, context);
-        } else {
-          _pilot_wire._pilot_update(attrs, context);
-        }
-
+      case VNative(_, attrs, children, _):
+        _pilot_wire._pilot_update(attrs, context);
         _pilot_wire._pilot_updateChildren(children, context);
-        if (didMount) context.later(() -> componentDidMount(_pilot_getReal()));
 
-      case VComponent(type, attrs, _):
-        if (_pilot_type != type) {
-          componentWillUnmount(_pilot_getReal());
-          _pilot_wire._pilot_dispose();
-          _pilot_type = type;
-          _pilot_wire = type._pilot_create(attrs, context);
-          context.later(() -> componentDidMount(_pilot_getReal()));
-        } else {
-          _pilot_wire._pilot_update(attrs, context);
-        }
+      case VComponent(_, attrs, _):
+        _pilot_wire._pilot_update(attrs, context);
 
-      case VFragment(_):
-        throw 'Fragment is not a valid root node';
+      case VFragment(children):
+        _pilot_wire._pilot_updateChildren(children, context);
     }
   }
+
+  // function _pilot_doDiffRender(rendered:VNode<Real>, context:Context) {
+  //   componentWillUpdate();
+  //   switch rendered {
+  //     case VNative(type, attrs, children, _):
+  //       if (_pilot_type != type) {
+  //         componentWillUnmount(_pilot_getReal());
+  //         _pilot_wire._pilot_dispose();
+  //         _pilot_type = type;
+  //         _pilot_wire = type._pilot_create(attrs, context);
+  //         context.later(() -> componentDidMount(_pilot_getReal()));
+  //       } else {
+  //         _pilot_wire._pilot_update(attrs, context);
+  //       }
+
+  //       _pilot_wire._pilot_updateChildren(children, context);
+
+  //     case VComponent(type, attrs, _):
+  //       if (_pilot_type != type) {
+  //         componentWillUnmount(_pilot_getReal());
+  //         _pilot_wire._pilot_dispose();
+  //         _pilot_type = type;
+  //         _pilot_wire = type._pilot_create(attrs, context);
+  //         context.later(() -> componentDidMount(_pilot_getReal()));
+  //       } else {
+  //         _pilot_wire._pilot_update(attrs, context);
+  //       }
+
+  //     case VFragment(children):
+  //       if (_pilot_type != WireFragment) {
+  //         componentWillUnmount(_pilot_getReal());
+  //         _pilot_wire._pilot_dispose();
+  //         _pilot_type = WireFragment;
+  //         _pilot_wire = new WireFragment();
+  //         context.later(() -> componentDidMount(_pilot_getReal()));
+  //       }
+  //       _pilot_wire._pilot_updateChildren(children, context);
+  //   }
+  // }
 
   public function _pilot_getReal():Real {
     return _pilot_wire._pilot_getReal();
@@ -87,6 +110,7 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
   }
 
   public function _pilot_insertInto(parent:Wire<Dynamic, Real>) {
+    _pilot_parent = parent;
     _pilot_wire._pilot_insertInto(parent);
   }
 
@@ -101,6 +125,7 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
   public function _pilot_dispose() {
     componentWillUnmount(_pilot_getReal());
     if (_pilot_wire != null) _pilot_wire._pilot_dispose();
+    _pilot_parent = null;
     _pilot_wire = null;
     _pilot_type = null;
   }
@@ -153,7 +178,7 @@ class Component {
   static final coreComponent = ':coreComponent';
 
   static function html(_, e) {
-    return pilot.dsl.Markup.parse(e, true);
+    return pilot.dsl.Markup.parse(e);
   }
 
   public static function build() {

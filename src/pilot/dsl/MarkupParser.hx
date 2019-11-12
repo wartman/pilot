@@ -8,7 +8,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
 
   override function parse():Array<MarkupNode> {
     var out:Array<MarkupNode> = [];
-    while (!isAtEnd()) out.push(parseRoot());
+    while (!isAtEnd()) out.push(parseRoot(false));
     if (out.length == 0) {
       out.push({
         node: MNone,
@@ -18,14 +18,20 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     return out;
   }
 
-  function parseRoot():MarkupNode {
+  function parseRoot(allowControlNodes = true):MarkupNode {
     whitespace();
     return switch advance() {
       case '/' if (match('/')):
         ignoreLine();
         null;
-      case '<' if (match('for')): parseFor();
-      case '<' if (match('if')): parseIf();
+      case '<' if (match('for')):
+        if (!allowControlNodes) 
+          throw errorAt('<for> cannot be a root node', 'for');
+        parseFor();
+      case '<' if (match('if')):
+        if (!allowControlNodes) 
+          throw errorAt('<if> cannot be a root node', 'if');
+        parseIf();
       case '<' if (match('/')): 
         throw errorAt('Unexpected close tag', '</');
       case '<': parseNode();

@@ -71,19 +71,15 @@ class TodoItem extends Component {
     }
   ';
 
-  // Note: this returns a fragment just to test that it works
+  // Note that `<if>` cannot be root nodes,
+  // but you can use them wrapped in a fragment.
   override function render() return html(<>
-    <li 
-      id={Std.string(todo.id)} 
-      onDblClick={e -> {
-        e.preventDefault();
-        e.stopPropagation();
-        editing = !editing;
-      }}
-      key={todo}
-      class={root + (editing ? ' editing' : '')}
-    >
-      <if {editing}>
+    <if {editing}>
+      <li 
+        id={Std.string(todo.id)} 
+        key={todo}
+        class={root + ' editing'}
+      >
         <TodoInput 
           value={todo.content}
           requestClose={ () -> editing = false }
@@ -92,7 +88,18 @@ class TodoItem extends Component {
             editing = false;
           }}
         />
-      <else>
+      </li>
+    <else>
+      <li 
+        id={Std.string(todo.id)}
+        onDblClick={e -> {
+          e.preventDefault();
+          e.stopPropagation();
+          editing = true;
+        }}
+        key={todo}
+        class={root}
+      >
         <Toggle
           checked={todo.complete}
           onClick={_ -> switch todo.complete {
@@ -105,8 +112,8 @@ class TodoItem extends Component {
           class="destroy"
           onClick={_ -> store.removeTodo(todo)}
         ></button>
-      </if>
-    </li>
+      </li>
+    </if>
   </>);
 
 }

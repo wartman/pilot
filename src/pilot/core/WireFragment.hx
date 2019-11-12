@@ -1,18 +1,20 @@
-package pilot;
+package pilot.core;
 
 import pilot.core.VNode;
 import pilot.core.Context;
 import pilot.core.WireBase;
 import pilot.core.Wire;
 
-class Fragment extends WireBase<Dynamic, RealNode> {
+// Todo: this might make more sense to just
+//       implement components like this?
+class WireFragment<Real:{}> extends WireBase<Dynamic, Real> {
   
-  public static function _pilot_create(attrs:Dynamic, context:Context):Wire<Dynamic, RealNode> {
-    return new Fragment();
+  public static function _pilot_create<Real:{}>(attrs:Dynamic, context:Context):Wire<Dynamic, Real> {
+    return new WireFragment();
   }
 
-  var parent:Wire<Dynamic, RealNode>;
-  var real:RealNode;
+  var parent:Wire<Dynamic, Real>;
+  var real:Real;
   var later:()->Void;
 
   public function new() {}
@@ -21,7 +23,7 @@ class Fragment extends WireBase<Dynamic, RealNode> {
     return real;
   }
   
-  override function _pilot_insertInto(parent:Wire<Dynamic, RealNode>) {
+  override function _pilot_insertInto(parent:Wire<Dynamic, Real>) {
     this.parent = parent;
     real = parent._pilot_getReal();
     if (later != null) {
@@ -30,12 +32,12 @@ class Fragment extends WireBase<Dynamic, RealNode> {
     }
   }
 
-  override function _pilot_appendChildReal(child:RealNode) {
-    _pilot_getReal().appendChild(child);
+  override function _pilot_appendChild(child:Wire<Dynamic, Real>) {
+    parent._pilot_appendChild(child);
   }
 
-  override function _pilot_removeChildReal(child:RealNode) {
-    _pilot_getReal().removeChild(child);
+  override function _pilot_removeChild(child:Wire<Dynamic, Real>) {
+    parent._pilot_removeChild(child);
   }
 
   override function _pilot_removeReal() {
@@ -46,7 +48,7 @@ class Fragment extends WireBase<Dynamic, RealNode> {
     // noop
   }
 
-  override function _pilot_removeFrom(parent:Wire<Dynamic, RealNode>) {
+  override function _pilot_removeFrom(parent:Wire<Dynamic, Real>) {
     for (c in childList) c._pilot_removeFrom(parent);
     _pilot_dispose();
   }
@@ -58,7 +60,7 @@ class Fragment extends WireBase<Dynamic, RealNode> {
     childList = null;
   }
 
-  override function _pilot_updateChildren(children:Array<VNode<RealNode>>, context:Context) {
+  override function _pilot_updateChildren(children:Array<VNode<Real>>, context:Context) {
     if (parent != null) {
       super._pilot_updateChildren(children, context);
     } else {

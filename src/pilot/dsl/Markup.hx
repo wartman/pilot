@@ -8,7 +8,7 @@ using haxe.macro.PositionTools;
 
 class Markup {
   
-  public static function parse(expr:Expr, noFragmentRoot = false) {
+  public static function parse(expr:Expr) {
     expr = switch expr {
       case macro @:markup ${e}: e;
       default: expr;
@@ -19,7 +19,7 @@ class Markup {
       case EConst(CString(s)):
         try {
           var ast = new MarkupParser(s, info.file, info.min).parse();
-          return new MarkupGenerator(ast, expr.pos, noFragmentRoot).generate();
+          return new MarkupGenerator(ast, expr.pos).generate();
         } catch (e:DslError) {
           Context.error(e.message, Context.makePosition({
             min: e.pos.min,
