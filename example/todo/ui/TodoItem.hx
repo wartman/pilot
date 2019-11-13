@@ -6,9 +6,12 @@ import todo.data.*;
 class TodoItem extends Component {
   
   @:attribute var todo:Todo;
+  // `inject = true` will look for `store` in the Context.
+  // You can provide context with a `Provider` -- see the `StoreProvider`
+  // for an example.
   @:attribute(inject = true) var store:Store;
   @:attribute(mutable = true) var editing:Bool = false;
-  @:keep @:style var root = '
+  @:style var root = '
     position: relative;
     font-size: 24px;
     border-bottom: 1px solid #ededed;
@@ -71,9 +74,9 @@ class TodoItem extends Component {
     }
   ';
 
-  // Note that `<if>` cannot be root nodes,
-  // but you can use them wrapped in a fragment.
   override function render() return html(<>
+    // Note that `<if>` (or <for>) cannot be a root node,
+    // but you can use it wrapped in a fragment.
     <if {editing}>
       <li 
         id={Std.string(todo.id)} 

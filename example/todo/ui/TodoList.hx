@@ -31,7 +31,13 @@ abstract TodoList(PureComponent) to PureComponent {
         list-style: none;
       }>
         <for {todo in props.store.visibleTodos}>
-          <TodoItem todo={todo} store={props.store} />
+          // note that we don't pass `store` here: instead,
+          // it's injected for us by `<StoreProvider /> in a 
+          // parent component.
+          //
+          // This is generally a bad idea, but just for illustration
+          // purposes.
+          <TodoItem todo={todo} /> 
         </for>
       </ul>
     </div>);

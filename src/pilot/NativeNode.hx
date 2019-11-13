@@ -1,6 +1,5 @@
 package pilot;
 
-import pilot.core.Wire;
 import pilot.core.NodeTypeRegistry;
 import pilot.core.WireBase;
 

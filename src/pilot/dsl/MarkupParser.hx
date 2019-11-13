@@ -7,8 +7,9 @@ using StringTools;
 class MarkupParser extends Parser<Array<MarkupNode>> {
 
   override function parse():Array<MarkupNode> {
-    var out:Array<MarkupNode> = [];
-    while (!isAtEnd()) out.push(parseRoot(false));
+    var out:Array<MarkupNode> = [
+      while (!isAtEnd()) parseRoot(false)
+    ].filter(n -> n != null);
     if (out.length == 0) {
       out.push({
         node: MNone,
@@ -105,7 +106,8 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     whitespace();
 
     while (!isAtEnd() && !endThenBranch()) {
-      passing.push(parseRoot());
+      var n = parseRoot();
+      if (n != null) passing.push(n);
       whitespace();
     }
 
@@ -137,7 +139,8 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       var didClose = false;
       var isClosed = () -> didClose = match('</>'); 
       while (!isAtEnd() && !isClosed()) {
-        children.push(parseRoot());
+        var n = parseRoot();
+        if (n != null) children.push(n);
         whitespace();
       }
       if (!didClose) {
@@ -214,7 +217,8 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     whitespace();
 
     while (!isAtEnd() && !isClosed()) {
-      children.push(parseRoot());
+      var n = parseRoot();
+      if (n != null) children.push(n);
       whitespace();
     }
 
