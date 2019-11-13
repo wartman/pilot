@@ -16,6 +16,7 @@ class WireBase<Attrs:{}, Real:{}> implements Wire<Attrs, Real> {
   
   public function _pilot_removeFrom(parent:Wire<Dynamic, Real>) {
     parent._pilot_removeChild(this);
+    _pilot_dispose();
   }
 
   public function _pilot_appendChild(child:Wire<Dynamic, Real>) {
@@ -29,7 +30,6 @@ class WireBase<Attrs:{}, Real:{}> implements Wire<Attrs, Real> {
 
   public function _pilot_removeChild(child:Wire<Dynamic, Real>) {
     _pilot_removeChildReal(child._pilot_getReal());
-    child._pilot_dispose();
   }
 
   function _pilot_removeChildReal(child:Real) {
@@ -41,10 +41,12 @@ class WireBase<Attrs:{}, Real:{}> implements Wire<Attrs, Real> {
   }
 
   public function _pilot_dispose() {
-    for (c in childList) c._pilot_dispose();
+    if (childList != null) {
+      for (c in childList) c._pilot_removeFrom(this);
+    }
     types = null;
     childList = null;
-    _pilot_removeReal();
+    // _pilot_removeReal();
   }
 
   function _pilot_removeReal() {
@@ -101,7 +103,7 @@ class WireBase<Attrs:{}, Real:{}> implements Wire<Attrs, Real> {
 
     process(children);
 
-    if (childList.length > 0) {
+    if (childList != null && childList.length > 0) {
       for (node in childList) {
         node._pilot_removeFrom(this);
       }

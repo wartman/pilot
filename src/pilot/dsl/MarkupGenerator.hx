@@ -125,6 +125,8 @@ class MarkupGenerator {
         var t = Context.typeof(e);
         if (Context.unify(t, Context.getType('pilot.Children'))) {
           macro @:pos(pos) VFragment(${e});
+        } else if (Context.unify(t, Context.getType('pilot.core.VNode'))) {
+          macro @:pos(pos) ${e};
         } else {
           macro @:pos(pos) VNative(${generateNodeType('text', pos)}, ${e}, []);
         }

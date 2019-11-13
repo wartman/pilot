@@ -9,8 +9,6 @@ class StoreProvider extends Provider {
   @:attribute var store:Store;
   @:attribute var children:Children;
 
-  override function render() return html(<>
-    {children}
-  </>);
+  override function render() return html(<>{children}</>);
 
 }

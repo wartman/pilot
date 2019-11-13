@@ -28,6 +28,16 @@ class Dom {
     #end
   }
 
+  inline public static function createComment(?comment:String):RealNode {
+    #if (js && !nodejs)
+      return js.Browser.document.createComment(comment);
+    #else
+      var node = new pilot.sys.Node(pilot.sys.Node.COMMENT);
+      node.textContent = comment;
+      return node;
+    #end
+  }
+
   inline public static function getElementById(id:String) {
     #if (js && !nodejs)
       return js.Browser.document.getElementById(id);

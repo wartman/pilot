@@ -1,8 +1,11 @@
 import pilot.Root;
 import pilot.RealNode;
 import pilot.core.VNode;
+import pilot.Dom;
 
-class Pilot {
+final class Pilot {
+
+  public static final dom = Dom;
   
   macro public static function html(expr) {
     return pilot.dsl.Markup.parse(expr);

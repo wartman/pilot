@@ -28,4 +28,3 @@ class Provider extends Component<RealNode> {
   }
 
 }
-

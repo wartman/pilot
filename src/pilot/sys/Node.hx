@@ -8,7 +8,8 @@ class Node {
 
   public static final TEXT = '__text__';
   public static final FRAGMENT = '__fragment__';
-  
+  public static final COMMENT = '__comment__';
+
   public final nodeName:String;
   public final childNodes:Array<Node> = [];
   public var textContent:String;
@@ -58,6 +59,7 @@ class Node {
 
   public function toString() {
     if (nodeName == TEXT) return textContent;
+    if (nodeName == COMMENT) return '<!-- ${textContent} -->';
     if (nodeName == FRAGMENT) {
       return [ for (c in childNodes) c.toString() ].join('');
     }

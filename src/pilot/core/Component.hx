@@ -38,7 +38,6 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
         _pilot_wire = new WireFragment();
         _pilot_wire._pilot_updateChildren(children, context);
     }
-
     context.later(() -> componentDidMount(_pilot_getReal()));
   }
 
@@ -98,7 +97,17 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
   // }
 
   public function _pilot_getReal():Real {
-    return _pilot_wire._pilot_getReal();
+    return if (_pilot_wire != null) _pilot_wire._pilot_getReal() else null;
+  }
+
+  public function _pilot_insertInto(parent:Wire<Dynamic, Real>) {
+    _pilot_parent = parent;
+    _pilot_wire._pilot_insertInto(parent);
+  }
+
+  public function _pilot_removeFrom(parent:Wire<Dynamic, Real>) {
+    if (_pilot_wire != null) _pilot_wire._pilot_removeFrom(parent);
+    _pilot_dispose();
   }
   
   public function _pilot_appendChild(child:Wire<Dynamic, Real>) {
@@ -109,22 +118,15 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
     if (_pilot_wire != null) _pilot_wire._pilot_removeChild(child);
   }
 
-  public function _pilot_insertInto(parent:Wire<Dynamic, Real>) {
-    _pilot_parent = parent;
-    _pilot_wire._pilot_insertInto(parent);
-  }
-
-  public function _pilot_removeFrom(parent:Wire<Dynamic, Real>) {
-    _pilot_wire._pilot_removeFrom(parent);
-  }
-
   public function _pilot_updateChildren(children:Array<VNode<Real>>, context:Context) {
     _pilot_wire._pilot_updateChildren(children, context);
   }
 
   public function _pilot_dispose() {
-    componentWillUnmount(_pilot_getReal());
-    if (_pilot_wire != null) _pilot_wire._pilot_dispose();
+    if (_pilot_wire != null) {
+      componentWillUnmount(_pilot_wire._pilot_getReal());
+      _pilot_wire._pilot_dispose();
+    }
     _pilot_parent = null;
     _pilot_wire = null;
     _pilot_type = null;
@@ -133,6 +135,9 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
   function _pilot_setProperties(attrs:Dynamic, context:Context):Dynamic {
     return {};
   }
+
+  // Todo: Lifecycle should be handled by metadata. We already have
+  //       `@:init` and `@:dispose` set up!
 
   function componentWillMount() {
     // noop
@@ -172,7 +177,8 @@ using haxe.macro.ComplexTypeTools;
 
 class Component {
 
-  static final initMeta = [ ':init' ];
+  static final initMeta = [ ':init', ':initialize' ];
+  static final disposeMeta = [ ':dispose' ];
   static final attrsMeta = [ ':attr', ':attribute' ];
   static final styleMeta = [ ':style' ];
   static final coreComponent = ':coreComponent';
@@ -190,6 +196,8 @@ class Component {
     var fields = Context.getBuildFields();
     var newFields:Array<Field> = [];
     var props:Array<Field> = [];
+    var startup:Array<Expr> = [];
+    var teardown:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
 
     // Don't implement core components: these are designed
@@ -227,11 +235,16 @@ class Component {
                 : macro @:pos(f.pos) __context.get($v{name});
             case macro false: 
               // ignore
-            case { expr: EConst(CString(s, _)) | EConst(CIdent(s)), pos:_ }:
+            case { expr: EConst(CString(s, _)), pos:_ }:
               isOptional = true;
               e = e != null
                 ? macro @:pos(f.pos) __context.get($v{s}, $e)
                 : macro @:pos(f.pos) __context.get($v{s});
+            case { expr: EConst(CIdent(s)), pos:_ }:
+              isOptional = true;
+              e = e != null
+                ? macro @:pos(f.pos) __context.get(__props.$s, $e)
+                : macro @:pos(f.pos) __context.get(__props.$s);
             default:
               Context.error('Invalid argument for `inject`', param.pos);
           }
@@ -320,6 +333,14 @@ class Component {
             pos: f.pos
           });
         }
+      
+      case FFun(_) if (f.meta.exists(m -> initMeta.has(m.name))):
+        var name = f.name;
+        startup.push(macro @:pos(f.pos) this.$name());
+
+      case FFun(_) if (f.meta.exists(m -> disposeMeta.has(m.name))):
+        var name = f.name;
+        teardown.push(macro @:pos(f.pos) this.$name());
 
       default:
     }
@@ -336,6 +357,7 @@ class Component {
       
       public function new(__props:$propType, context:pilot.core.Context) {
         _pilot_update(__props, context);
+        $b{startup};
       }
 
       override function _pilot_setProperties(__props:Dynamic, __context:pilot.core.Context) {
@@ -343,6 +365,11 @@ class Component {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
+      }
+
+      override function _pilot_dispose() {
+        $b{teardown};
+        super._pilot_dispose();
       }
 
     }).fields);
