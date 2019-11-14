@@ -56,6 +56,17 @@ class Example extends Component {
 
 ```
 
+Lifecycle
+---------
+
+Components can have methods marked with lifecycle meta (`@:init`, `@:effect` or `@:dispose`).
+
+`@:init` (or `@:initialize` if you're feeling verbose) will be run _once_ when the Component is constructed.
+
+`@:effect` will be run _every time_ the Component has been rendered and is mounted in the DOM. This is where you'll want to handle things like checking if the user clicked off the component's node (use `getRealNode()` to access the mounted DOM node).
+
+`@:dispose` will be run _once_, after the Component is removed from the DOM. This is where you should handle any cleanup your component needs.
+
 Other Options
 -------------
 

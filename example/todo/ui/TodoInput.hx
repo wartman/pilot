@@ -63,8 +63,9 @@ class TodoInput extends Component {
 
     var handler:(e:js.html.Event)->Void;
 
-    override function componentDidMount(node:RealNode) {
-      var el:js.html.InputElement = cast node;
+    @:effect 
+    function setupListener() {
+      var el:js.html.InputElement = cast getRealNode();
       el.focus();
       if (requestClose != null) {
         handler = function (_) {
@@ -75,7 +76,8 @@ class TodoInput extends Component {
       }
     }
     
-    override function componentWillUnmount(el:RealNode) {
+    @:dispose 
+    function cleanup() {
       js.Browser.window.removeEventListener('click', handler);
     }
   

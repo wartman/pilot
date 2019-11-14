@@ -21,7 +21,6 @@ class Context {
   }
 
   public function later(cb:()->Void) {
-    // callbacks.push(cb);
     #if js
       js.Browser.window.requestAnimationFrame(_ -> cb());
     #else

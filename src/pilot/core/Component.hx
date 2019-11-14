@@ -5,12 +5,12 @@ package pilot.core;
 @:autoBuild(pilot.core.Component.build())
 class Component<Real:{}> implements Wire<Dynamic, Real> {
   
-  var _pilot_type:NodeType<Dynamic, Real>;
-  var _pilot_wire:Wire<Dynamic, Real>;
-  var _pilot_parent:Wire<Dynamic, Real>;
-  var _pilot_context:Context;
+  @:noCompletion var _pilot_type:NodeType<Dynamic, Real>;
+  @:noCompletion var _pilot_wire:Wire<Dynamic, Real>;
+  @:noCompletion var _pilot_parent:Wire<Dynamic, Real>;
+  @:noCompletion var _pilot_context:Context;
 
-  public function _pilot_update(attrs:Dynamic, context:Context) {
+  @:noCompletion public function _pilot_update(attrs:Dynamic, context:Context) {
     _pilot_context = context;
     if (_pilot_wire == null && componentShouldRender(attrs)) {
       _pilot_setProperties(attrs, context);
@@ -21,8 +21,7 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
     }
   }
 
-  function _pilot_doInitialRender(rendered:VNode<Real>, context:Context) {
-    componentWillMount();
+  @:noCompletion function _pilot_doInitialRender(rendered:VNode<Real>, context:Context) {
     switch rendered {
       case VNative(type, attrs, children, _):
         _pilot_type = type;
@@ -38,12 +37,11 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
         _pilot_wire = new WireFragment();
         _pilot_wire._pilot_updateChildren(children, context);
     }
-    context.later(() -> componentDidMount(_pilot_getReal()));
+    context.later(_pilot_doEffects);
   }
 
   
-  function _pilot_doDiffRender(rendered:VNode<Real>, context:Context) {
-    componentWillUpdate();
+  @:noCompletion function _pilot_doDiffRender(rendered:VNode<Real>, context:Context) {
     switch rendered {
       case VNative(_, attrs, children, _):
         _pilot_wire._pilot_update(attrs, context);
@@ -55,8 +53,67 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
       case VFragment(children):
         _pilot_wire._pilot_updateChildren(children, context);
     }
+    context.later(_pilot_doEffects);
   }
 
+  function componentShouldRender(newAttrs:Dynamic):Bool {
+    return true;
+  }
+
+  function render():VNode<Real> {
+    return null;
+  }
+
+  macro function html(e);
+
+  inline function getRealNode() {
+    return _pilot_getReal();
+  }
+
+  @:noCompletion public function _pilot_getReal():Real {
+    return if (_pilot_wire != null) _pilot_wire._pilot_getReal() else null;
+  }
+
+  @:noCompletion public function _pilot_insertInto(parent:Wire<Dynamic, Real>) {
+    _pilot_parent = parent;
+    _pilot_wire._pilot_insertInto(parent);
+  }
+
+  @:noCompletion public function _pilot_removeFrom(parent:Wire<Dynamic, Real>) {
+    if (_pilot_wire != null) _pilot_wire._pilot_removeFrom(parent);
+    _pilot_dispose();
+  }
+  
+  @:noCompletion public function _pilot_appendChild(child:Wire<Dynamic, Real>) {
+    if (_pilot_wire != null) _pilot_wire._pilot_appendChild(child);
+  }
+
+  @:noCompletion public function _pilot_removeChild(child:Wire<Dynamic, Real>) {
+    if (_pilot_wire != null) _pilot_wire._pilot_removeChild(child);
+  }
+
+  @:noCompletion public function _pilot_updateChildren(children:Array<VNode<Real>>, context:Context) {
+    _pilot_wire._pilot_updateChildren(children, context);
+  }
+
+  @:noCompletion public function _pilot_dispose() {
+    if (_pilot_wire != null) {
+      _pilot_wire._pilot_dispose();
+    }
+    _pilot_parent = null;
+    _pilot_wire = null;
+    _pilot_type = null;
+  }
+
+  @:noCompletion function _pilot_setProperties(attrs:Dynamic, context:Context):Dynamic {
+    return {};
+  }
+
+  @:noCompletion function _pilot_doEffects() {
+    // noop -- handled by macro
+  }
+
+  // // Keeping this around just in case.
   // function _pilot_doDiffRender(rendered:VNode<Real>, context:Context) {
   //   componentWillUpdate();
   //   switch rendered {
@@ -96,75 +153,6 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
   //   }
   // }
 
-  public function _pilot_getReal():Real {
-    return if (_pilot_wire != null) _pilot_wire._pilot_getReal() else null;
-  }
-
-  public function _pilot_insertInto(parent:Wire<Dynamic, Real>) {
-    _pilot_parent = parent;
-    _pilot_wire._pilot_insertInto(parent);
-  }
-
-  public function _pilot_removeFrom(parent:Wire<Dynamic, Real>) {
-    if (_pilot_wire != null) _pilot_wire._pilot_removeFrom(parent);
-    _pilot_dispose();
-  }
-  
-  public function _pilot_appendChild(child:Wire<Dynamic, Real>) {
-    if (_pilot_wire != null) _pilot_wire._pilot_appendChild(child);
-  }
-
-  public function _pilot_removeChild(child:Wire<Dynamic, Real>) {
-    if (_pilot_wire != null) _pilot_wire._pilot_removeChild(child);
-  }
-
-  public function _pilot_updateChildren(children:Array<VNode<Real>>, context:Context) {
-    _pilot_wire._pilot_updateChildren(children, context);
-  }
-
-  public function _pilot_dispose() {
-    if (_pilot_wire != null) {
-      componentWillUnmount(_pilot_wire._pilot_getReal());
-      _pilot_wire._pilot_dispose();
-    }
-    _pilot_parent = null;
-    _pilot_wire = null;
-    _pilot_type = null;
-  }
-
-  function _pilot_setProperties(attrs:Dynamic, context:Context):Dynamic {
-    return {};
-  }
-
-  // Todo: Lifecycle should be handled by metadata. We already have
-  //       `@:init` and `@:dispose` set up!
-
-  function componentWillMount() {
-    // noop
-  }
-
-  function componentDidMount(el:Real) {
-    // noop
-  }
-
-  function componentWillUpdate() {
-    // noop    
-  }
-
-  function componentWillUnmount(el:Real) {
-    // noop
-  }
-
-  function componentShouldRender(newAttrs:Dynamic):Bool {
-    return true;
-  }
-
-  function render():VNode<Real> {
-    return null;
-  }
-
-  macro function html(e);
-
 }
 
 #else 
@@ -179,6 +167,8 @@ class Component {
 
   static final initMeta = [ ':init', ':initialize' ];
   static final disposeMeta = [ ':dispose' ];
+  static final effectMeta = [ ':effect' ];
+  // static final guardMeta = [ ':guard' ];
   static final attrsMeta = [ ':attr', ':attribute' ];
   static final styleMeta = [ ':style' ];
   static final coreComponent = ':coreComponent';
@@ -198,6 +188,7 @@ class Component {
     var props:Array<Field> = [];
     var startup:Array<Expr> = [];
     var teardown:Array<Expr> = [];
+    var effect:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
 
     // Don't implement core components: these are designed
@@ -342,6 +333,10 @@ class Component {
         var name = f.name;
         teardown.push(macro @:pos(f.pos) this.$name());
 
+      case FFun(_) if (f.meta.exists(m -> effectMeta.has(m.name))):
+        var name = f.name;
+        effect.push(macro @:pos(f.pos) this.$name());
+
       default:
     }
 
@@ -351,7 +346,7 @@ class Component {
       
       @:noCompletion var _pilot_props:$propType;
 
-      public static function _pilot_create(props, context:pilot.core.Context) {
+      @:noCompletion public static function _pilot_create(props, context:pilot.core.Context) {
         return new $clsTp(props, context);
       } 
       
@@ -365,6 +360,10 @@ class Component {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
+      }
+
+      override function _pilot_doEffects() {
+        $b{effect};
       }
 
       override function _pilot_dispose() {
