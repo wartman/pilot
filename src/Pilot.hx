@@ -22,6 +22,9 @@ final class Pilot {
       rootNodes.set(node, new Root(node));
     }
     rootNodes.get(node).update(vNode);
+    #if php
+      Sys.print(node.toString());
+    #end
   }
 
 }

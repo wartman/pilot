@@ -14,6 +14,7 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
     _pilot_context = context;
     if (_pilot_wire == null && componentShouldRender(attrs)) {
       _pilot_setProperties(attrs, context);
+      _pilot_doInits();
       _pilot_doInitialRender(render(), context);
     } else if (componentShouldRender(attrs)) {
       _pilot_setProperties(attrs, context);
@@ -107,6 +108,10 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
 
   @:noCompletion function _pilot_setProperties(attrs:Dynamic, context:Context):Dynamic {
     return {};
+  }
+
+  @:noCompletion function _pilot_doInits() {
+    // noop -- handled by macro
   }
 
   @:noCompletion function _pilot_doEffects() {
@@ -352,7 +357,6 @@ class Component {
       
       public function new(__props:$propType, context:pilot.core.Context) {
         _pilot_update(__props, context);
-        $b{startup};
       }
 
       override function _pilot_setProperties(__props:Dynamic, __context:pilot.core.Context) {
@@ -360,6 +364,10 @@ class Component {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
+      }
+
+      override function _pilot_doInits() {
+        $b{startup};
       }
 
       override function _pilot_doEffects() {

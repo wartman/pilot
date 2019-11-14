@@ -21,6 +21,7 @@ class Provider<T> extends Component {
     _pilot_context = context;
     if (_pilot_wire == null && componentShouldRender(attrs)) {
       _pilot_setProperties(attrs, context);
+      _pilot_doInits();
       _pilot_setSubContext(context);
       _pilot_doInitialRender(render(), _pilot_subContext);
     } else if (componentShouldRender(attrs)) {
