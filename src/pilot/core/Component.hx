@@ -194,6 +194,7 @@ class Component {
     var startup:Array<Expr> = [];
     var teardown:Array<Expr> = [];
     var effect:Array<Expr> = [];
+    var updates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
 
     // Don't implement core components: these are designed
@@ -253,6 +254,11 @@ class Component {
             expr: macro __props.$name
           });
         }
+        
+        updates.push(macro @:pos(f.pos) {
+          if (Reflect.hasField(__props, $v{name})) _pilot_props.$name = Reflect.field(__props, $v{name});
+        });
+
         newFields = newFields.concat((macro class {
           function $getName() return _pilot_props.$name;
         }).fields);
@@ -339,15 +345,17 @@ class Component {
         return new $clsTp(props, context);
       } 
       
-      public function new(__props:$propType, context:pilot.core.Context) {
-        _pilot_update(__props, context);
-      }
-
-      override function _pilot_setProperties(__props:Dynamic, __context:pilot.core.Context) {
-        return _pilot_props = ${ {
+      public function new(__props:$propType, __context:pilot.core.Context) {
+        _pilot_props = ${ {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
+        _pilot_update({}, __context);
+      }
+
+      override function _pilot_setProperties(__props:Dynamic, __context:pilot.core.Context) {
+        $b{updates};
+        return _pilot_props;
       }
 
       override function _pilot_doInits() {

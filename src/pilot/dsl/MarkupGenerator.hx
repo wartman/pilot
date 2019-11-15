@@ -134,14 +134,15 @@ class MarkupGenerator {
       case MText(value):
         macro @:pos(pos) VNative(${generateNodeType('text', pos)}, $v{value}, []);
 
+      // TODO: This is broken: the child expressions won't be parseable.
       case MFor(it, children):
         switch Context.parse(it, pos) {
           case macro $i{name} in $target:
             var body = generateChildren(children, pos);
             macro @:pos(pos) VFragment([ for ($i{name} in ${target}) ${body} ]);
           case macro $i{name} => $i{value} in $target:
-            var body = generateChildren(children, pos);
-            macro @:pos(pos) VFragment([ for ($i{name} => $i{value} in ${target}) ${body} ]);
+            // var body = generateChildren(children, pos);
+            macro @:pos(pos) VFragment([ for ($i{name} => $i{value} in ${target}) ${generateChildren(children, pos)} ]);
           default:
             Context.error('Invalid loop iterator', pos);
             macro null;
