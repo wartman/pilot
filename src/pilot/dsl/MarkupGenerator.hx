@@ -139,6 +139,9 @@ class MarkupGenerator {
           case macro $i{name} in $target:
             var body = generateChildren(children, pos);
             macro @:pos(pos) VFragment([ for ($i{name} in ${target}) ${body} ]);
+          case macro $i{name} => $i{value} in $target:
+            var body = generateChildren(children, pos);
+            macro @:pos(pos) VFragment([ for ($i{name} => $i{value} in ${target}) ${body} ]);
           default:
             Context.error('Invalid loop iterator', pos);
             macro null;

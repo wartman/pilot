@@ -2,4 +2,4 @@ package pilot;
 
 import pilot.core.VNode;
 
-typedef PureComponent = VNode<RealNode>;
+typedef RenderResult = VNode<RealNode>;

@@ -1,10 +1,10 @@
 package todo.ui;
 
-import pilot.PureComponent;
+import pilot.RenderResult;
 import Pilot.html;
 import todo.data.*;
 
-abstract SiteFooter(PureComponent) to PureComponent {
+abstract SiteFooter(RenderResult) to RenderResult {
   
   public function new(props:{
     store:Store

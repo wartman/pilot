@@ -1,10 +1,10 @@
 package todo.ui;
 
 import Pilot.html;
-import pilot.PureComponent;
+import pilot.RenderResult;
 import todo.data.Store;
 
-abstract TodoList(PureComponent) to PureComponent {
+abstract TodoList(RenderResult) to RenderResult {
   
   public function new(props:{
     store:Store

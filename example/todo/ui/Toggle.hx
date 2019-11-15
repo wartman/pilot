@@ -1,9 +1,9 @@
 package todo.ui;
 
-import pilot.PureComponent;
+import pilot.RenderResult;
 import Pilot.html;
 
-abstract Toggle(PureComponent) to PureComponent {
+abstract Toggle(RenderResult) to RenderResult {
 
   public function new(props:{
     checked:Bool,

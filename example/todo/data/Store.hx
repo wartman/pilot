@@ -1,12 +1,12 @@
 package todo.data;
 
-import pilot.PureComponent;
+import pilot.RenderResult;
 import pilot.Root;
 
 class Store {
 
   var todos:Array<Todo> = [];
-  final build:(store:Store)->PureComponent;
+  final build:(store:Store)->RenderResult;
   public var filter:VisibleTodos = VisibleAll;
   
   var _allSelected:Bool = null;
