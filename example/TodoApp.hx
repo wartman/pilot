@@ -1,16 +1,16 @@
 import pilot.Dom;
-import pilot.Provider;
 import todo.data.Store;
 import todo.ui.App;
+import todo.ui.StoreProvider;
 
 class TodoApp {
 
   static function main() {
     var root = Dom.getElementById('root');
     var store = new Store(store -> Pilot.html(
-      <Provider id="store" value={store}> 
+      <StoreProvider store={store}> 
         <App />
-      </Provider>
+      </StoreProvider>
     ), root);
     store.update();
 

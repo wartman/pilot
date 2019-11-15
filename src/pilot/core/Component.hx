@@ -223,27 +223,11 @@ class Component {
             default: 
               Context.error('Attribute option `mutable` must be Bool', param.pos);
           }
-          case macro inject = ${injectExpr}: switch injectExpr {
-            case macro true:
-              isOptional = true;
-              e = e != null
-                ? macro @:pos(f.pos) __context.get($v{name}, $e)
-                : macro @:pos(f.pos) __context.get($v{name});
-            case macro false: 
-              // ignore
-            case { expr: EConst(CString(s, _)), pos:_ }:
-              isOptional = true;
-              e = e != null
-                ? macro @:pos(f.pos) __context.get($v{s}, $e)
-                : macro @:pos(f.pos) __context.get($v{s});
-            case { expr: EConst(CIdent(s)), pos:_ }:
-              isOptional = true;
-              e = e != null
-                ? macro @:pos(f.pos) __context.get(__props.$s, $e)
-                : macro @:pos(f.pos) __context.get(__props.$s);
-            default:
-              Context.error('Invalid argument for `inject`', param.pos);
-          }
+          case macro inject = ${injectExpr}:
+            isOptional = true;
+            e = e != null
+              ? macro @:pos(f.pos) __context.get(${injectExpr}, $e)
+              : macro @:pos(f.pos) __context.get(${injectExpr});
           case macro optional = ${e}: switch e {
             case macro true: isOptional = true;
             case macro false: isOptional = false;
