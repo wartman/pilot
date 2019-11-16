@@ -16,6 +16,11 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
         pos: getPos(position, position)
       });
     }
+    if (out.length == 1) switch out[0].node {
+      case MIf(_, _, _) | MFor(_, _):
+        out = [ { node: MFragment(out), pos: out[0].pos } ];
+      default:
+    }
     return out;
   }
 
@@ -26,12 +31,8 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
         ignoreLine();
         null;
       case '<' if (match('for')):
-        if (!allowControlNodes) 
-          throw errorAt('<for> cannot be a root node', 'for');
         parseFor();
       case '<' if (match('if')):
-        if (!allowControlNodes) 
-          throw errorAt('<if> cannot be a root node', 'if');
         parseIf();
       case '<' if (match('/')): 
         throw errorAt('Unexpected close tag', '</');

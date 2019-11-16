@@ -12,11 +12,11 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
 
   @:noCompletion public function _pilot_update(attrs:Dynamic, context:Context) {
     _pilot_context = context;
-    if (_pilot_wire == null && componentShouldRender(attrs)) {
+    if (_pilot_wire == null && _pilot_shouldRender(attrs)) {
       _pilot_setProperties(attrs, context);
       _pilot_doInits();
       _pilot_doInitialRender(render(), context);
-    } else if (componentShouldRender(attrs)) {
+    } else if (_pilot_shouldRender(attrs)) {
       _pilot_setProperties(attrs, context);
       _pilot_doDiffRender(render(), context);
     }
@@ -57,7 +57,7 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
     context.later(_pilot_doEffects);
   }
 
-  function componentShouldRender(newAttrs:Dynamic):Bool {
+  function _pilot_shouldRender(attrs:Dynamic):Bool {
     return true;
   }
 
@@ -118,46 +118,6 @@ class Component<Real:{}> implements Wire<Dynamic, Real> {
     // noop -- handled by macro
   }
 
-  // // Keeping this around just in case.
-  // function _pilot_doDiffRender(rendered:VNode<Real>, context:Context) {
-  //   componentWillUpdate();
-  //   switch rendered {
-  //     case VNative(type, attrs, children, _):
-  //       if (_pilot_type != type) {
-  //         componentWillUnmount(_pilot_getReal());
-  //         _pilot_wire._pilot_dispose();
-  //         _pilot_type = type;
-  //         _pilot_wire = type._pilot_create(attrs, context);
-  //         context.later(() -> componentDidMount(_pilot_getReal()));
-  //       } else {
-  //         _pilot_wire._pilot_update(attrs, context);
-  //       }
-
-  //       _pilot_wire._pilot_updateChildren(children, context);
-
-  //     case VComponent(type, attrs, _):
-  //       if (_pilot_type != type) {
-  //         componentWillUnmount(_pilot_getReal());
-  //         _pilot_wire._pilot_dispose();
-  //         _pilot_type = type;
-  //         _pilot_wire = type._pilot_create(attrs, context);
-  //         context.later(() -> componentDidMount(_pilot_getReal()));
-  //       } else {
-  //         _pilot_wire._pilot_update(attrs, context);
-  //       }
-
-  //     case VFragment(children):
-  //       if (_pilot_type != WireFragment) {
-  //         componentWillUnmount(_pilot_getReal());
-  //         _pilot_wire._pilot_dispose();
-  //         _pilot_type = WireFragment;
-  //         _pilot_wire = new WireFragment();
-  //         context.later(() -> componentDidMount(_pilot_getReal()));
-  //       }
-  //       _pilot_wire._pilot_updateChildren(children, context);
-  //   }
-  // }
-
 }
 
 #else 
@@ -173,7 +133,7 @@ class Component {
   static final initMeta = [ ':init', ':initialize' ];
   static final disposeMeta = [ ':dispose' ];
   static final effectMeta = [ ':effect' ];
-  // static final guardMeta = [ ':guard' ];
+  static final guardMeta = [ ':guard' ];
   static final attrsMeta = [ ':attr', ':attribute' ];
   static final styleMeta = [ ':style' ];
   static final coreComponent = ':coreComponent';
@@ -194,6 +154,7 @@ class Component {
     var startup:Array<Expr> = [];
     var teardown:Array<Expr> = [];
     var effect:Array<Expr> = [];
+    var guards:Array<Expr> = [];
     var updates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
 
@@ -256,7 +217,10 @@ class Component {
         }
         
         updates.push(macro @:pos(f.pos) {
-          if (Reflect.hasField(__props, $v{name})) _pilot_props.$name = Reflect.field(__props, $v{name});
+          if (Reflect.hasField(__props, $v{name})) switch [ _pilot_props.$name, Reflect.field(__props, $v{name}) ] {
+            case [ a, b ] if (a == b):
+            case [ _, b ]: _pilot_props.$name = b;
+          }
         });
 
         newFields = newFields.concat((macro class {
@@ -266,10 +230,8 @@ class Component {
         if (isState) {
           newFields = newFields.concat((macro class {
             function $setName(value) {
-              var props = Reflect.copy(_pilot_props);
-              props.$name = value;
               if (_pilot_context != null) {
-                _pilot_update(props, _pilot_context);
+                _pilot_update({ $name: value }, _pilot_context);
               }
               return value;
             }
@@ -330,7 +292,49 @@ class Component {
 
       case FFun(_) if (f.meta.exists(m -> effectMeta.has(m.name))):
         var name = f.name;
-        effect.push(macro @:pos(f.pos) this.$name());
+        var params = f.meta.find(m -> effectMeta.has(m.name)).params;
+        var guarded:Expr;
+
+        for (p in params) switch p {
+          case macro guard = ${e}:
+            guarded = macro @:pos(p.pos) if (${e}) this.$name();
+          default: 
+            Context.error('Invalid effect option', p.pos);
+        }
+
+        if (guarded != null) 
+          effect.push(guarded) 
+        else 
+          effect.push(macro @:pos(f.pos) this.$name());
+
+      case FFun(_) if (f.meta.exists(m -> guardMeta.has(m.name))):
+        var name = f.name;
+        var params = f.meta.find(m -> guardMeta.has(m.name)).params;
+        var check:Expr;
+
+        for (param in params) switch param {
+          case macro $i{field}:
+            if (check != null) {
+              Context.error('Only one field may be guarded for re-renders', param.pos);
+            }
+            var clsField = fields.find(f -> f.name == field);
+            if (clsField == null) {
+              Context.error('The field ${field} does not exist on this class', param.pos);
+            }
+            if (!clsField.meta.exists(m -> attrsMeta.has(m.name))) {
+              Context.error('Only fields marked with @:attribute may be checked for render guards', param.pos);
+            }
+            var fName = clsField.name;
+            check = macro @:pos(param.pos) if (!this.$name(Reflect.field(attrs, $v{clsField.name}))) return false;
+          default:
+            Context.error('Invalid guard option', param.pos);
+        }
+
+        guards.push(
+          check != null
+            ? check
+            : macro @:pos(f.pos) if (!this.$name(attrs)) return false
+        );
 
       default:
     }
@@ -356,6 +360,11 @@ class Component {
       override function _pilot_setProperties(__props:Dynamic, __context:pilot.core.Context) {
         $b{updates};
         return _pilot_props;
+      }
+
+      override function _pilot_shouldRender(attrs:Dynamic) {
+        $b{guards};
+        return true;
       }
 
       override function _pilot_doInits() {

@@ -61,24 +61,21 @@ class TodoInput extends Component {
 
   #if js
 
-    var handler:(e:js.html.Event)->Void;
+    function clickOff(_) {
+      js.Browser.window.removeEventListener('click', clickOff);
+      requestClose();
+    }
 
-    @:effect 
+    @:effect(guard = requestClose != null)
     function setupListener() {
       var el:js.html.InputElement = cast getRealNode();
       el.focus();
-      if (requestClose != null) {
-        handler = function (_) {
-          js.Browser.window.removeEventListener('click', handler);
-          requestClose();
-        }
-        js.Browser.window.addEventListener('click', handler);
-      }
+      js.Browser.window.addEventListener('click', clickOff);
     }
     
     @:dispose 
     function cleanup() {
-      js.Browser.window.removeEventListener('click', handler);
+      js.Browser.window.removeEventListener('click', clickOff);
     }
   
   #end

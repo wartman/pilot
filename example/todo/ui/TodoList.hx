@@ -1,26 +1,26 @@
 package todo.ui;
 
-import Pilot.html;
-import pilot.RenderResult;
-import todo.data.Store;
+import pilot.Component;
+import todo.data.*;
 
-abstract TodoList(RenderResult) to RenderResult {
+class TodoList extends Component {
   
-  public function new(props:{
-    store:Store
-  }) {
-    this = html(<div class@style={
+  @:attribute var store:Store;
+  @:attribute var todos:Array<Todo>;
+
+  override function render() return html(
+    <div class@style={
       position: relative;
       z-index: 2;
       border-top: 1px solid #e6e6e6;
     }>
       <ToggleAll
-        checked={props.store.allSelected}
+        checked={store.allSelected}
         id="toggle-all"
         onClick={e -> {
-          switch props.store.allSelected {
-            case true: props.store.markAllPending();
-            default: props.store.markAllComplete();
+          switch store.allSelected {
+            case true: store.markAllPending();
+            default: store.markAllComplete();
           }
         }}
       />
@@ -30,7 +30,7 @@ abstract TodoList(RenderResult) to RenderResult {
         padding: 0;
         list-style: none;
       }>
-        <for {todo in props.store.visibleTodos}>
+        <for {todo in todos}>
           // note that we don't pass `store` here: instead,
           // it's injected for us by `<StoreProvider /> in a 
           // parent component.
@@ -40,7 +40,13 @@ abstract TodoList(RenderResult) to RenderResult {
           <TodoItem todo={todo} /> 
         </for>
       </ul>
-    </div>);
+    </div>
+  );
+
+  @:guard(todos) function todoCountHasChanged(newTodos:Array<Todo>) {
+    if (newTodos == null) return true;
+    if (newTodos.length != todos.length) return true;
+    return false;
   }
 
 }

@@ -59,13 +59,34 @@ class Example extends Component {
 Lifecycle
 ---------
 
-Components can have methods marked with lifecycle meta (`@:init`, `@:effect` or `@:dispose`).
+Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@:dispose` or `@:gaurd`).
 
 `@:init` (or `@:initialize` if you're feeling verbose) will be run _once_ when the Component is constructed.
 
-`@:effect` will be run _every time_ the Component has been rendered and is mounted in the DOM. This is where you'll want to handle things like checking if the user clicked off the component's node (use `getRealNode()` to access the mounted DOM node).
+`@:effect` will be run _every time_ the Component has been rendered and is mounted in the DOM. This is where you'll want to handle things like checking if the user clicked off the component's node (use `getRealNode()` to access the mounted DOM node). You can determine if effects should run with the `guard` option, which might look something like this: `@:effect(guard = someAttribute != null)`.
 
 `@:dispose` will be run _once_, after the Component is removed from the DOM. This is where you should handle any cleanup your component needs.
+
+`@:guard` lets you check when a component should render. Methods marked with `@:guard` will receive an object with all incoming attributes, allowing you to check for whatever criteria makes sense. Alternately, you can pass an identifier to guard (e.g., `@:guard(title)`) to ONLY check that attribute. For example:
+
+```haxe
+
+// Say we have some attributes:
+@:attribute var title:String;
+@:attribute var foo:String;
+
+// If this returns false, the component will NOT re-render.
+@:guard(title) function titleHasChanged(newTitle:String) {
+  return title != newTitle;
+}
+
+// Alterately, we can check against all attributes:
+@:guard function checkEverything(newAttrs:{ title:String, foo:String }) {
+  // do something here
+  return true;
+}
+
+```
 
 Other Options
 -------------

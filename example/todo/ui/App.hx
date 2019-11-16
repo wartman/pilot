@@ -66,7 +66,7 @@ class App extends Component {
     }>
       <SiteHeader store={store} />
       <if {store.getTodos().length > 0}>
-        <TodoList store={store} />
+        <TodoList store={store} todos={store.visibleTodos} />
         <SiteFooter store={store} />
       </if>
     </div>);

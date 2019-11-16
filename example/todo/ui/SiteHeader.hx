@@ -21,7 +21,7 @@ abstract SiteHeader(RenderResult) to RenderResult {
         -webkit-text-rendering: optimizeLegibility;
         -moz-text-rendering: optimizeLegibility;
         text-rendering: optimizeLegibility;
-      }>Todos</h1>
+      }>todos</h1>
       <TodoInput
         inputClass="new-todo"
         value=""
