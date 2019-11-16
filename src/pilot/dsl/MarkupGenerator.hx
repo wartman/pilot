@@ -28,6 +28,15 @@ class MarkupGenerator {
         case Code(value):
           Css.parse(macro @:pos(pos) $v{value}, true);
       }
+    },
+    'html' => (attr, pos) -> {
+      field: attr.name,
+      expr: switch attr.value.value {
+        case Raw(_):
+          throw new DslError('@html does not accept raw values', attr.pos);
+        case Code(value):
+          Markup.parse(macro @:pos(pos) $v{value});
+      }
     }
   ];
 
@@ -134,7 +143,7 @@ class MarkupGenerator {
       case MText(value):
         macro @:pos(pos) VNative(${generateNodeType('text', pos)}, $v{value}, []);
 
-      // TODO: This is broken: the child expressions won't be parseable.
+      // TODO: This is broken. The iterated values are NOT typed.
       case MFor(it, children):
         switch Context.parse(it, pos) {
           case macro $i{name} in $target:

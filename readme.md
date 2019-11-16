@@ -88,6 +88,31 @@ Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@
 
 ```
 
+Markup Attribute Macros
+-----------------------
+
+Currently there are only two attribute macros: `@style` and `@html`. There may be more in the future (along with the ability to define your own). Attribute macros may be appended to any attribute name and will handle the value at compile time. 
+
+Use `@style` to parse styles. Generally used with `class`, although it can be used for any attribute that expects a `pilot.Style` as well.
+
+```haxe
+Pilot.html(<div class@style={
+  width: 200px;
+  height: 50px;
+}>Hello world</div>);
+```
+
+Use `@html` to parse markup. This might be handy in situations where you have more than one slot for content.
+
+```haxe
+var title = 'bar';
+Pilot.html(<Alert
+  title@html={<h2>{title}</h2>}
+>
+  <p>Some warning about a thing.</p>
+</Alert>);
+```
+
 Other Options
 -------------
 
