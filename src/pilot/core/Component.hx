@@ -325,7 +325,7 @@ class Component {
               Context.error('Only fields marked with @:attribute may be checked for render guards', param.pos);
             }
             var fName = clsField.name;
-            check = macro @:pos(param.pos) if (!this.$name(Reflect.field(attrs, $v{clsField.name}))) return false;
+            check = macro @:pos(param.pos) !this.$name(Reflect.field(attrs, $v{clsField.name}));
           default:
             Context.error('Invalid guard option', param.pos);
         }
@@ -333,13 +333,21 @@ class Component {
         guards.push(
           check != null
             ? check
-            : macro @:pos(f.pos) if (!this.$name(attrs)) return false
+            : macro @:pos(f.pos)!this.$name(attrs)
         );
 
       default:
     }
 
     var propType = TAnonymous(props);
+    var guardCheck = macro null;
+    if (guards.length > 0) {
+      guardCheck = guards[0];
+      for (i in 1...guards.length) {
+        guardCheck = macro ${guardCheck} && ${guards[i]};
+      }
+      guardCheck = macro if (${guardCheck}) return false;
+    }
 
     newFields = newFields.concat((macro class {
       
@@ -363,7 +371,7 @@ class Component {
       }
 
       override function _pilot_shouldRender(attrs:Dynamic) {
-        $b{guards};
+        ${guardCheck}
         return true;
       }
 

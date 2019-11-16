@@ -43,7 +43,12 @@ class TodoList extends Component {
     </div>
   );
 
-  @:guard(todos) function todoCountHasChanged(newTodos:Array<Todo>) {
+  @:guard(store) function storeIsDirty(newStore:Store) {
+    if (newStore != store) return true;
+    return store.dirty;
+  }
+
+  @:guard(todos) function todosHaveChanged(newTodos:Array<Todo>) {
     if (newTodos == null) return true;
     if (newTodos.length != todos.length) return true;
     return false;

@@ -7,6 +7,7 @@ class Store {
 
   var todos:Array<Todo> = [];
   final build:(store:Store)->RenderResult;
+  public var dirty = true;
   public var filter:VisibleTodos = VisibleAll;
   
   var _allSelected:Bool = null;
@@ -48,6 +49,7 @@ class Store {
     _visibleTodos = null;
     _allSelected = null;
     root.update(build(this));
+    dirty = false;
   }
 
   public function getTodos() {
@@ -75,11 +77,13 @@ class Store {
   }
 
   public function markAllComplete() {
+    dirty = true;
     for (todo in visibleTodos) todo.complete = true;
     update();
   }
 
   public function markAllPending() {
+    dirty = true;
     for (todo in visibleTodos) todo.complete = false;
     update();
   }
