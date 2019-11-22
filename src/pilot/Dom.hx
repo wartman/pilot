@@ -2,6 +2,8 @@ package pilot;
 
 class Dom {
 
+  inline public static final SVG_NS = 'http://www.w3.org/2000/svg';
+
   inline public static function createFragment() {
     #if (js && !nodejs)
       return js.Browser.document.createDocumentFragment();
@@ -13,6 +15,14 @@ class Dom {
   inline public static function createNode(name:String):RealNode {
     #if (js && !nodejs)
       return js.Browser.document.createElement(name);
+    #else
+      return new pilot.sys.Node(name);
+    #end
+  }
+
+  inline public static function createSvgNode(name:String):RealNode {
+    #if (js && !nodejs)
+      return js.Browser.document.createElementNS(SVG_NS, name);
     #else
       return new pilot.sys.Node(name);
     #end

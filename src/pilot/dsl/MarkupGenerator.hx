@@ -46,6 +46,7 @@ class MarkupGenerator {
   
   final nodes:Array<MarkupNode>;
   final pos:Position;
+  var isSvg:Bool = false;
 
   public function new(nodes, pos) {
     this.nodes = nodes;
@@ -70,6 +71,11 @@ class MarkupGenerator {
     return switch node.node {
 
       case MNode(name, attrs, children, false):
+        // Trying to handle SVG this way, not sure if it's
+        // wise though.
+        var svgBefore = isSvg;
+        if (name == 'svg') isSvg = true;
+
         var key = extractKey(attrs);
         var fields = generateAttrs(attrs);
         var type = generateNodeType(name, pos);
@@ -81,6 +87,8 @@ class MarkupGenerator {
         var children:Array<Expr> = children == null ? [] : [ for (c in children)
           generateNode(c)
         ].filter(e -> e != null);
+
+        isSvg = svgBefore;
         
         macro @:pos(pos) VNative(
           ${type}, 
@@ -177,6 +185,7 @@ class MarkupGenerator {
   function generateNodeType(name:String, pos:Position):Expr {
     return switch name {
       case 'text': macro @:pos(pos) pilot.TextNode;
+      case _ if (isSvg): macro @:pos(pos) pilot.SvgNodeType.get($v{name});
       default: macro @:pos(pos) pilot.NodeType.get($v{name});
     }
   }

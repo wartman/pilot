@@ -6,9 +6,11 @@ import pilot.core.WireBase;
 class NativeNode<Attrs:{}> extends WireBase<Attrs, RealNode> {
   
   final real:RealNode;
+  final isSvg:Bool;
 
-  public function new(real) {
+  public function new(real, isSvg = false) {
     this.real = real;
+    this.isSvg = isSvg;
   }
 
   public function hydrate() {
@@ -50,6 +52,15 @@ class NativeNode<Attrs:{}> extends WireBase<Attrs, RealNode> {
       switch key {
         case 'value' | 'selected' | 'checked':
           js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
+        case 'viewBox' if (isSvg):
+          if (newValue == null) {
+            el.removeAttributeNS(Dom.SVG_NS, key);
+          } else {
+            el.setAttributeNS(Dom.SVG_NS, key, newValue);
+          }
+        case 'xmlns' if (isSvg):
+        case _ if (!isSvg && js.Syntax.code('{0} in {1}', key, el)):
+          js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
         default: 
           if (key.charAt(0) == 'o' && key.charAt(1) == 'n') {
             var ev = key.substr(2).toLowerCase();
@@ -65,7 +76,7 @@ class NativeNode<Attrs:{}> extends WireBase<Attrs, RealNode> {
       }
     }
 
-  #else 
+  #else
 
     override function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
       if (key.charAt(0) == 'o' && key.charAt(1) == 'n') {
