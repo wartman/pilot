@@ -1,9 +1,9 @@
 package todo.ui;
 
-import pilot.RenderResult;
+import pilot.VNode;
 import Pilot.html;
 
-abstract Toggle(RenderResult) to RenderResult {
+abstract Toggle(VNode) to VNode {
 
   public function new(props:{
     checked:Bool,

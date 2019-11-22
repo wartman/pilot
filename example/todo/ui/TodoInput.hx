@@ -1,6 +1,5 @@
 package todo.ui;
 
-import pilot.RealNode;
 import pilot.Component;
 
 class TodoInput extends Component {

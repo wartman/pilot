@@ -1,6 +1,6 @@
 import pilot.Root;
-import pilot.RealNode;
-import pilot.core.VNode;
+import pilot.Node;
+import pilot.VNode;
 import pilot.Dom;
 
 final class Pilot {
@@ -15,9 +15,9 @@ final class Pilot {
     return pilot.dsl.Css.parse(expr);
   }
 
-  static final rootNodes:Map<RealNode, Root> = [];
+  static final rootNodes:Map<Node, Root> = [];
 
-  inline public static function mount(node:RealNode, vNode:VNode<RealNode>) {
+  inline public static function mount(node:Node, vNode:VNode) {
     if (!rootNodes.exists(node)) {
       rootNodes.set(node, new Root(node));
     }

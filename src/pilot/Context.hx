@@ -1,4 +1,4 @@
-package pilot.core;
+package pilot;
 
 class Context {
 

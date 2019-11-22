@@ -62,7 +62,7 @@ class MarkupGenerator {
       ? exprs[0] 
       : macro VFragment([ $a{exprs} ]);
 
-    return macro @:pos(pos) (${eType}:pilot.core.VNode<pilot.RealNode>);
+    return macro @:pos(pos) (${eType}:pilot.VNode);
   }
 
   function generateNode(node:MarkupNode):Expr {
@@ -124,11 +124,11 @@ class MarkupGenerator {
           pos: pos
         };
 
-        if (Context.unify(type, Context.getType('pilot.core.VNode'))) {
+        if (Context.unify(type, Context.getType('pilot.VNode'))) {
           macro @:pos(pos) new $tp($attrs);
         } else {
-          if (!Context.unify(type, Context.getType('pilot.core.Component'))) {
-            Context.error('Components must implement pilot.core.Component', pos);
+          if (!Context.unify(type, Context.getType('pilot.Component'))) {
+            Context.error('Components must implement pilot.Component', pos);
           }
           macro @:pos(pos) VComponent(
             $p{tp.pack.concat([ tp.name ])},
@@ -142,7 +142,7 @@ class MarkupGenerator {
         var t = Context.typeof(e);
         if (Context.unify(t, Context.getType('pilot.Children'))) {
           macro @:pos(pos) VFragment(${e});
-        } else if (Context.unify(t, Context.getType('pilot.core.VNode'))) {
+        } else if (Context.unify(t, Context.getType('pilot.VNode'))) {
           macro @:pos(pos) ${e};
         } else {
           macro @:pos(pos) VNative(${generateNodeType('text', pos)}, ${e}, []);
@@ -184,7 +184,7 @@ class MarkupGenerator {
 
   function generateNodeType(name:String, pos:Position):Expr {
     return switch name {
-      case 'text': macro @:pos(pos) pilot.TextNode;
+      case 'text': macro @:pos(pos) pilot.TextType;
       case _ if (isSvg): macro @:pos(pos) pilot.NodeType.getSvg($v{name});
       default: macro @:pos(pos) pilot.NodeType.get($v{name});
     }

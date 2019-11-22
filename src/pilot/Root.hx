@@ -1,21 +1,18 @@
 package pilot;
 
-import pilot.core.Context;
-import pilot.core.VNode;
-
 class Root {
   
-  var target:NativeNode<Dynamic>;
+  var target:NodeWire<Dynamic>;
   final context:Context;
 
   // Todo: allow setting of context here
-  public function new(node:RealNode) {
+  public function new(node:Node) {
     context = new Context();
-    target = new NativeNode(node);
+    target = new NodeWire(node);
     target.hydrate();
   }
 
-  public function update(vNode:VNode<RealNode>) {
+  public function update(vNode:VNode) {
     target._pilot_updateChildren([ vNode ], context);
   }
 

@@ -1,4 +1,4 @@
-package pilot.core;
+package pilot;
 
 abstract Key({}) from {} to {} {
   

@@ -1,7 +1,5 @@
 package pilot;
 
-import pilot.core.Context;
-
 final class Provider<T> extends Component {
 
   @:attribute var id:String;

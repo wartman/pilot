@@ -1,4 +1,4 @@
-package pilot.core;
+package pilot;
 
 import haxe.DynamicAccess;
 

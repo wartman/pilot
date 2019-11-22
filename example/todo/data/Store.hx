@@ -1,12 +1,12 @@
 package todo.data;
 
-import pilot.RenderResult;
+import pilot.VNode;
 import pilot.Root;
 
 class Store {
 
   var todos:Array<Todo> = [];
-  final build:(store:Store)->RenderResult;
+  final build:(store:Store)->VNode;
   public var dirty = true;
   public var filter:VisibleTodos = VisibleAll;
   

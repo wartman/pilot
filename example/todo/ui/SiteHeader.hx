@@ -1,10 +1,10 @@
 package todo.ui;
 
-import pilot.RenderResult;
+import pilot.VNode;
 import Pilot.html;
 import todo.data.*;
 
-abstract SiteHeader(RenderResult) to RenderResult {
+abstract SiteHeader(VNode) to VNode {
   
   public function new(props:{
     store:Store

@@ -1,8 +1,5 @@
 package pilot;
 
-import pilot.core.Wire;
-import pilot.core.Context;
-
 class NodeType<Attrs:{}> {
   
   static final tags:Map<String, NodeType<Dynamic>> = [];
@@ -29,9 +26,9 @@ class NodeType<Attrs:{}> {
     this.isSvg = isSvg;
   }
 
-  public function _pilot_create(attrs:Attrs, context:Context):Wire<Attrs, RealNode> {
-    var node = new NativeNode(
-      isSvg ? Dom.createSvgNode(name) : Dom.createNode(name),
+  public function _pilot_create(attrs:Attrs, context:Context):Wire<Attrs> {
+    var node = new NodeWire(
+      new Node(name, isSvg ? Svg : Native),
       isSvg
     );
     node._pilot_update(attrs, context);
