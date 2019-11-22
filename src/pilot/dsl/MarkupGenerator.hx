@@ -185,7 +185,7 @@ class MarkupGenerator {
   function generateNodeType(name:String, pos:Position):Expr {
     return switch name {
       case 'text': macro @:pos(pos) pilot.TextNode;
-      case _ if (isSvg): macro @:pos(pos) pilot.SvgNodeType.get($v{name});
+      case _ if (isSvg): macro @:pos(pos) pilot.NodeType.getSvg($v{name});
       default: macro @:pos(pos) pilot.NodeType.get($v{name});
     }
   }

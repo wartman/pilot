@@ -17,9 +17,12 @@ class NativeNode<Attrs:{}> extends WireBase<Attrs, RealNode> {
     if (childList.length > 0) return;
 
     for (n in real.childNodes) {
-      var type = NodeType.get(n.nodeName);
-      var nn = new NativeNode(n);
-      if (!types.exists(type)) types.set(type, new NodeTypeRegistry());
+      var isSvg = isSvg || n.nodeName == 'svg';
+      var type = isSvg ? NodeType.getSvg(n.nodeName) : NodeType.get(n.nodeName);
+      var nn = new NativeNode(n, isSvg);
+      if (!types.exists(type)) {
+        types.set(type, new NodeTypeRegistry());
+      }
       types.get(type).put(null, nn);
       childList.push(nn);
       nn.hydrate();
@@ -50,7 +53,7 @@ class NativeNode<Attrs:{}> extends WireBase<Attrs, RealNode> {
     override function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
       var el:js.html.Element = cast real;
       switch key {
-        case 'value' | 'selected' | 'checked':
+        case 'value' | 'selected' | 'checked' if (!isSvg):
           js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
         case 'viewBox' if (isSvg):
           if (newValue == null) {

@@ -14,15 +14,26 @@ class NodeType<Attrs:{}> {
     return tags.get(name);
   }
 
-  final name:String;
-  // todo: handle svg
+  static public function getSvg(name:String):NodeType<Dynamic> {
+    if (!tags.exists(name)) {
+      tags.set(name, new NodeType(name, true));
+    } 
+    return tags.get(name);
+  }
 
-  public function new(name) {
+  final name:String;
+  final isSvg:Bool;
+
+  public function new(name, isSvg = false) {
     this.name = name;
+    this.isSvg = isSvg;
   }
 
   public function _pilot_create(attrs:Attrs, context:Context):Wire<Attrs, RealNode> {
-    var node = new NativeNode(Dom.createNode(name));
+    var node = new NativeNode(
+      isSvg ? Dom.createSvgNode(name) : Dom.createNode(name),
+      isSvg
+    );
     node._pilot_update(attrs, context);
     return node;
   }
