@@ -1,50 +1,54 @@
 package todo.ui;
 
-import pilot.Style;
-import pilot.VNode;
-import pilot.VNode.h;
-import todo.data.Store;
+import pilot.Component;
+import todo.data.*;
 
-abstract TodoList(VNode) to VNode {
+class TodoList extends Component {
   
-  public inline function new(props:{ store:Store }) {
-    var store = props.store;
+  @:attribute var store:Store;
+  @:attribute var todos:Array<Todo>;
 
-    this = h('div', {
-      className: Style.create({
-        position: 'relative',
-        'z-index': 2,
-        'border-top': '1px solid #e6e6e6',
-      })
-    }, [
-      new Toggle({
-        type: All,
-        checked: store.allSelected,
-        id: 'toggle-all',
-        #if js
-          onClick: e -> {
-            switch store.allSelected {
-              case true: store.markAllPending();
-              default: store.markAllComplete();
-            }
+  override function render() return html(
+    <div class@style={
+      position: relative;
+      z-index: 2;
+      border-top: 1px solid #e6e6e6;
+    }>
+      <ToggleAll
+        checked={store.allSelected}
+        id="toggle-all"
+        onClick={e -> {
+          switch store.allSelected {
+            case true: store.markAllPending();
+            default: store.markAllComplete();
           }
-        #end
-      }),
-      h('label', { htmlFor: 'toggle-all' }, [ 'Toggle All' ]),
-      h('ul', {
-        className: Style.create({
-          margin: 0,
-          padding: 0,
-          'list-style': 'none',
-        })
-      }, [ 
-          for (todo in store.visibleTodos) new TodoItem({
-            todo: todo,
-            store: store
-          }) 
-        ]
-      )
-    ]);
+        }}
+      />
+      <label for="toggle-all">Toggle All</label>
+      <ul class@style={
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }>
+        <for {todo in todos}>
+          // note that we don't pass `store` here: instead,
+          // it's injected for us by `<StoreProvider /> in a 
+          // parent component.
+          <TodoItem todo={todo} /> 
+        </for>
+      </ul>
+    </div>
+  );
+
+  @:guard(store) function storeIsDirty(newStore:Store) {
+    if (newStore != store) return true;
+    return store.dirty;
+  }
+
+  @:guard(todos) function todosHaveChanged(newTodos:Array<Todo>) {
+    if (newTodos == null) return true;
+    if (newTodos.length != todos.length) return true;
+    return false;
   }
 
 }

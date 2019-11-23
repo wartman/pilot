@@ -1,17 +1,13 @@
 package todo.data;
 
 import pilot.VNode;
-
-#if js
-  using pilot.Differ;
-#else
-  using pilot.Renderer;
-#end
+import pilot.Root;
 
 class Store {
 
   var todos:Array<Todo> = [];
   final build:(store:Store)->VNode;
+  public var dirty = true;
   public var filter:VisibleTodos = VisibleAll;
   
   var _allSelected:Bool = null;
@@ -42,29 +38,19 @@ class Store {
   public var remainingTodos(get, never):Int;
   inline function get_remainingTodos() return todos.filter(todo -> !todo.complete).length;
 
-  #if js
-    final node:js.html.Node;
+  final root:Root;
 
-    public function new(build, node) {
-      this.node = node;
-      this.build = build;
-    }
-    
-    public function update() {
-      _visibleTodos = null;
-      _allSelected = null;
-      node.patch(build(this));
-    }
-
-  #else
-    public function new(build) {
-      this.build = build;
-    }
-
-    public function update() {
-      Sys.print(build(this).render());
-    }
-  #end
+  public function new(build, node) {
+    this.root = new Root(node);
+    this.build = build;
+  }
+  
+  public function update() {
+    _visibleTodos = null;
+    _allSelected = null;
+    root.update(build(this));
+    dirty = false;
+  }
 
   public function getTodos() {
     return todos;
@@ -91,11 +77,13 @@ class Store {
   }
 
   public function markAllComplete() {
+    dirty = true;
     for (todo in visibleTodos) todo.complete = true;
     update();
   }
 
   public function markAllPending() {
+    dirty = true;
     for (todo in visibleTodos) todo.complete = false;
     update();
   }
