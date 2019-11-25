@@ -12,49 +12,48 @@ class Component implements Wire<Dynamic> {
 
   @:noCompletion public function _pilot_update(attrs:Dynamic, context:Context) {
     _pilot_context = context;
-    if (_pilot_wire == null && _pilot_shouldRender(attrs)) {
+    if (_pilot_wire == null || _pilot_shouldRender(attrs)) {
       _pilot_setProperties(attrs, context);
       _pilot_doInits();
-      _pilot_doInitialRender(render(), context);
-    } else if (_pilot_shouldRender(attrs)) {
-      _pilot_setProperties(attrs, context);
-      _pilot_doDiffRender(render(), context);
+      _pilot_doRender(render(), context);
     }
   }
 
-  @:noCompletion function _pilot_doInitialRender(rendered:VNode, context:Context) {
+  @:noCompletion function _pilot_doRender(rendered:VNode, context:Context) {
     switch rendered {
       case VNative(type, attrs, children, _):
-        _pilot_type = type;
-        _pilot_wire = type._pilot_create(attrs, context);
+        if (_pilot_type != type) _pilot_removeWire();
+        if (_pilot_wire == null) {
+          _pilot_type = type;
+          _pilot_wire = type._pilot_create(attrs, context);
+        } else {
+          _pilot_wire._pilot_update(attrs, context);
+        }
         _pilot_wire._pilot_updateChildren(children, context);
-
       case VComponent(type, attrs, _):
-        _pilot_type = type;
-        _pilot_wire = type._pilot_create(attrs, context);
-
+        if (_pilot_type != type) _pilot_removeWire();
+        if (_pilot_wire == null) {
+          _pilot_type = type;
+          _pilot_wire = type._pilot_create(attrs, context);
+        } else {
+          _pilot_wire._pilot_update(attrs, context);
+        }
       case VFragment(children):
-        _pilot_type = FragmentWire;
-        _pilot_wire = new FragmentWire();
+        if (_pilot_type != FragmentWire) _pilot_removeWire();
+        if (_pilot_wire == null) {
+          _pilot_type = FragmentWire;
+          _pilot_wire = new FragmentWire();
+        }
         _pilot_wire._pilot_updateChildren(children, context);
     }
     Util.later(_pilot_doEffects);
   }
 
-  
-  @:noCompletion function _pilot_doDiffRender(rendered:VNode, context:Context) {
-    switch rendered {
-      case VNative(_, attrs, children, _):
-        _pilot_wire._pilot_update(attrs, context);
-        _pilot_wire._pilot_updateChildren(children, context);
-
-      case VComponent(_, attrs, _):
-        _pilot_wire._pilot_update(attrs, context);
-
-      case VFragment(children):
-        _pilot_wire._pilot_updateChildren(children, context);
+  @:noCompletion function _pilot_removeWire() {
+    if (_pilot_parent != null) {
+      _pilot_wire._pilot_removeFrom(_pilot_parent);
     }
-    Util.later(_pilot_doEffects);
+    _pilot_wire = null;
   }
 
   function _pilot_shouldRender(attrs:Dynamic):Bool {
