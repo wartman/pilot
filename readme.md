@@ -59,7 +59,7 @@ class Example extends Component {
 Lifecycle
 ---------
 
-Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@:dispose` or `@:gaurd`).
+Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@:dispose` or `@:guard`).
 
 `@:init` (or `@:initialize` if you're feeling verbose) will be run _once_ when the Component is constructed.
 
@@ -67,26 +67,7 @@ Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@
 
 `@:dispose` will be run _once_, after the Component is removed from the DOM. This is where you should handle any cleanup your component needs.
 
-`@:guard` lets you check when a component should render. Methods marked with `@:guard` will receive an object with all incoming attributes, allowing you to check for whatever criteria makes sense. Alternately, you can pass an identifier to guard (e.g., `@:guard(title)`) to ONLY check that attribute. For example:
-
-```haxe
-
-// Say we have some attributes:
-@:attribute var title:String;
-@:attribute var foo:String;
-
-// If this returns false, the component will NOT re-render.
-@:guard(title) function titleHasChanged(newTitle:String) {
-  return title != newTitle;
-}
-
-// Alterately, we can check against all attributes:
-@:guard function checkEverything(newAttrs:{ title:String, foo:String }) {
-  // do something here
-  return true;
-}
-
-```
+> Note: `@:guard` is currently undergoing some changes as I figure out the best API for it.
 
 Markup Attribute Macros
 -----------------------
@@ -111,6 +92,22 @@ Pilot.html(<Alert
 >
   <p>Some warning about a thing.</p>
 </Alert>);
+```
+
+There are also two special attributes (for now) you can use: `@ref` and `@key`:
+
+```haxe
+Pilot.html(
+  <div
+    @ref={node -> {
+      // Allows access to the real DOM (if a JS target) or to Pilot's
+      // very limited DOM implementation (for Sys targets). 
+      trace(node);
+    }}
+    @key="A unique key!"
+  >foo</div>
+);
+
 ```
 
 Other Options

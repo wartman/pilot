@@ -59,12 +59,13 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
     function process(nodes:Array<VNode>) for (n in nodes) switch n {
       case null:
 
-      case VNative(type, attrs, children, key): switch _pilot_resolveChildNode(type, key) {
+      case VNative(type, attrs, children, key, ref): switch _pilot_resolveChildNode(type, key) {
         case null:
           var node = type._pilot_create(attrs, context);
           node._pilot_insertInto(this);
           node._pilot_update(attrs, children, context);
           add(key, type, node);
+          if (ref != null) ref(node._pilot_getReal());
         case previous:
           previous._pilot_update(attrs, children, context);
           add(key, type, previous);

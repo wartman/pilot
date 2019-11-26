@@ -15,10 +15,6 @@ class Component extends BaseWire<Dynamic> {
 
   macro function html(e);
 
-  inline function getRealNode() {
-    return _pilot_getReal();
-  }
-
   override function _pilot_update(attrs:Dynamic, children:Array<VNode>, context:Context) {
     _pilot_context = context;
     _pilot_updateAttributes(attrs, context);

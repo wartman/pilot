@@ -75,7 +75,7 @@ class TodoItem extends Component {
     <if {editing}>
       <li 
         id={Std.string(todo.id)} 
-        key={todo}
+        @key={todo}
         class={root + ' editing'}
       >
         <TodoInput 
@@ -95,7 +95,7 @@ class TodoItem extends Component {
           e.stopPropagation();
           editing = true;
         }}
-        key={todo}
+        @key={todo}
         class={root}
       >
         <Toggle

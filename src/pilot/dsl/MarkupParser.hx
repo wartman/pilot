@@ -169,7 +169,8 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       }
 
       var attrStart = position;
-      var key:String = ident();
+      // todo: maybe indicate if starts with `@`?
+      var key:String = if (match('@')) '@' + ident() else ident();
       if (key.length <= 0) {
         throw errorAt('Expected an identifier', peek());
       }

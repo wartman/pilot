@@ -76,7 +76,8 @@ class MarkupGenerator {
         var svgBefore = isSvg;
         if (name == 'svg') isSvg = true;
 
-        var key = extractKey(attrs);
+        var ref = extractAttribute('@ref', attrs);
+        var key = extractAttribute('@key', attrs);
         var fields = generateAttrs(attrs);
         var type = generateNodeType(name, pos);
 
@@ -94,7 +95,8 @@ class MarkupGenerator {
           ${type}, 
           ${attrs}, 
           [ $a{children} ],
-          ${key}  
+          ${key},
+          ${ref}
         );
         
       case MNode(name, attrs, children, true):
@@ -109,7 +111,7 @@ class MarkupGenerator {
           Context.error(e, pos);
         }
         
-        var key = extractKey(attrs);
+        var key = extractAttribute('@key', attrs);
         var fields = generateAttrs(attrs);
 
         if (children != null && children.length > 0) {
@@ -202,7 +204,7 @@ class MarkupGenerator {
     var fields:Array<ObjectField> = [];
     for (attr in attrs) { 
       var pos = makePos(attr.value.pos);
-      if (attr.name != 'key' && allowKey(attr.name)) {
+      if (allowKey(attr.name)) {
         if (attr.macroName != null) {
           if (!attributeMacros.exists(attr.macroName)) {
             throw new DslError('Undefined macro @${attr.macroName}', attr.pos);
@@ -223,12 +225,13 @@ class MarkupGenerator {
   }
 
   function allowKey(key:String) {
+    if (key.startsWith('@')) return false;
     if (Context.defined('js') && !Context.defined('nodejs')) return true;
     return !key.startsWith('on');
   }
 
-  function extractKey(attrs:Array<MarkupAttribute>) {
-    for (attr in attrs) if (attr.name == 'key') {
+  function extractAttribute(name:String, attrs:Array<MarkupAttribute>) {
+    for (attr in attrs) if (attr.name == name) {
       var pos = makePos(attr.pos);
       return switch attr.value.value {
         case Raw(v): macro @:pos(pos) $v{v};
