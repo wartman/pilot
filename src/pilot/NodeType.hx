@@ -27,12 +27,12 @@ class NodeType<Attrs:{}> {
   }
 
   public function _pilot_create(attrs:Attrs, context:Context):Wire<Attrs> {
-    var node = new NodeWire(
+    return new NodeWire(
       new Node(name, isSvg ? Svg : Native),
+      attrs,
+      context,
       isSvg
     );
-    node._pilot_update(attrs, context);
-    return node;
   }
 
 }

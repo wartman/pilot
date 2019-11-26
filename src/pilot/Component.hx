@@ -3,62 +3,11 @@ package pilot;
 #if !macro
 
 @:autoBuild(pilot.Component.build())
-class Component implements Wire<Dynamic> {
+class Component extends BaseWire<Dynamic> {
   
-  @:noCompletion var _pilot_type:WireType<Dynamic>;
-  @:noCompletion var _pilot_wire:Wire<Dynamic>;
   @:noCompletion var _pilot_parent:Wire<Dynamic>;
   @:noCompletion var _pilot_context:Context;
-
-  @:noCompletion public function _pilot_update(attrs:Dynamic, context:Context) {
-    _pilot_context = context;
-    if (_pilot_wire == null || _pilot_shouldRender(attrs)) {
-      _pilot_setProperties(attrs, context);
-      _pilot_doInits();
-      _pilot_doRender(render(), context);
-    }
-  }
-
-  @:noCompletion function _pilot_doRender(rendered:VNode, context:Context) {
-    switch rendered {
-      case VNative(type, attrs, children, _):
-        if (_pilot_type != type) _pilot_removeWire();
-        if (_pilot_wire == null) {
-          _pilot_type = type;
-          _pilot_wire = type._pilot_create(attrs, context);
-        } else {
-          _pilot_wire._pilot_update(attrs, context);
-        }
-        _pilot_wire._pilot_updateChildren(children, context);
-      case VComponent(type, attrs, _):
-        if (_pilot_type != type) _pilot_removeWire();
-        if (_pilot_wire == null) {
-          _pilot_type = type;
-          _pilot_wire = type._pilot_create(attrs, context);
-        } else {
-          _pilot_wire._pilot_update(attrs, context);
-        }
-      case VFragment(children):
-        if (_pilot_type != FragmentWire) _pilot_removeWire();
-        if (_pilot_wire == null) {
-          _pilot_type = FragmentWire;
-          _pilot_wire = new FragmentWire();
-        }
-        _pilot_wire._pilot_updateChildren(children, context);
-    }
-    Util.later(_pilot_doEffects);
-  }
-
-  @:noCompletion function _pilot_removeWire() {
-    if (_pilot_parent != null) {
-      _pilot_wire._pilot_removeFrom(_pilot_parent);
-    }
-    _pilot_wire = null;
-  }
-
-  function _pilot_shouldRender(attrs:Dynamic):Bool {
-    return true;
-  }
+  @:noCompletion var _pilot_later:()->Void;
 
   function render():VNode {
     return null;
@@ -70,35 +19,50 @@ class Component implements Wire<Dynamic> {
     return _pilot_getReal();
   }
 
-  @:noCompletion public function _pilot_getReal():Node {
-    return if (_pilot_wire != null) _pilot_wire._pilot_getReal() else null;
+  override function _pilot_update(attrs:Dynamic, children:Array<VNode>, context:Context) {
+    _pilot_context = context;
+    _pilot_updateAttributes(attrs, context);
+
+    var getChildren = () -> switch render() {
+      case VFragment(children): children;
+      case vn: [ vn ];
+    }
+
+    if (_pilot_shouldRender(attrs)) {
+      if (_pilot_real == null) {
+        _pilot_later = () -> {
+          _pilot_updateChildren(getChildren(), _pilot_context);
+          Util.later(_pilot_doEffects);
+        }
+      } else {
+        _pilot_updateChildren(getChildren(), _pilot_context);
+        Util.later(_pilot_doEffects);
+      }
+    }
   }
 
-  @:noCompletion public function _pilot_insertInto(parent:Wire<Dynamic>) {
+  function _pilot_shouldRender(attrs:Dynamic):Bool {
+    return true;
+  }
+
+  override function _pilot_insertInto(parent:Wire<Dynamic>) {
     _pilot_parent = parent;
-    _pilot_wire._pilot_insertInto(parent);
+    _pilot_real = parent._pilot_getReal();
+    if (_pilot_later != null) {
+      _pilot_later();
+      _pilot_later = null;
+    }
   }
 
-  @:noCompletion public function _pilot_removeFrom(parent:Wire<Dynamic>) {
-    if (_pilot_wire != null) _pilot_wire._pilot_removeFrom(parent);
+  override function _pilot_removeFrom(parent:Wire<Dynamic>) {
+    for (c in _pilot_childList) c._pilot_removeFrom(parent);
     _pilot_dispose();
   }
-  
-  @:noCompletion public function _pilot_updateChildren(children:Array<VNode>, context:Context) {
-    _pilot_wire._pilot_updateChildren(children, context);
-  }
 
-  @:noCompletion public function _pilot_dispose() {
-    if (_pilot_wire != null) {
-      _pilot_wire._pilot_dispose();
-    }
+  override function _pilot_dispose() {
     _pilot_parent = null;
-    _pilot_wire = null;
-    _pilot_type = null;
-  }
-
-  @:noCompletion function _pilot_setProperties(attrs:Dynamic, context:Context):Dynamic {
-    return {};
+    _pilot_types = null;
+    _pilot_childList = null;
   }
 
   @:noCompletion function _pilot_doInits() {
@@ -124,7 +88,8 @@ class Component {
   static final initMeta = [ ':init', ':initialize' ];
   static final disposeMeta = [ ':dispose' ];
   static final effectMeta = [ ':effect' ];
-  static final guardMeta = [ ':guard' ];
+  // // Todo: rethinking how guards should work.
+  // static final guardMeta = [ ':guard' ];
   static final attrsMeta = [ ':attr', ':attribute' ];
   static final styleMeta = [ ':style' ];
   static final coreComponent = ':coreComponent';
@@ -145,7 +110,7 @@ class Component {
     var startup:Array<Expr> = [];
     var teardown:Array<Expr> = [];
     var effect:Array<Expr> = [];
-    var guards:Array<Expr> = [];
+    // var guards:Array<Expr> = [];
     var updates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
 
@@ -222,7 +187,7 @@ class Component {
           newFields = newFields.concat((macro class {
             function $setName(value) {
               if (_pilot_context != null) {
-                _pilot_update({ $name: value }, _pilot_context);
+                _pilot_update({ $name: value }, [], _pilot_context);
               }
               return value;
             }
@@ -298,73 +263,72 @@ class Component {
         else 
           effect.push(macro @:pos(f.pos) this.$name());
 
-      case FFun(_) if (f.meta.exists(m -> guardMeta.has(m.name))):
-        var name = f.name;
-        var params = f.meta.find(m -> guardMeta.has(m.name)).params;
-        var check:Expr;
+      // case FFun(_) if (f.meta.exists(m -> guardMeta.has(m.name))):
+      //   var name = f.name;
+      //   var params = f.meta.find(m -> guardMeta.has(m.name)).params;
+      //   var check:Expr;
 
-        for (param in params) switch param {
-          case macro $i{field}:
-            if (check != null) {
-              Context.error('Only one field may be guarded for re-renders', param.pos);
-            }
-            var clsField = fields.find(f -> f.name == field);
-            if (clsField == null) {
-              Context.error('The field ${field} does not exist on this class', param.pos);
-            }
-            if (!clsField.meta.exists(m -> attrsMeta.has(m.name))) {
-              Context.error('Only fields marked with @:attribute may be checked for render guards', param.pos);
-            }
-            var fName = clsField.name;
-            check = macro @:pos(param.pos) !this.$name(Reflect.field(attrs, $v{clsField.name}));
-          default:
-            Context.error('Invalid guard option', param.pos);
-        }
+      //   for (param in params) switch param {
+      //     case macro $i{field}:
+      //       if (check != null) {
+      //         Context.error('Only one field may be guarded for re-renders', param.pos);
+      //       }
+      //       var clsField = fields.find(f -> f.name == field);
+      //       if (clsField == null) {
+      //         Context.error('The field ${field} does not exist on this class', param.pos);
+      //       }
+      //       if (!clsField.meta.exists(m -> attrsMeta.has(m.name))) {
+      //         Context.error('Only fields marked with @:attribute may be checked for render guards', param.pos);
+      //       }
+      //       var fName = clsField.name;
+      //       check = macro @:pos(param.pos) !this.$name(Reflect.field(attrs, $v{clsField.name}));
+      //     default:
+      //       Context.error('Invalid guard option', param.pos);
+      //   }
 
-        guards.push(
-          check != null
-            ? check
-            : macro @:pos(f.pos)!this.$name(attrs)
-        );
+      //   guards.push(
+      //     check != null
+      //       ? check
+      //       : macro @:pos(f.pos)!this.$name(attrs)
+      //   );
 
       default:
     }
 
     var propType = TAnonymous(props);
-    var guardCheck = macro null;
-    if (guards.length > 0) {
-      guardCheck = guards[0];
-      for (i in 1...guards.length) {
-        guardCheck = macro ${guardCheck} && ${guards[i]};
-      }
-      guardCheck = macro if (${guardCheck}) return false;
-    }
+    // var guardCheck = macro null;
+    // if (guards.length > 0) {
+    //   guardCheck = guards[0];
+    //   for (i in 1...guards.length) {
+    //     guardCheck = macro ${guardCheck} && ${guards[i]};
+    //   }
+    //   guardCheck = macro if (${guardCheck}) return false;
+    // }
 
     newFields = newFields.concat((macro class {
       
       @:noCompletion var _pilot_props:$propType;
 
-      @:noCompletion public static function _pilot_create(props, context:pilot.Context) {
+      @:noCompletion public static function _pilot_create(props:$propType, context:pilot.Context) {
         return new $clsTp(props, context);
       } 
       
       public function new(__props:$propType, __context:pilot.Context) {
+        _pilot_context = __context;
         _pilot_props = ${ {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
-        _pilot_update({}, __context);
       }
 
-      override function _pilot_setProperties(__props:Dynamic, __context:pilot.Context) {
+      override function _pilot_updateAttributes(__props:Dynamic, __context:pilot.Context) {
         $b{updates};
-        return _pilot_props;
       }
 
-      override function _pilot_shouldRender(attrs:Dynamic) {
-        ${guardCheck}
-        return true;
-      }
+      // override function _pilot_shouldRender(attrs:Dynamic) {
+      //   ${guardCheck}
+      //   return true;
+      // }
 
       override function _pilot_doInits() {
         $b{startup};

@@ -4,7 +4,7 @@ class TextWire implements Wire<String> {
   
   final real:Node;
 
-  public function new(content:String) {
+  public function new(content) {
     real = new Node(content, Text);
   }
 
@@ -25,13 +25,9 @@ class TextWire implements Wire<String> {
     _pilot_dispose();
   }
   
-  public function _pilot_update(attrs:String, context:Context):Void {
+  public function _pilot_update(attrs:String, children:Array<VNode>, context:Context):Void {
     if (attrs == real.textContent) return;
     real.textContent = attrs;
   }
 
-  public function _pilot_updateChildren(children:Array<VNode>, context:Context):Void {
-    // noop
-  }
-  
 }

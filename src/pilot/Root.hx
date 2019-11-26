@@ -7,12 +7,12 @@ class Root {
 
   public function new(node:Node) {
     context = new Context();
-    target = new NodeWire(node);
-    target.hydrate();
+    target = new NodeWire(node, {}, context);
+    target.hydrate(context);
   }
 
   public function update(vNode:VNode) {
-    target._pilot_updateChildren([ vNode ], context);
+    target._pilot_update({}, [ vNode ], context);
   }
 
 }

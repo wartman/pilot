@@ -5,6 +5,5 @@ interface Wire<Attrs> {
   public function _pilot_getReal():Node;
   public function _pilot_insertInto(parent:Wire<Dynamic>):Void;
   public function _pilot_removeFrom(parent:Wire<Dynamic>):Void;
-  public function _pilot_update(attrs:Attrs, context:Context):Void;
-  public function _pilot_updateChildren(children:Array<VNode>, context:Context):Void;
+  public function _pilot_update(attrs:Attrs, children:Array<VNode>, context:Context):Void;
 }
