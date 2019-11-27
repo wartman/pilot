@@ -28,10 +28,39 @@ class MarkupTest {
       .equals('<div>abc</div>');
   }
 
+  @test('For loop with else works')
+  public function testLoopElse() {
+    var tester = (items:Array<String>) -> 
+      Pilot.html(<>
+        <for {item in items}>
+          {item}
+        <else>None</for>
+      </>)
+      .render()
+      .outerHTML;
+    tester([ 'a', 'b', 'c' ]).equals('<div>abc</div>');
+    tester(null).equals('<div>None</div>');
+  }
+
+  @test('Switch works')
+  public function testSwitch() {
+    Pilot
+      .html(<>
+        <switch {'foo'}>
+          <case {'foo'}>Foo</case>
+          <case {'bar'}>Bar</case>
+          <case {_}></case>
+        </switch>
+      </>)
+      .render()
+      .outerHTML
+      .equals('<div>Foo</div>');
+  }
+
   @test('If works')
   public function testIf() {
-    var tester = (ok:Bool) -> Pilot
-      .html(<if {ok}>Ok!<else>Not ok!</if>)
+    var tester = (ok:Bool) -> 
+      Pilot.html(<if {ok}>Ok!<else>Not ok!</if>)
       .render()
       .outerHTML;
     tester(false).equals('<div>Not ok!</div>');

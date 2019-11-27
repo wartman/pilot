@@ -34,6 +34,8 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
         parseFor();
       case '<' if (match('if')):
         parseIf();
+      case '<' if (match('switch')):
+        parseSwitch();
       case '<' if (match('/')): 
         throw errorAt('Unexpected close tag', '</');
       case '<': parseNode();
@@ -64,26 +66,18 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     consume('>');
     whitespace();
     
-    var children = parseChildren('for');
+    var maybeElse = parseChildrenWithElse('for');
+    var children = maybeElse.children;
+    var failed = if (maybeElse.hasElseBranch) parseChildren('for') else null;
     
     return {
-      node: MFor(it, children),
+      node: MFor(it, children, failed),
       pos: getPos(start, position)
     };
   }
 
   function parseIf():MarkupNode {
     var start = position - 3;
-    var hasElseBranch:Bool = false;
-    var didClose:Bool = false;
-    var endThenBranch = () -> {
-      if (match('<else>')) {
-        hasElseBranch = true;
-        didClose = true;
-        return true;
-      }
-      return didClose = match('</if>');
-    };
     var passing:Array<MarkupNode> = [];
     var failed:Array<MarkupNode> = [];
     var cond:String = '';
@@ -106,24 +100,57 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     consume('>');
     whitespace();
 
-    while (!isAtEnd() && !endThenBranch()) {
-      var n = parseRoot();
-      if (n != null) passing.push(n);
-      whitespace();
-    }
-
-    if (!didClose) {
-      throw error('Unclosed <if>', start, position);
-    }
-
-    if (hasElseBranch) {
-      failed = parseChildren('if');
-    } else {
-      failed = null;
-    }
+    var maybeElse = parseChildrenWithElse('if');
+    var passing = maybeElse.children;
+    var failed = if (maybeElse.hasElseBranch) parseChildren('if') else null;
 
     return {
       node: MIf(cond, passing, failed),
+      pos: getPos(start, position)
+    };
+  }
+
+  function parseSwitch() {
+    var start = position - 6;
+    var cases:Array<{
+      cond:String,
+      children:Array<MarkupNode>
+    }> = [];
+    whitespace();
+
+    var target = switch advance() {
+      case '{': parseCode(1);
+      case '$': parseCode(0);
+      default:
+        throw error('<switch> requires a condition', position - 1, position);
+    }
+    
+    consume('>');
+
+    whitespace();
+  
+    while (!isAtEnd() && match('<case')) {
+      whitespace();
+      var cond = switch advance() {
+        case '{': parseCode(1);
+        case '$': parseCode(0);
+        default:
+          throw error('<case> requires a condition', position - 1, position);
+      }
+      consume('>');
+      whitespace();
+      var children = parseChildren('case');
+      whitespace();
+      cases.push({
+        cond: cond,
+        children: children
+      });
+    }
+
+    consume('</switch>');
+
+    return {
+      node: MSwitch(target, cases),
       pos: getPos(start, position)
     };
   }
@@ -229,6 +256,42 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     }
 
     return children;
+  }
+
+  function parseChildrenWithElse(closeTag:String):{
+    hasElseBranch:Bool,
+    children:Array<MarkupNode>
+  } {
+    var start = position;
+    var hasElseBranch:Bool = false;
+    var didClose:Bool = false;
+    var children:Array<MarkupNode> = [];
+
+    var isClosed = () -> {
+      if (match('<else>')) {
+        hasElseBranch = true;
+        didClose = true;
+        return true;
+      }
+      return didClose = match('</${closeTag}>');
+    };
+
+    whitespace();
+
+    while (!isAtEnd() && !isClosed()) {
+      var n = parseRoot();
+      if (n != null) children.push(n);
+      whitespace();
+    }
+
+    if (!didClose) {
+      throw error('Unclosed tag: ${closeTag}', start, position);
+    }
+
+    return {
+      hasElseBranch: hasElseBranch,
+      children: children
+    };
   }
 
   function parseText(init:String):MarkupNode {

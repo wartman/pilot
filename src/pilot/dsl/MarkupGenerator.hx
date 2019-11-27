@@ -146,14 +146,28 @@ class MarkupGenerator {
       case MText(value):
         macro @:pos(pos) VNative(${generateNodeType('text', pos)}, $v{value}, []);
 
-      case MFor(it, children):
+      case MFor(it, children, failed):
         switch Context.parse(it, pos) {
           case macro $i{name} in $target:
             var body = generateChildren(children, pos);
-            macro @:pos(pos) VFragment([ for ($i{name} in ${target}) ${body} ]);
+            var expr = macro @:pos(pos) VFragment([ for ($i{name} in ${target}) ${body} ]);
+            if (failed != null) {
+              var fBody = generateChildren(failed, pos);
+              macro @:pos(pos) if (${target} == null) ${fBody} else ${expr};
+            } else {
+              expr;
+            }
+          
           case macro $i{name} => $i{value} in $target:
-            // var body = generateChildren(children, pos);
-            macro @:pos(pos) VFragment([ for ($i{name} => $i{value} in ${target}) ${generateChildren(children, pos)} ]);
+            var body = generateChildren(children, pos);
+            var expr = macro @:pos(pos) VFragment([ for ($i{name} => $i{value} in ${target}) ${body} ]);
+            if (failed != null) {
+              var fBody = generateChildren(failed, pos);
+              macro @:pos(pos) if (${target} == null) ${fBody} else ${expr};
+            } else {
+              expr;
+            }
+
           default:
             Context.error('Invalid loop iterator', pos);
             macro null;
@@ -169,7 +183,20 @@ class MarkupGenerator {
 
       case MFragment(children):
         var exprs:Array<Expr> = [ for (c in children) generateNode(c) ];
-        return macro @:pos(pos) VFragment([ $a{exprs} ]);
+        macro @:pos(pos) VFragment([ $a{exprs} ]);
+
+      case MSwitch(target, cases):
+        {
+          expr: ESwitch(
+            Context.parse(target, pos),
+            [ for (c in cases) {
+                values: [ Context.parse(c.cond, pos) ],
+                expr: generateChildren(c.children, pos)
+            } ],
+            null
+          ),
+          pos: pos
+        };
 
       case MNone: null;
 

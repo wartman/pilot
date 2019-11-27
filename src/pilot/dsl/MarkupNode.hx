@@ -32,7 +32,15 @@ enum MarkupNodeDef {
   );
   MFor(
     it:String,
-    children:Array<MarkupNode>
+    children:Array<MarkupNode>,
+    ?failed:Array<MarkupNode>
+  );
+  MSwitch(
+    target:String,
+    cases:Array<{
+      cond:String,
+      children:Array<MarkupNode>
+    }>
   );
   MNone;
 }

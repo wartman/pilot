@@ -26,6 +26,11 @@ abstract Node(js.html.Node) from js.html.Node to js.html.Node {
   inline function get_outerHTML():String {
     return toElement().outerHTML;
   }
+
+  public var innerHTML(get, never):String;
+  inline function get_innerHTML():String {
+    return toElement().innerHTML;
+  }
   
   public function new(name:String, kind:NodeKind = Native) {
     this = switch kind {
@@ -64,6 +69,11 @@ class Node {
   public var outerHTML(get, never):String;
   inline function get_outerHTML():String {
     return toString();
+  }
+
+  public var innerHTML(get, never):String;
+  inline function get_innerHTML():String {
+    return [ for (c in childNodes) c.toString() ].join('');
   }
   
   public function new(nodeName, kind = Native) {
