@@ -26,9 +26,16 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
     }
   }
 
+  override function _pilot_updateAttributes(newAttrs:Attrs, context:Context) {
+    var previous:Attrs = _pilot_attrs;
+    if (previous == null) previous = cast {};
+    _pilot_attrs = newAttrs;
+    Util.diffObject(previous, newAttrs, applyAttribute);
+  }
+
   #if js
     
-    override function _pilot_applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
+    function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
       var el = _pilot_real.toElement();
       switch key {
         case 'value' | 'selected' | 'checked' if (!isSvg):
@@ -59,7 +66,7 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
 
   #else
 
-    override function _pilot_applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
+    function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
       if (key.charAt(0) == 'o' && key.charAt(1) == 'n') {
         // noop
       } else if (newValue == null || newValue == false) {

@@ -141,19 +141,11 @@ class MarkupGenerator {
 
       case MCode(v):
         var e = Context.parse(v, pos);
-        var t = Context.typeof(e);
-        if (Context.unify(t, Context.getType('pilot.Children'))) {
-          macro @:pos(pos) VFragment(${e});
-        } else if (Context.unify(t, Context.getType('pilot.VNode'))) {
-          macro @:pos(pos) ${e};
-        } else {
-          macro @:pos(pos) VNative(${generateNodeType('text', pos)}, ${e}, []);
-        }
+        macro @:pos(pos) (${e}:pilot.VNodeValue);
 
       case MText(value):
         macro @:pos(pos) VNative(${generateNodeType('text', pos)}, $v{value}, []);
 
-      // TODO: This is broken. The iterated values are NOT typed.
       case MFor(it, children):
         switch Context.parse(it, pos) {
           case macro $i{name} in $target:

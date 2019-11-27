@@ -40,4 +40,12 @@ class TodoList extends Component {
     </div>
   );
 
+  @:init public function startup() {
+    trace('This will be logged before the component is first rendered');
+  }
+
+  @:dispose public function removed() {
+    trace('This will be logged when the component is removed.');
+  }
+
 }

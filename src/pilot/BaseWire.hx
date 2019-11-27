@@ -34,13 +34,6 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   }
 
   function _pilot_updateAttributes(newAttrs:Attrs, context:Context) {
-    var previous:Attrs = _pilot_attrs;
-    if (previous == null) previous = cast {};
-    _pilot_attrs = newAttrs;
-    Util.diffObject(previous, newAttrs, _pilot_applyAttribute);
-  }
-
-  function _pilot_applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
     throw 'not implemented';
   }
 

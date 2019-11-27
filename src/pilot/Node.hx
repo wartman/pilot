@@ -21,6 +21,11 @@ enum NodeKind {
 abstract Node(js.html.Node) from js.html.Node to js.html.Node {
   
   inline public static final SVG_NS = 'http://www.w3.org/2000/svg';
+
+  public var outerHTML(get, never):String;
+  inline function get_outerHTML():String {
+    return toElement().outerHTML;
+  }
   
   public function new(name:String, kind:NodeKind = Native) {
     this = switch kind {
@@ -56,6 +61,11 @@ class Node {
   final kind:NodeKind;
   var attributes:DynamicAccess<Dynamic> = {};
 
+  public var outerHTML(get, never):String;
+  inline function get_outerHTML():String {
+    return toString();
+  }
+  
   public function new(nodeName, kind = Native) {
     this.kind = kind;
     switch kind {

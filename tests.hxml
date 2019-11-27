@@ -1,0 +1,16 @@
+-cp src
+-cp test
+
+-lib medic
+-main Run
+
+--each
+
+-D js-es=6
+-js dist/assets/test.js
+
+--next
+
+-D pilot-skip
+-D real-position
+-php dist/php-test

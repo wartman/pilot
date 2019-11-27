@@ -7,7 +7,7 @@ class Component extends BaseWire<Dynamic> {
   
   @:noCompletion var _pilot_parent:Wire<Dynamic>;
   @:noCompletion var _pilot_context:Context;
-  @:noCompletion var _pilot_later:()->Void;
+  @:noCompletion var _pilot_initialized:Bool = false;
 
   function render():VNode {
     return null;
@@ -19,21 +19,17 @@ class Component extends BaseWire<Dynamic> {
     _pilot_context = context;
     _pilot_updateAttributes(attrs, context);
 
-    var getChildren = () -> switch render() {
-      case VFragment(children): children;
-      case vn: [ vn ];
+    if (!_pilot_initialized) {
+      _pilot_initialized = true;
+      _pilot_doInits();
     }
 
     if (_pilot_shouldRender(attrs)) {
-      if (_pilot_real == null) {
-        _pilot_later = () -> {
-          _pilot_updateChildren(getChildren(), _pilot_context);
-          Util.later(_pilot_doEffects);
-        }
-      } else {
-        _pilot_updateChildren(getChildren(), _pilot_context);
-        Util.later(_pilot_doEffects);
-      }
+      _pilot_updateChildren(switch render() {
+        case VFragment(children): children;
+        case vn: [ vn ];
+      }, _pilot_context);
+      Util.later(_pilot_doEffects);
     }
   }
 
@@ -44,10 +40,6 @@ class Component extends BaseWire<Dynamic> {
   override function _pilot_insertInto(parent:Wire<Dynamic>) {
     _pilot_parent = parent;
     _pilot_real = parent._pilot_getReal();
-    if (_pilot_later != null) {
-      _pilot_later();
-      _pilot_later = null;
-    }
   }
 
   override function _pilot_removeFrom(parent:Wire<Dynamic>) {
