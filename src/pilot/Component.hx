@@ -15,7 +15,7 @@ class Component extends BaseWire<Dynamic> {
 
   macro function html(e);
 
-  override function _pilot_update(attrs:Dynamic, children:Array<VNode>, context:Context) {
+  @:noCompletion override function _pilot_update(attrs:Dynamic, children:Array<VNode>, context:Context) {
     _pilot_context = context;
     _pilot_updateAttributes(attrs, context);
 
@@ -33,21 +33,21 @@ class Component extends BaseWire<Dynamic> {
     }
   }
 
-  function _pilot_shouldRender(attrs:Dynamic):Bool {
+  @:noCompletion function _pilot_shouldRender(attrs:Dynamic):Bool {
     return true;
   }
 
-  override function _pilot_insertInto(parent:Wire<Dynamic>) {
+  @:noCompletion override function _pilot_insertInto(parent:Wire<Dynamic>) {
     _pilot_parent = parent;
     _pilot_real = parent._pilot_getReal();
   }
 
-  override function _pilot_removeFrom(parent:Wire<Dynamic>) {
+  @:noCompletion override function _pilot_removeFrom(parent:Wire<Dynamic>) {
     for (c in _pilot_childList) c._pilot_removeFrom(parent);
     _pilot_dispose();
   }
 
-  override function _pilot_dispose() {
+  @:noCompletion override function _pilot_dispose() {
     _pilot_parent = null;
     _pilot_types = null;
     _pilot_childList = null;
@@ -309,24 +309,24 @@ class Component {
         } };
       }
 
-      override function _pilot_updateAttributes(__props:Dynamic, __context:pilot.Context) {
+      @:noCompletion override function _pilot_updateAttributes(__props:Dynamic, __context:pilot.Context) {
         $b{updates};
       }
 
-      // override function _pilot_shouldRender(attrs:Dynamic) {
+      // @:noCompletion override function _pilot_shouldRender(attrs:Dynamic) {
       //   ${guardCheck}
       //   return true;
       // }
 
-      override function _pilot_doInits() {
+      @:noCompletion override function _pilot_doInits() {
         $b{startup};
       }
 
-      override function _pilot_doEffects() {
+      @:noCompletion override function _pilot_doEffects() {
         $b{effect};
       }
 
-      override function _pilot_dispose() {
+      @:noCompletion override function _pilot_dispose() {
         $b{teardown};
         super._pilot_dispose();
       }

@@ -2,6 +2,7 @@ package medic;
 
 import pilot.Root;
 import pilot.Component;
+import medic.ui.*;
 
 class HtmlReporter implements Reporter {
 
@@ -39,8 +40,8 @@ class HtmlReporter implements Reporter {
     // todo: rethink this display
     fullStatus += '\n${failed == 0 ? 'OK' : 'FAILED'} ${total} tests, ${success} success, ${failed} failed';
 
-    root.update(Pilot.html(<>
-      <h1>Test Results</h1>
+    root.update(Pilot.html(<Container>
+      <Header title="Test Results" />
       <pre>{fullStatus}</pre>
       <if {errors.length > 0}>
         <h2>Errors</h2>
@@ -50,7 +51,7 @@ class HtmlReporter implements Reporter {
           </for>
         </ul>
       </if>
-    </>));
+    </Container>));
   }
 
 }
@@ -60,7 +61,7 @@ class TestReport extends Component {
   @:attribute var info:TestInfo;
 
   override function render() return html(<li>
-    <h3>{info.name}::{info.field}()</h3>
+    <h3>{info.name}#{info.field}()</h3>
     <if {info.description.length > 0}>
       <p>{info.description}</p>
     </if>

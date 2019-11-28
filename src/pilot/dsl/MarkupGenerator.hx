@@ -9,6 +9,8 @@ using StringTools;
 using haxe.macro.PositionTools;
 
 class MarkupGenerator {
+
+  static inline final TEXT_NODE = '__text__';
   
   static final attributeMacros:Map<String, (attr:MarkupAttribute, pos:Position)->ObjectField> = [
     'style' => (attr, pos) -> {
@@ -144,7 +146,7 @@ class MarkupGenerator {
         macro @:pos(pos) (${e}:pilot.VNodeValue);
 
       case MText(value):
-        macro @:pos(pos) VNative(${generateNodeType('text', pos)}, $v{value}, []);
+        macro @:pos(pos) VNative(${generateNodeType(TEXT_NODE, pos)}, $v{value}, []);
 
       case MFor(it, children, failed):
         switch Context.parse(it, pos) {
@@ -205,7 +207,7 @@ class MarkupGenerator {
 
   function generateNodeType(name:String, pos:Position):Expr {
     return switch name {
-      case 'text': macro @:pos(pos) pilot.TextType;
+      case TEXT_NODE: macro @:pos(pos) pilot.TextType;
       case _ if (isSvg): macro @:pos(pos) pilot.NodeType.getSvg($v{name});
       default: macro @:pos(pos) pilot.NodeType.get($v{name});
     }

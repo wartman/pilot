@@ -34,27 +34,31 @@ class MarkupTest {
       Pilot.html(<>
         <for {item in items}>
           {item}
-        <else>None</for>
+        <else>
+          <span>None</span>
+        </for>
       </>)
       .render()
       .outerHTML;
     tester([ 'a', 'b', 'c' ]).equals('<div>abc</div>');
-    tester(null).equals('<div>None</div>');
+    tester(null).equals('<div><span>None</span></div>');
   }
 
   @test('Switch works')
   public function testSwitch() {
-    Pilot
-      .html(<>
-        <switch {'foo'}>
+    var tester = (value:String) ->
+      Pilot.html(<>
+        <switch {value}>
           <case {'foo'}>Foo</case>
           <case {'bar'}>Bar</case>
-          <case {_}></case>
+          <case {thing}>Other {thing}</case>
         </switch>
       </>)
       .render()
-      .outerHTML
-      .equals('<div>Foo</div>');
+      .outerHTML;
+    tester('foo').equals('<div>Foo</div>');
+    tester('bar').equals('<div>Bar</div>');
+    tester('bax').equals('<div>Other bax</div>');
   }
 
   @test('If works')

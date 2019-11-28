@@ -78,8 +78,6 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
 
   function parseIf():MarkupNode {
     var start = position - 3;
-    var passing:Array<MarkupNode> = [];
-    var failed:Array<MarkupNode> = [];
     var cond:String = '';
 
     whitespace();
@@ -116,6 +114,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       cond:String,
       children:Array<MarkupNode>
     }> = [];
+
     whitespace();
 
     var target = switch advance() {
@@ -340,5 +339,9 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
   function path() {
     return readWhile(s -> isAlphaNumeric(s) || checkAny([ '.', '-', '_' ]));
   }
+
+  override function isAllowedInIdentifier(s:String) {
+    return isAlphaNumeric(s) || checkAny([ '-', '_', ':' ]);
+  } 
 
 }

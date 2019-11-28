@@ -15,6 +15,10 @@ final class Pilot {
     return pilot.dsl.Css.parse(expr);
   }
 
+  macro public static function globalCss(expr) {
+    return pilot.dsl.Css.parse(expr, false, true);
+  }
+
   static final rootNodes:Map<Node, Root> = [];
 
   inline public static function mount(node:Node, vNode:VNode) {
