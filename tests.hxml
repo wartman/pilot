@@ -4,13 +4,13 @@
 -lib medic
 -main Run
 
---each
+# --each
 
 -D js-es=6
 -js dist/assets/test.js
 
---next
+# --next
 
--D pilot-skip
--D real-position
--php dist/php-test
+# -D pilot-skip
+# -D real-position
+# -php dist/php-test

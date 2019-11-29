@@ -7,7 +7,9 @@ class ComponentExample extends Component {
   override function render() return html(<Container>
     <Header title="Interactive Component Examples" />
     <ul>
-      <ToggleExample />
+      <StateExample />
+      <InputExample />
+      <ChildrenExample />
       <SvgExample />
     </ul>
   </Container>);
@@ -28,7 +30,48 @@ abstract ExampleContainer(VNode) to VNode {
 
 }
 
-class ToggleExample extends Component {
+class InputExample extends Component {
+
+  @:attribute(mutable = true) var value:String = '';
+
+  override function render() return html(<ExampleContainer title="Input Handling">
+    <input value={value} onKeyDown={e -> {
+      var input:js.html.InputElement = cast e.target;
+      var keyboardEvent:js.html.KeyboardEvent = cast e;
+      if (keyboardEvent.key == 'Enter') {
+        value = input.value;
+        input.blur();
+      }
+    }} />
+    <span>Current Value: {value}</span>
+  </ExampleContainer>);
+
+}
+
+class ChildrenExample extends Component {
+
+  @:attribute(mutable = true) var items:Array<String> = null;
+
+  override function render() return html(<ExampleContainer title="Mutable Children">
+    <button onClick={_ -> {
+      var item = "Thing!";
+      items =  if (items == null) [ item ] else items.concat([ item ]);
+    }}>+</button>
+    <button onClick={_ -> items = items.length == 1
+      ? null
+      : items.slice(0, items.length - 1)}>-</button>
+    <ul>
+      <for {item in items}>
+        <li>{item}</li>
+      <else>
+        <li>No items</li>
+      </for>
+    </ul>
+  </ExampleContainer>);
+
+}
+
+class StateExample extends Component {
   
   @:attribute(mutable = true) var clicked:Int = 0;
 
