@@ -1,0 +1,15 @@
+{
+    "name": "pilot",
+    "license": "MIT",
+    "tags": [
+        "ui"
+    ],
+    "contributors": [
+        "wartman"
+    ],
+    "releasenote": "Super alpha!",
+    "classPath": "src",
+    "version": "0.0.3",
+    "url": "https://github.com/wartman/pilot",
+    "dependencies": {}
+}
