@@ -3,7 +3,7 @@ package pilot;
 class Root {
   
   var target:NodeWire<Dynamic>;
-  final context:Context;
+  public final context:Context;
 
   public function new(node:Node) {
     context = new Context();

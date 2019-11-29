@@ -161,14 +161,14 @@ class Component {
         }
         
         updates.push(macro @:pos(f.pos) {
-          if (Reflect.hasField(__props, $v{name})) switch [ _pilot_props.$name, Reflect.field(__props, $v{name}) ] {
+          if (Reflect.hasField(__props, $v{name})) switch [ _pilot_attrs.$name, Reflect.field(__props, $v{name}) ] {
             case [ a, b ] if (a == b):
-            case [ _, b ]: _pilot_props.$name = b;
+            case [ _, b ]: _pilot_attrs.$name = b;
           }
         });
 
         newFields = newFields.concat((macro class {
-          function $getName() return _pilot_props.$name;
+          function $getName() return _pilot_attrs.$name;
         }).fields);
 
         if (isState) {
@@ -294,8 +294,6 @@ class Component {
     // }
 
     newFields = newFields.concat((macro class {
-      
-      @:noCompletion var _pilot_props:$propType;
 
       @:noCompletion public static function _pilot_create(props:$propType, context:pilot.Context) {
         return new $clsTp(props, context);
@@ -303,7 +301,7 @@ class Component {
       
       public function new(__props:$propType, __context:pilot.Context) {
         _pilot_context = __context;
-        _pilot_props = ${ {
+        _pilot_attrs = ${ {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };

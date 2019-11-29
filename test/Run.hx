@@ -34,6 +34,7 @@ class Run {
       var runner = new Runner();
     #end
 
+    runner.add(new pilot.ComponentTest());
     runner.add(new pilot.MarkupTest());
 
     runner.run();

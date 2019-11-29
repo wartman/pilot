@@ -18,4 +18,10 @@ abstract VNodeValue(VNode) from VNode to VNode {
     return VNode.VFragment(children);
   }
 
+  @:from inline public static function ofComponentInstance(component:Component):VNodeValue {
+    return VNode.VComponent({
+      _pilot_create: (_, _) -> component
+    }, @:privateAccess component._pilot_attrs);
+  }
+
 }
