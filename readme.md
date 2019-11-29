@@ -12,8 +12,6 @@ Pilot handles CSS, HTML and VNode diffing for both browsers and servers, allowin
 
 That's the dream, anyway.
 
-> Note: I'll explain this example later, but it's mostly self-explanatory I think.
-
 ```haxe
 
 import pilot.Component;
@@ -55,6 +53,11 @@ class Example extends Component {
 }
 
 ```
+
+Examples
+--------
+
+- [TodoMVC](https://github.com/wartman/pilot.todo)
 
 Lifecycle
 ---------
