@@ -389,10 +389,19 @@ class CssParser extends Parser<Array<CssExpr>> {
       whitespace();
       e;
     } ];
-    return values.length == 1 ? values[0] : {
+    var out = values.length == 1 ? values[0] : {
       value: VCompound(values),
       pos: getPos(start, position)
     };
+    return if (match(',')) {
+      whitespace();
+      {
+        value: VList(out, parseValue(until)),
+        pos: getPos(start, position)
+      };
+    } else {
+      out;
+    }
   }
 
   function parseExpr() {

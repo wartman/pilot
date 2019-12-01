@@ -43,6 +43,7 @@ enum ValueDef {
   VCall(name:String, args:Array<Value>);
   VBinOp(op:BinOp, left:Value, right:Value);
   VCompound(values:Array<Value>);
+  VList(left:Value, right:Value);
 }
 
 typedef Value = {

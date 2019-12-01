@@ -129,6 +129,7 @@ class CssGenerator {
       case VCompound(values): [ for (v in values) generateValue(v) ].join(' ');
       case VString(data): '"' + data + '"';
       case VBinOp(op, left, right): generateValue(left) + op + generateValue(right);
+      case VList(left, right): generateValue(left) + ', ' + generateValue(right);
     }
   }
 
