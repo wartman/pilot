@@ -30,12 +30,6 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       case '/' if (match('/')):
         ignoreLine();
         null;
-      case '<' if (match('for')):
-        parseFor();
-      case '<' if (match('if')):
-        parseIf();
-      case '<' if (match('switch')):
-        parseSwitch();
       case '<' if (match('/')): 
         throw errorAt('Unexpected close tag', '</');
       case '<': parseNode();
@@ -180,6 +174,13 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     }
 
     name = path();
+
+    switch name {
+      case 'for': return parseFor();
+      case 'if': return parseIf();
+      case 'switch': return parseSwitch();
+      default:
+    }
     
     whitespace();
 

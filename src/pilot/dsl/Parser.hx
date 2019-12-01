@@ -189,7 +189,7 @@ class Parser<T> {
   }
 
   function reject(s:String) {
-    return error('Unexpected [${s}]', position, position + s.length);
+    return error('Unexpected [${s}]', position - s.length, position);
   }
 
   function expected(s:String) {
