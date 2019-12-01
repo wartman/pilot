@@ -383,7 +383,7 @@ class CssParser extends Parser<Array<CssExpr>> {
   
   function parseValue(until = ';'):Value {
     var start = position;
-    var values = [ while (!isAtEnd() && !match(until)) {
+    var values = [ while (!isAtEnd() && !match(until) && !check(',')) {
       whitespace();
       var e = parseExpr();
       whitespace();

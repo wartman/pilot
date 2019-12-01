@@ -12,6 +12,7 @@ class Run {
       Pilot.globalCss('
         body {
           display: flex;
+          font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
         #example-root {
           flex: 1;
