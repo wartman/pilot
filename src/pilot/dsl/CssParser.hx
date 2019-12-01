@@ -128,7 +128,7 @@ class CssParser extends Parser<Array<CssExpr>> {
       consume(':');
       whitespace();
       var value = parseValue();
-      consume(';');
+      // consume(';');
       return Some(({
         expr: CPropety(id, value),
         pos: getPos(start, position)
@@ -203,7 +203,6 @@ class CssParser extends Parser<Array<CssExpr>> {
     whitespace();
     var value = parseValue(')');
     whitespace();
-    consume(')');
     return Feature(id, value);
   }
 
@@ -382,40 +381,100 @@ class CssParser extends Parser<Array<CssExpr>> {
     }
   }
   
-  // TODO: Need to implement a real parser, this one
-  //       is a mess. The `until` param is a hack to allow
-  //       us to read arbitrary strings of code.
   function parseValue(until = ';'):Value {
     var start = position;
-    var value = switch attempt(() -> switch advance() {
-      case '$': Some(Code(parseCode(0)));
-      // case '{': Some(Code(parseCode(1)));
-      case '"': Some(Raw( '"' + string('"') + '"' ));
-      case "'": Some(Raw( "'" + string("'") + "'" ));
-      default: None;
-    }) {
-      case Some(v): v;
-      case None: switch attempt(() -> {
-        // TODO: this is a hack, implement real calling
-        var id = ident();
-        consume('(');
-        var value = switch parseValue(')').value {
-          case Raw(v): v;
-          case Code(_): throw 'not implemented';
-        }
-        consume(')');
-        Some('$id($value)');
-      }) {
-        case Some(v): Raw(v);
-        // TODO: this is a hack, actually parse values!
-        case None: Raw(readWhile(s -> s != until));
-      }
-    }
-
-    return {
-      value: value,
+    var values = [ while (!isAtEnd() && !match(until)) {
+      whitespace();
+      var e = parseExpr();
+      whitespace();
+      e;
+    } ];
+    return values.length == 1 ? values[0] : {
+      value: VCompound(values),
       pos: getPos(start, position)
     };
+  }
+
+  function parseExpr() {
+    // todo: need to parse binOp and stuff too
+    return parseCall();
+  }
+
+  // todo: binops!
+
+  function parseCall() {
+    var expr = parsePrimary();
+    
+    if (match('(')) {
+      var args = [ do {
+        whitespace();
+        var e = parseExpr();
+        whitespace();
+        e; 
+      } while (!isAtEnd() && match(',')) ];
+      consume(')');
+      return {
+        value: VCall(switch expr.value {
+          case VAtom(data): data;
+          default: throw error('Name must be an identifier', expr.pos.min, expr.pos.max);
+        }, args),
+        pos: getPos(expr.pos.min, position)
+      };
+    }
+
+    return expr;
+  }
+
+  function parseNumber():Value {
+    var start = position;
+    var data = readWhile(() -> isDigit(peek()));
+    if (match('.')) {
+      data += '.' + readWhile(() -> isDigit(peek()));
+    }
+    for (unit in Unit.all) if (match(unit)) {
+      return {
+        value: VNumeric(data, unit),
+        pos: getPos(start, position)
+      };
+    }
+    return {
+      value: VNumeric(data, None),
+      pos: getPos(start, position)
+    };
+  }
+
+  function parsePrimary():Value {
+    var start = position;
+    return if (match('$')) {
+      {
+        value: VCode(parseCode(0)),
+        pos: getPos(start, position)
+      };
+    } else if (match('"')) {
+      {
+        value: VString(string('"')),
+        pos: getPos(start, position)
+      };
+    } else if (match("'")) {
+      {
+        value: VString(string("'")),
+        pos: getPos(start, position)
+      };
+    } else if (match('#')) {
+      return {
+        value: VColor(readWhile(() -> isAlphaNumeric(peek()))),
+        pos: getPos(start, position)
+      };
+    } else if (isDigit(peek())) {
+      parseNumber();
+    } else if (isAllowedInIdentifier(peek())) {
+      {
+        value: VAtom(ident()),
+        pos: getPos(start, position)
+      };
+    } else {
+      throw errorAt('Expected an expression', advance());
+    }
   }
 
 }

@@ -20,6 +20,11 @@ class Run {
         #root {
           flex: 1;
         }
+        @media screen and (max-width: 750px) {
+          body {
+            flex-direction: column;
+          }
+        }
       ');
 
       Pilot.mount(

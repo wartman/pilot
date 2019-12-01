@@ -71,8 +71,8 @@ class CssGenerator {
 
   function generateValue(value:Value):String {
     return switch value.value {
-      case Raw(value): value;
-      case Code(v):
+      case VAtom(value): value;
+      case VCode(v):
         var expr = Context.parse(v, Context.makePosition({
           min: value.pos.min,
           max: value.pos.max,
@@ -117,6 +117,18 @@ class CssGenerator {
             }
           default: throw new DslError('Invalid value', value.pos);
         }
+      case VCall(name, args):
+        '${name}(' + [ for (a in args) generateValue(a) ].join(',') + ')';
+      case VNumeric(data, unit):
+        if (unit == null) {
+          data;
+        } else {
+          data + unit; 
+        }
+      case VColor(color): '#' + color;
+      case VCompound(values): [ for (v in values) generateValue(v) ].join(' ');
+      case VString(data): '"' + data + '"';
+      case VBinOp(op, left, right): generateValue(left) + op + generateValue(right);
     }
   }
 

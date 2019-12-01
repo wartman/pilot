@@ -296,7 +296,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
   function parseText(init:String):MarkupNode {
     var start = position;
     // todo: allow escapes
-    var out = init + readWhile(_ -> !checkAny([ '<', '$', '{' ]));
+    var out = init + readWhile(() -> !checkAny([ '<', '$', '{' ]));
 
     if (out.trim().length == 0) {
       return {
@@ -337,7 +337,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
   }
 
   function path() {
-    return readWhile(s -> isAlphaNumeric(s) || checkAny([ '.', '-', '_' ]));
+    return readWhile(() -> isAlphaNumeric(peek()) || checkAny([ '.', '-', '_' ]));
   }
 
   override function isAllowedInIdentifier(s:String) {

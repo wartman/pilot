@@ -29,7 +29,7 @@ class Parser<T> {
   }
 
   function whitespace() {
-    readWhile(isWhitespace);
+    readWhile(() -> isWhitespace(peek()));
   }
   
   function isWhitespace(c:String) {
@@ -72,7 +72,7 @@ class Parser<T> {
   }
 
   function ident() {
-    return readWhile(isAllowedInIdentifier);
+    return readWhile(() -> isAllowedInIdentifier(peek()));
   }
 
   function isAllowedInIdentifier(s:String) {
@@ -110,8 +110,8 @@ class Parser<T> {
     }
   }
 
-  function readWhile(compare:(a:String)->Bool):String {
-    var out = [ while (!isAtEnd() && compare(peek())) advance() ];
+  function readWhile(compare:()->Bool):String {
+    var out = [ while (!isAtEnd() && compare()) advance() ];
     return out.join('');
   }
 

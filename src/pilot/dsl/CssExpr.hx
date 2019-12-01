@@ -5,6 +5,51 @@ typedef CssExpr = {
   pos:DslPosition
 }
 
+// enum ValueDef {
+//   Raw(value:String);
+//   Code(value:String);
+// }
+
+enum abstract BinOp(String) to String {
+  var OpAdd = '+';
+  var OpSubt = '-';
+  var OpMult = '*';
+  var OpDiv = '/';
+}
+
+enum abstract Unit(String) to String from String {
+  var None = null;
+  var Px = 'px';
+  var Pct = '%';
+  var Em = 'em';
+  var Rem = 'rem';
+  var VH = 'vh';
+  var VW = 'vw';
+  var VMin = 'vmin';
+  var VMax = 'vmax';
+  var Deg = 'deg';
+  var Sec = 's';
+  var MS = 'ms';
+
+  public static final all = [ Px, Pct, Em, Rem, VH, VW, VMin, VMax, Deg, Sec, MS ];
+}
+
+enum ValueDef {
+  VCode(code:String);
+  VNumeric(data:String, unit:Unit);
+  VAtom(data:String);
+  VString(data:String);
+  VColor(data:String);
+  VCall(name:String, args:Array<Value>);
+  VBinOp(op:BinOp, left:Value, right:Value);
+  VCompound(values:Array<Value>);
+}
+
+typedef Value = {
+  value:ValueDef,
+  pos:DslPosition
+}
+
 enum CssExprDef {
   CDeclaration(selector:Selector, properties:Array<CssExpr>);
   CMediaQuery(conditions:Array<MediaCondition>, properties:Array<CssExpr>);
@@ -25,16 +70,6 @@ enum MediaCondition {
   Negated(cond:MediaCondition);
   Feature(name:String, value:Value);
   Type(type:MediaType);
-}
-
-enum ValueDef {
-  Raw(value:String);
-  Code(value:String);
-}
-
-typedef Value = {
-  value:ValueDef,
-  pos:DslPosition
 }
 
 typedef Selector = {

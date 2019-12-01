@@ -11,7 +11,7 @@ class Container extends Component {
     <div class@style={
       padding: 10px;
       border-radius: 5px;
-      background: rgb(232, 232, 232);
+      background: rgb( 232, 232, 232 );
       pre {
         background: #666666;
         color: #ffffff;
