@@ -125,10 +125,10 @@ class CssParser extends Parser<Array<CssExpr>> {
       var id = ident();
       if (id.length == 0) return None;
       whitespace();
+      if (!check(':')) return None;
       consume(':');
       whitespace();
-      var value = parseValue();
-      // consume(';');
+      var value = parseValue(';');
       return Some(({
         expr: CPropety(id, value),
         pos: getPos(start, position)
@@ -436,6 +436,13 @@ class CssParser extends Parser<Array<CssExpr>> {
         value: VNumeric(data, unit),
         pos: getPos(start, position)
       };
+    }
+    if (!isWhitespace(peek())) {
+      var last = position;
+      if (isAlpha(peek())) {
+        throw reject(advance());
+      }
+      position = last;
     }
     return {
       value: VNumeric(data, None),

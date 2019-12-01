@@ -100,7 +100,8 @@ class Parser<T> {
 
   function attempt<T>(cb:()->Option<T>):Option<T> {
     var start = position;
-    var o = try cb() catch (e:DslError) None;
+    // var o = try cb() catch (e:DslError) None;
+    var o = cb();
     return switch o {
       case Some(v): 
         Some(v);
@@ -188,7 +189,7 @@ class Parser<T> {
   }
 
   function reject(s:String) {
-    return errorAt('Unexpected [${s}]', s);
+    return error('Unexpected [${s}]', position, position + s.length);
   }
 
   function expected(s:String) {
