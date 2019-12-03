@@ -53,6 +53,10 @@ abstract Node(js.html.Node) from js.html.Node to js.html.Node {
     return cast this;
   }
 
+  inline public function toString() {
+    return outerHTML;
+  }
+
 }
 
 #else

@@ -8,10 +8,9 @@ class MarkupTest {
   public function new() {}
 
   public static function render(vn:VNode) {
-    var node = new Node('div');
-    var root = new Root(node);
+    var root = new Root(new Node('div'));
     root.update(vn);
-    return node;
+    return root;
   }
 
   @test('For loop works')
@@ -24,7 +23,7 @@ class MarkupTest {
         </for>
       </>)
       .render()
-      .outerHTML
+      .toString()
       .equals('<div>abc</div>');
   }
 
@@ -39,7 +38,7 @@ class MarkupTest {
         </for>
       </>)
       .render()
-      .outerHTML;
+      .toString();
     tester([ 'a', 'b', 'c' ]).equals('<div>abc</div>');
     tester(null).equals('<div><span>None</span></div>');
   }
@@ -55,7 +54,7 @@ class MarkupTest {
         </switch>
       </>)
       .render()
-      .outerHTML;
+      .toString();
     tester('foo').equals('<div>Foo</div>');
     tester('bar').equals('<div>Bar</div>');
     tester('bax').equals('<div>Other bax</div>');
@@ -66,7 +65,7 @@ class MarkupTest {
     var tester = (ok:Bool) -> 
       Pilot.html(<if {ok}>Ok!<else>Not ok!</if>)
       .render()
-      .outerHTML;
+      .toString();
     tester(false).equals('<div>Not ok!</div>');
     tester(true).equals('<div>Ok!</div>');
   }
