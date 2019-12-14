@@ -12,6 +12,7 @@ class ComponentExample extends Component {
       <InputExample />
       <ChildrenExample />
       <SvgExample />
+      <EmbeddedCssExample />
     </ul>
   </Container>);
 

@@ -10,12 +10,12 @@ typedef CssExpr = {
 //   Code(value:String);
 // }
 
-enum abstract BinOp(String) to String {
-  var OpAdd = '+';
-  var OpSubt = '-';
-  var OpMult = '*';
-  var OpDiv = '/';
-}
+// enum abstract BinOp(String) to String {
+//   var OpAdd = '+';
+//   var OpSubt = '-';
+//   var OpMult = '*';
+//   var OpDiv = '/';
+// }
 
 enum abstract Unit(String) to String from String {
   var None = null;
@@ -41,7 +41,7 @@ enum ValueDef {
   VString(data:String);
   VColor(data:String);
   VCall(name:String, args:Array<Value>);
-  VBinOp(op:BinOp, left:Value, right:Value);
+  // VBinOp(op:BinOp, left:Value, right:Value);
   VCompound(values:Array<Value>);
   VList(left:Value, right:Value);
 }
@@ -52,6 +52,7 @@ typedef Value = {
 }
 
 enum CssExprDef {
+  CNone;
   CDeclaration(selector:Selector, properties:Array<CssExpr>);
   CMediaQuery(conditions:Array<MediaCondition>, properties:Array<CssExpr>);
   CKeyframes(name:String, properties:Array<CssExpr>);

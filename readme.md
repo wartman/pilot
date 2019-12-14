@@ -113,6 +113,71 @@ Pilot.html(
 
 ```
 
+CSS Generation Options
+----------------------
+
+Pilot can export CSS to an external file, embed it into the javascript output, or a combination of both.
+
+For example, the following `hxml` will embed all the css into `assets/app.js`, meaning you'll only need `app.js`:
+
+```hxml
+-lib pilot
+-main MyApp
+-js assets/app.js
+```
+
+To export css, simply define `-D pilot-css-output=PATH/TO/YOUR/css.css` in your `hxml` file. This will be exported relative to your current compile target. For example, the following `hxml` file will export `assets/app.js` and `assets/app.css`:
+
+```hxml
+-lib pilot
+-main MyApp
+-D pilot-css-output=app.css
+-js assets/app.js
+```
+
+Things get slightly more complicated if you're exporting to more than one target. You should only need to generate your CSS once, so you can set `-D pilot-css-skip` to tell pilot that it doesn't need to generate CSS for a given target:
+
+```hxml
+-lib pilot
+-main MyApp
+
+--each
+
+-D pilot-css-output=app.css
+-php dist
+
+--next
+
+-D pilot-css-skip
+-js dist/assets/app.js
+```
+
+Generally, if you're creating an isomorphic app you should generate CSS for the SERVER target (in this case, `php`) and skip the client (or `js`) target. The reason for this is that Pilot allows you to force CSS embedding, meaning you can include any CSS the server target might miss.
+
+For example, say we have a Modal component. This might never get used in a PHP or Node target, as we might never display it. To get around this, you can do the following:
+
+```haxe
+import pilot.Component;
+
+class ModalOrSomething extends Component {
+
+  // Mark @:style meta for embedding:
+  @:style(embed = true) var foo = '
+    background: blue;
+  ';
+
+  override function render() return html(
+    <div class={foo}>
+      // We can also use `@style-embed` in our markup to get the same result:
+      <div class@style-embed={
+        background: white;
+      }>Stuff</div>
+    </div>
+  );
+
+}
+```
+
 Other Options
 -------------
 

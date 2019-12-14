@@ -12,8 +12,8 @@ using haxe.io.Path;
 class Css {
 
   static var isInitialized:Bool = false;
-  static final isEmbedded:Bool = !Context.defined('pilot-output');
-  static final isSkipped:Bool = Context.defined('pilot-skip');
+  static final isEmbedded:Bool = !Context.defined('pilot-css-output');
+  static final isSkipped:Bool = Context.defined('pilot-css-skip');
   
   public static function parse(expr:Expr, forceEmbedding = false, global = false) {
     var info = expr.pos.getInfos();
@@ -72,7 +72,7 @@ class Css {
               default:
             }
 
-            sys.io.File.saveContent(switch Context.definedValue('pilot-output') {
+            sys.io.File.saveContent(switch Context.definedValue('pilot-css-output') {
               case abs = _.charAt(0) => '.' | '/': abs;
               case relative:
                 Path.join([

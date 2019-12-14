@@ -42,6 +42,8 @@ class CssGenerator {
     var sel = generateSelector(selector, parent);
 
     for (prop in properties) if (prop != null) switch prop.expr {
+      case CNone:
+        // noop
       case CDeclaration(selector, properties):
         var decl = generateDeclaration(selector, properties, sel);
         if (decl != null) decls.push(decl);
@@ -128,7 +130,7 @@ class CssGenerator {
       case VColor(color): '#' + color;
       case VCompound(values): [ for (v in values) generateValue(v) ].join(' ');
       case VString(data): '"' + data + '"';
-      case VBinOp(op, left, right): generateValue(left) + op + generateValue(right);
+      // case VBinOp(op, left, right): generateValue(left) + op + generateValue(right);
       case VList(left, right): generateValue(left) + ', ' + generateValue(right);
     }
   }

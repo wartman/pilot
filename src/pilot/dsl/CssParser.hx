@@ -141,7 +141,11 @@ class CssParser extends Parser<Array<CssExpr>> {
 
   function parseRule():CssExpr {
     whitespace();
-    if (isAtEnd()) return null; // ?
+
+    if (isAtEnd()) return {
+      expr: CNone,
+      pos: getPos(position, position)
+    };
 
     var start = position;
     var selector = parseSelector();
@@ -405,11 +409,8 @@ class CssParser extends Parser<Array<CssExpr>> {
   }
 
   function parseExpr() {
-    // todo: need to parse binOp and stuff too
     return parseCall();
   }
-
-  // todo: binops!
 
   function parseCall() {
     var expr = parsePrimary();
