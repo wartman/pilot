@@ -18,18 +18,14 @@ final class Pilot {
   macro public static function globalCss(expr) {
     return pilot.dsl.Css.parse(expr, false, true);
   }
-
-  #if (js && !nodejs)
     
-    macro public static function embedCss(expr) {
-      return pilot.dsl.Css.parse(expr, true);
-    }
+  macro public static function embedCss(expr) {
+    return pilot.dsl.Css.parse(expr, true);
+  }
 
-    macro public static function embedGlobalCss(expr) {
-      return pilot.dsl.Css.parse(expr, true, true);
-    }
-
-  #end
+  macro public static function embedGlobalCss(expr) {
+    return pilot.dsl.Css.parse(expr, true, true);
+  }
 
   static final rootNodes:Map<Node, Root> = [];
 

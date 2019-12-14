@@ -95,13 +95,13 @@ class Css {
       name: clsName,
       pack: [ 'pilot', 'styles' ],
       kind: TDAbstract(macro:pilot.Style, [], [macro:pilot.Style]),
-      meta: [
+      meta: if (!forceEmbedding) [
         {
           name: ':pilot_output',
           params: [  macro $v{css} ],
           pos: Context.currentPos()
         }
-      ],
+      ] else [],
       fields: 
         if ((isEmbedded && !isSkipped) || forceEmbedding)
           (macro class {
