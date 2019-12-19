@@ -1,5 +1,7 @@
 package pilot;
 
+import pilot.html.*;
+
 interface Wire<Attrs> {
   public function _pilot_dispose():Void;
   public function _pilot_getReal():Node;

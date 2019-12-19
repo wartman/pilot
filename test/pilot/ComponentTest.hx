@@ -1,5 +1,7 @@
 package pilot;
 
+import pilot.html.*;
+
 using medic.Assert;
 
 class ComponentTest {
@@ -8,7 +10,7 @@ class ComponentTest {
 
   @test('Component instance can be passed as a value')
   public function testInstance() {
-    var node = new Node('div');
+    var node = Document.root.createElement('div');
     var root = new Root(node);
     var comp = new ComponentTester({ text: 'foo', isMutable: false }, null);
     root.update(Pilot.html(<>{comp}</>));

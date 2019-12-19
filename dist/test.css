@@ -1,0 +1,37 @@
+body {
+  display: flex;
+  font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+#example-root {
+  flex: 1;
+  margin-right: 10px;
+}
+#root {
+  flex: 1;
+}
+@media screen and (max-width: 750px) {
+  body {
+    flex-direction: column;
+  }
+}
+.mu_container447 {
+  padding: 10px;
+  border-radius: 5px;
+  background: rgb(232,232,232);
+}
+.mu_container447 pre {
+  background: #666666;
+  color: #ffffff;
+  border: 1px solid #000;
+  padding: 10px;
+}
+.mu_header375 {
+  border-bottom: 1px solid #000;
+  margin: 0 0 10px 0;
+  padding: 0 0 10px 0;
+}
+.mu_header375 h2 {
+  margin: 0;
+  padding: 0;
+  font-size: 20px;
+}

@@ -1,5 +1,7 @@
 package pilot;
 
+import pilot.html.*;
+
 enum VNode {
   VNative<Attrs>(
     type:WireType<Attrs>,

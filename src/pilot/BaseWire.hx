@@ -1,5 +1,7 @@
 package pilot;
 
+import pilot.html.*;
+
 class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
   var _pilot_attrs:Attrs;

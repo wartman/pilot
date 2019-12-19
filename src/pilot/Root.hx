@@ -1,14 +1,16 @@
 package pilot;
 
+import pilot.html.*;
+
 class Root {
   
   public inline static function forId(id:String) {
-    return new Root(Dom.getElementById(id));
+    return new Root(Document.root.getElementById(id));
   }
 
-  public inline static function forBody() {
-    return new Root(Dom.getBody());
-  }
+  // public inline static function forBody() {
+  //   return new Root(Browser);
+  // }
 
   var target:NodeWire<Dynamic>;
   final context:Context;
@@ -32,7 +34,8 @@ class Root {
   }
 
   public inline function toString() {
-    return getNode().toString();
+    var el:Element = cast getNode();
+    return el.outerHTML;
   }
 
 }

@@ -30,8 +30,9 @@ enum abstract Unit(String) to String from String {
   var Deg = 'deg';
   var Sec = 's';
   var MS = 'ms';
+  var Fr = 'fr';
 
-  public static final all = [ Px, Pct, Em, Rem, VH, VW, VMin, VMax, Deg, Sec, MS ];
+  public static final all = [ Px, Pct, Em, Rem, VH, VW, VMin, VMax, Deg, Sec, MS, Fr ];
 }
 
 enum ValueDef {

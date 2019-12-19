@@ -1,11 +1,8 @@
 import pilot.Root;
-import pilot.Node;
 import pilot.VNode;
-import pilot.Dom;
+import pilot.html.*;
 
 final class Pilot {
-
-  public static final dom = Dom;
   
   macro public static function html(expr) {
     return pilot.dsl.Markup.parse(expr);
@@ -35,7 +32,7 @@ final class Pilot {
   **/
   inline public static function mount(?node:Node, vNode:VNode):Root {
     if (node == null) {
-      node = Dom.getBody();
+      node = Document.root.body;
     }
     if (!rootNodes.exists(node)) {
       rootNodes.set(node, new Root(node));

@@ -60,8 +60,8 @@ class Css {
             var out:Array<String> = [];
             
             for (t in types) switch t {
-              case TAbstract(_.get() => cls, _) if (cls.meta.has(':pilot_output')):
-                for (meta in cls.meta.extract(':pilot_output')) {
+              case TAbstract(_.get() => cls, _) if (cls.meta.has(':pilot_css_output')):
+                for (meta in cls.meta.extract(':pilot_css_output')) {
                   for (e in meta.params) switch e.expr {
                     case EConst(CString(s)):
                       out.push(s);
@@ -82,6 +82,14 @@ class Css {
             }, out.join('\n'));
           });
         });
+      } else switch Context.getType('pilot.StyleManager') {
+        case TInst(cls, _) if (cls.get().meta.has(':pilot_notSupported')):
+          Context.error(
+            'Embedding is not allowed on this target -- ensure pilot-css-output'
+            + ' is defined in your hxml',
+            pos
+          );
+        default:
       }
     }
 
@@ -91,13 +99,18 @@ class Css {
   static function createClassName(name:String, css:String, pos:Position, forceEmbedding:Bool) {
     var clsName = 'PilotCss_${name}';
     var cls = 'pilot.styles.${clsName}';
+
+    if (css == null) {
+      Context.error('Invalid CSS value', pos);
+    }
+
     var abs:TypeDefinition = {
       name: clsName,
       pack: [ 'pilot', 'styles' ],
       kind: TDAbstract(macro:pilot.Style, [], [macro:pilot.Style]),
       meta: if (!forceEmbedding) [
         {
-          name: ':pilot_output',
+          name: ':pilot_css_output',
           params: [  macro $v{css} ],
           pos: Context.currentPos()
         }

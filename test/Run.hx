@@ -1,49 +1,57 @@
 import medic.Runner;
-#if (js && !nodejs)
-  import medic.HtmlReporter;
-  import pilot.Root;
-  import pilot.ComponentExample;
-#end
+import pilot.html.*;
+import medic.HtmlReporter;
+import pilot.Root;
+import pilot.ComponentExample;
 
 class Run {
 
   static function main() {
-    #if (js && !nodejs)
-      Pilot.globalCss('
+    Pilot.globalCss('
+      body {
+        display: flex;
+        font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+      #example-root {
+        flex: 1;
+        margin-right: 10px;
+      }
+      #root {
+        flex: 1;
+      }
+      @media screen and (max-width: 750px) {
         body {
-          display: flex;
-          font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+          flex-direction: column;
         }
-        #example-root {
-          flex: 1;
-          margin-right: 10px;
-        }
-        #root {
-          flex: 1;
-        }
-        @media screen and (max-width: 750px) {
-          body {
-            flex-direction: column;
-          }
-        }
-      ');
+      }
+    ');
 
-      Pilot.mount(
-        Pilot.dom.getElementById('example-root'),
-        Pilot.html(<ComponentExample />)
-      );
+    var exampleRoot = Document.root.getElementById('example-root'); 
+    Pilot.mount(
+      exampleRoot,
+      Pilot.html(<ComponentExample />)
+    );
 
-      var root = new Root(Pilot.dom.getElementById('root'));
-      var reporter = new HtmlReporter(root);
-      var runner = new Runner(reporter);
-    #else
-      var runner = new Runner();
-    #end
+    var root = new Root(Document.root.getElementById('root'));
+    var reporter = new HtmlReporter(root);
+    var runner = new Runner(reporter);
 
     runner.add(new pilot.ComponentTest());
     runner.add(new pilot.MarkupTest());
 
     runner.run();
+
+    #if sys
+      Sys.print('
+        <!doctype html>
+        <html>
+          <body>
+            ${exampleRoot}
+            ${root}
+          <body>
+        </html>
+      ');
+    #end
   }
 
 }

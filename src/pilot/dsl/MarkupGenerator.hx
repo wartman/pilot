@@ -247,8 +247,7 @@ class MarkupGenerator {
 
   function allowKey(key:String) {
     if (key.startsWith('@')) return false;
-    if (Context.defined('js') && !Context.defined('nodejs')) return true;
-    return !key.startsWith('on');
+    return true;
   }
 
   function extractAttribute(name:String, attrs:Array<MarkupAttribute>) {

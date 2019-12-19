@@ -1,7 +1,10 @@
 package pilot;
 
+import pilot.html.*;
+
 class NodeType<Attrs:{}> {
-  
+
+  inline public static final SVG_NS = 'http://www.w3.org/2000/svg';
   static final tags:Map<String, NodeType<Dynamic>> = [];
 
   static public function get(name:String):NodeType<Dynamic> {
@@ -27,8 +30,11 @@ class NodeType<Attrs:{}> {
   }
 
   public function _pilot_create(attrs:Attrs, context:Context):Wire<Attrs> {
+    var doc = Document.root;
     return new NodeWire(
-      new Node(name, isSvg ? Svg : Native),
+      isSvg 
+        ? doc.createElementNS(SVG_NS, name) 
+        : doc.createElement(name),
       attrs,
       context,
       isSvg

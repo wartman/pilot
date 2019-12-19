@@ -53,6 +53,7 @@ class StyleManager {
 
 #else
 
+@:pilot_notSupported
 class StyleManager {}
 
 #end

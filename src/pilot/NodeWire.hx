@@ -1,5 +1,7 @@
 package pilot;
 
+import pilot.html.*;
+
 class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
 
   final isSvg:Bool;
@@ -36,15 +38,15 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   #if js
     
     function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
-      var el = _pilot_real.toElement();
+      var el:Element = cast _pilot_real;
       switch key {
         case 'value' | 'selected' | 'checked' if (!isSvg):
           js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
         case 'viewBox' if (isSvg):
           if (newValue == null) {
-            el.removeAttributeNS(Node.SVG_NS, key);
+            el.removeAttributeNS(NodeType.SVG_NS, key);
           } else {
-            el.setAttributeNS(Node.SVG_NS, key, newValue);
+            el.setAttributeNS(NodeType.SVG_NS, key, newValue);
           }
         case 'xmlns' if (isSvg):
         case _ if (!isSvg && js.Syntax.code('{0} in {1}', key, el)):
@@ -67,14 +69,15 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   #else
 
     function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
+      var el:Element = cast _pilot_real;
       if (key.charAt(0) == 'o' && key.charAt(1) == 'n') {
         // noop
       } else if (newValue == null || newValue == false) {
-        _pilot_real.removeAttribute(key);
+        el.removeAttribute(key);
       } else if (newValue == true) {
-        _pilot_real.setAttribute(key, key);
+        el.setAttribute(key, key);
       } else {
-        _pilot_real.setAttribute(key, newValue);
+        el.setAttribute(key, newValue);
       }
     }
 

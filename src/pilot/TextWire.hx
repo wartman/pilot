@@ -1,11 +1,13 @@
 package pilot;
 
+import pilot.html.*;
+
 class TextWire implements Wire<String> {
   
-  final real:Node;
+  final real:Text;
 
   public function new(content) {
-    real = new Node(content, Text);
+    real = Document.root.createTextNode(content);
   }
 
   public function _pilot_getReal():Node {

@@ -1,5 +1,7 @@
 package pilot;
 
+import pilot.html.*;
+
 using medic.Assert;
 using pilot.MarkupTest;
 
@@ -8,7 +10,7 @@ class MarkupTest {
   public function new() {}
 
   public static function render(vn:VNode) {
-    var root = new Root(new Node('div'));
+    var root = new Root(Document.root.createElement('div'));
     root.update(vn);
     return root;
   }

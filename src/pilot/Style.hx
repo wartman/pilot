@@ -17,7 +17,7 @@ abstract Style(String) to String {
   }
 
   @:op(a + b)
-  public inline function add(style:Style):Style {
+  public function add(style:Style):Style {
     return new Style(switch [ this, (style:String) ] {
       case [ null, v ] | [ v, null ]: v;
       case [ a, b ] if (a.length == 0): b;
