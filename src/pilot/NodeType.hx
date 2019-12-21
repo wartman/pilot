@@ -1,6 +1,6 @@
 package pilot;
 
-import pilot.html.*;
+import pilot.dom.*;
 
 class NodeType<Attrs:{}> {
 

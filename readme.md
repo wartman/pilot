@@ -52,6 +52,20 @@ class Example extends Component {
 
 }
 
+class Main {
+
+  public static function main() {
+    Pilot.mount(
+      // `Pilot.document` is an alias for `js.Browser.document` on
+      // js targets or for `pilot.dom.Document.root` on sys targets
+      // (which uses Pilot's minimal DOM) 
+      Pilot.document.body,
+      Pilot.html(<App shouldShowExample={true} />)
+    );
+  }
+
+}
+
 ```
 
 Examples
@@ -70,7 +84,7 @@ Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@
 
 `@:dispose` will be run _once_, after the Component is removed from the DOM. This is where you should handle any cleanup your component needs.
 
-> Note: `@:guard` is currently undergoing some changes as I figure out the best API for it.
+Methods with `@:guard` meta will be checked before every render -- if ANY `@:guard` methods return false the component will not be rendered.  
 
 Markup Attribute Macros
 -----------------------
@@ -161,8 +175,8 @@ import pilot.Component;
 
 class ModalOrSomething extends Component {
 
-  // Mark @:style meta for embedding:
-  @:style(embed = true) var foo = '
+  // Mark @:style meta for embedding (you can also use `embed = true`):
+  @:style(embed) var foo = '
     background: blue;
   ';
 
@@ -177,6 +191,8 @@ class ModalOrSomething extends Component {
 
 }
 ```
+
+Note that you CAN use embedded styles in `sys` targets, you'll just need to put `pilot.StyleManager.toString()` somewhere to render the styles (this is not recommended, by the way).
 
 Other Options
 -------------

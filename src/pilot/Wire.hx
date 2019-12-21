@@ -1,6 +1,6 @@
 package pilot;
 
-import pilot.html.*;
+import pilot.dom.*;
 
 interface Wire<Attrs> {
   public function _pilot_dispose():Void;

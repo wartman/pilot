@@ -82,14 +82,6 @@ class Css {
             }, out.join('\n'));
           });
         });
-      } else switch Context.getType('pilot.StyleManager') {
-        case TInst(cls, _) if (cls.get().meta.has(':pilot_notSupported')):
-          Context.error(
-            'Embedding is not allowed on this target -- ensure pilot-css-output'
-            + ' is defined in your hxml',
-            pos
-          );
-        default:
       }
     }
 

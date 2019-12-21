@@ -1,5 +1,5 @@
 import medic.Runner;
-import pilot.html.*;
+import pilot.dom.*;
 import medic.HtmlReporter;
 import pilot.Root;
 import pilot.ComponentExample;
@@ -26,14 +26,14 @@ class Run {
       }
     ');
 
-    var exampleRoot = Document.root.getElementById('example-root'); 
+    var exampleRoot = Pilot.document.getElementById('example-root'); 
     Pilot.mount(
       exampleRoot,
       Pilot.html(<ComponentExample />)
     );
 
-    var root = new Root(Document.root.getElementById('root'));
-    var reporter = new HtmlReporter(root);
+    var root = Pilot.document.getElementById('root');
+    var reporter = new HtmlReporter(new Root(root));
     var runner = new Runner(reporter);
 
     runner.add(new pilot.ComponentTest());
@@ -44,6 +44,11 @@ class Run {
     #if sys
       Sys.print('
         <!doctype html>
+        <head>
+          <style>
+            ${pilot.StyleManager.toString()}
+          </style>
+        </head>
         <html>
           <body>
             ${exampleRoot}

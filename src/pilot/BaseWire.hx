@@ -1,6 +1,6 @@
 package pilot;
 
-import pilot.html.*;
+import pilot.dom.*;
 
 class BaseWire<Attrs:{}> implements Wire<Attrs> {
 

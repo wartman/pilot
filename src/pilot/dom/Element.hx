@@ -1,4 +1,4 @@
-package pilot.html;
+package pilot.dom;
 
 #if (js && !nodejs)
 

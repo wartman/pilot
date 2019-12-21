@@ -53,7 +53,22 @@ class StyleManager {
 
 #else
 
-@:pilot_notSupported
-class StyleManager {}
+class StyleManager {
+
+  static var rules:Map<String, String>;
+
+  public static function define(id:String, css:()->String):Style {
+    if (rules == null) {
+      rules = new Map();
+    }
+    rules.set(id, css());
+    return new Style(id);
+  }
+
+  public static function toString() {
+    return [ for (_ => v in rules) v ].join('\n');
+  }
+
+}
 
 #end

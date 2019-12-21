@@ -76,8 +76,7 @@ class Component {
   static final initMeta = [ ':init', ':initialize' ];
   static final disposeMeta = [ ':dispose' ];
   static final effectMeta = [ ':effect' ];
-  // // Todo: rethinking how guards should work.
-  // static final guardMeta = [ ':guard' ];
+  static final guardMeta = [ ':guard' ];
   static final attrsMeta = [ ':attr', ':attribute' ];
   static final styleMeta = [ ':style' ];
   static final coreComponent = ':coreComponent';
@@ -98,7 +97,7 @@ class Component {
     var startup:Array<Expr> = [];
     var teardown:Array<Expr> = [];
     var effect:Array<Expr> = [];
-    // var guards:Array<Expr> = [];
+    var guards:Array<Expr> = [];
     var updates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
 
@@ -120,12 +119,14 @@ class Component {
         var params = f.meta.find(m -> attrsMeta.has(m.name)).params;
         var getName = 'get_${name}';
         var setName = 'set_${name}';
-        var isState = false;
+        var isMutable = false;
+        var guard:Expr;
 
         for (param in params) switch param {
+          case macro mutable: isMutable = true;
           case macro mutable = ${e}: switch e {
-            case macro false: isState = false;
-            case macro true: isState = true;
+            case macro false: isMutable = false;
+            case macro true: isMutable = true;
             default: 
               Context.error('Attribute option `mutable` must be Bool', param.pos);
           }
@@ -134,6 +135,9 @@ class Component {
             e = e != null
               ? macro @:pos(f.pos) __context.get(${injectExpr}, $e)
               : macro @:pos(f.pos) __context.get(${injectExpr});
+          case macro optional: isOptional = true;
+          case macro guard = ${e}:
+            guard = e;
           case macro optional = ${e}: switch e {
             case macro true: isOptional = true;
             case macro false: isOptional = false;
@@ -143,8 +147,12 @@ class Component {
           default:
             Context.error('Invalid attribute option', param.pos);
         }
+
+        if (guard != null && !isMutable) {
+          Context.error('`guard` parameter is not allowed unless a field is mutable', guard.pos);
+        }
         
-        f.kind = isState 
+        f.kind = isMutable 
           ? FProp('get', 'set', t, null)
           : FProp('get', 'never', t, null);
 
@@ -171,15 +179,26 @@ class Component {
           function $getName() return _pilot_attrs.$name;
         }).fields);
 
-        if (isState) {
-          newFields = newFields.concat((macro class {
-            function $setName(value) {
-              if (_pilot_context != null) {
-                _pilot_update({ $name: value }, [], _pilot_context);
+        if (isMutable) {
+          if (guard != null) {
+            newFields = newFields.concat((macro class {
+              function $setName(__v) {
+                if (_pilot_context != null && ${guard}(__v)) {
+                  _pilot_update({ $name: __v }, [], _pilot_context);
+                }
+                return __v;
               }
-              return value;
-            }
-          }).fields);
+            }).fields);
+          } else {
+            newFields = newFields.concat((macro class {
+              function $setName(__v) {
+                if (_pilot_context != null) {
+                  _pilot_update({ $name: __v }, [], _pilot_context);
+                }
+                return __v;
+              }
+            }).fields);
+          }
         }
 
         props.push({
@@ -205,13 +224,19 @@ class Component {
         var params = f.meta.find(m -> styleMeta.has(m.name)).params;
 
         for (param in params) switch param {
+          case macro embed: forceEmbedding = true;
           case macro embed = ${e}: switch e {
             case macro true: forceEmbedding = true;
+            case macro false:
             default:
+              Context.error('Bool expected', param.pos);
           }
+          case macro global: isGlobal = true;
           case macro global = ${e}: switch e {
             case macro true: isGlobal = true;
+            case macro false:
             default:
+              Context.error('Bool expected', param.pos);
           }
           default:
             Context.error('Invalid attribute option', param.pos);
@@ -251,47 +276,35 @@ class Component {
         else 
           effect.push(macro @:pos(f.pos) this.$name());
 
-      // case FFun(_) if (f.meta.exists(m -> guardMeta.has(m.name))):
-      //   var name = f.name;
-      //   var params = f.meta.find(m -> guardMeta.has(m.name)).params;
-      //   var check:Expr;
+      case FFun(func) if (f.meta.exists(m -> guardMeta.has(m.name))):
+        var name = f.name;
+        var params = f.meta.find(m -> guardMeta.has(m.name)).params;
+        var check:Expr;
 
-      //   for (param in params) switch param {
-      //     case macro $i{field}:
-      //       if (check != null) {
-      //         Context.error('Only one field may be guarded for re-renders', param.pos);
-      //       }
-      //       var clsField = fields.find(f -> f.name == field);
-      //       if (clsField == null) {
-      //         Context.error('The field ${field} does not exist on this class', param.pos);
-      //       }
-      //       if (!clsField.meta.exists(m -> attrsMeta.has(m.name))) {
-      //         Context.error('Only fields marked with @:attribute may be checked for render guards', param.pos);
-      //       }
-      //       var fName = clsField.name;
-      //       check = macro @:pos(param.pos) !this.$name(Reflect.field(attrs, $v{clsField.name}));
-      //     default:
-      //       Context.error('Invalid guard option', param.pos);
-      //   }
+        if (params.length != 0) {
+          Context.error('`@:guard` does not have any options', f.pos);
+        }
 
-      //   guards.push(
-      //     check != null
-      //       ? check
-      //       : macro @:pos(f.pos)!this.$name(attrs)
-      //   );
+        if (func.args.length == 0) {
+          guards.push(macro @:pos(f.pos) this.$name());
+        } else if (func.args.length == 1) {
+          guards.push(macro @:pos(f.pos) this.$name(attrs));
+        } else {
+          Context.error('`@:guard` methods must have one or no arguments', f.pos);
+        }
 
       default:
     }
 
     var propType = TAnonymous(props);
-    // var guardCheck = macro null;
-    // if (guards.length > 0) {
-    //   guardCheck = guards[0];
-    //   for (i in 1...guards.length) {
-    //     guardCheck = macro ${guardCheck} && ${guards[i]};
-    //   }
-    //   guardCheck = macro if (${guardCheck}) return false;
-    // }
+    var guardCheck = macro return true;
+    if (guards.length > 0) {
+      guardCheck = guards[0];
+      for (i in 1...guards.length) {
+        guardCheck = macro ${guardCheck} && ${guards[i]};
+      }
+      guardCheck = macro if (${guardCheck}) return true else return false;
+    }
 
     newFields = newFields.concat((macro class {
 
@@ -311,10 +324,9 @@ class Component {
         $b{updates};
       }
 
-      // @:noCompletion override function _pilot_shouldRender(attrs:Dynamic) {
-      //   ${guardCheck}
-      //   return true;
-      // }
+      @:noCompletion override function _pilot_shouldRender(attrs:Dynamic) {
+        ${guardCheck}
+      }
 
       @:noCompletion override function _pilot_doInits() {
         $b{startup};

@@ -1,4 +1,4 @@
-package pilot.html;
+package pilot.dom;
 
 #if (js && !nodejs)
 
@@ -6,7 +6,7 @@ typedef Event = js.html.Event;
 
 #else
 
-@:allow(pilot.html.EventTarget)
+@:allow(pilot.dom.EventTarget)
 class Event {
 
   final type:String;

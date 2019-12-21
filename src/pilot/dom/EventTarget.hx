@@ -1,4 +1,4 @@
-package pilot.html;
+package pilot.dom;
 
 import haxe.DynamicAccess;
 
