@@ -16,11 +16,6 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
         pos: getPos(position, position)
       });
     }
-    if (out.length == 1) switch out[0].node {
-      case MIf(_, _, _) | MFor(_, _):
-        out = [ { node: MFragment(out), pos: out[0].pos } ];
-      default:
-    }
     return out;
   }
 
@@ -30,6 +25,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       case '/' if (match('/')):
         ignoreLine();
         null;
+      case '@': parseInlineCode();
       case '<' if (match('/')): 
         throw errorAt('Unexpected close tag', '</');
       case '<': parseNode();
@@ -39,113 +35,52 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     }
   }
 
-  function parseFor():MarkupNode {
-    var start = position - 4;
+  function parseInlineCode():MarkupNode {
+    var start = position;
+    if (checkAny([ 'if', 'for', 'switch' ])) {
+      var isIf = match('if');
+      var isFor = match('for');
+      var isSwitch = match('switch');
+      var hasElse = false;
 
-    whitespace();
-
-    var it = switch advance() {
-      case '{': parseCode(1);
-      case '$': parseCode(0);
-      default:
-        throw errorAt('<for> requires an iterator', previous());
-    }
-
-    whitespace();
-
-    if (match('/>')) {
-      throw error('<for> cannot be a void tag', start, position);
-    }
-
-    consume('>');
-    whitespace();
-    
-    var maybeElse = parseChildrenWithElse('for');
-    var children = maybeElse.children;
-    var failed = if (maybeElse.hasElseBranch) parseChildren('for') else null;
-    
-    return {
-      node: MFor(it, children, failed),
-      pos: getPos(start, position)
-    };
-  }
-
-  function parseIf():MarkupNode {
-    var start = position - 3;
-    var cond:String = '';
-
-    whitespace();
-
-    cond = switch advance() {
-      case '{': parseCode(1);
-      case '$': parseCode(0);
-      default:
-        throw error('<if> requires a condition', position - 1, position);
-    }
-
-    whitespace();
-
-    if (match('/>')) {
-      throw error('<if> cannot be a void tag', start, position);
-    }
-    
-    consume('>');
-    whitespace();
-
-    var maybeElse = parseChildrenWithElse('if');
-    var passing = maybeElse.children;
-    var failed = if (maybeElse.hasElseBranch) parseChildren('if') else null;
-
-    return {
-      node: MIf(cond, passing, failed),
-      pos: getPos(start, position)
-    };
-  }
-
-  function parseSwitch() {
-    var start = position - 6;
-    var cases:Array<{
-      cond:String,
-      children:Array<MarkupNode>
-    }> = [];
-
-    whitespace();
-
-    var target = switch advance() {
-      case '{': parseCode(1);
-      case '$': parseCode(0);
-      default:
-        throw error('<switch> requires a condition', position - 1, position);
-    }
-    
-    consume('>');
-
-    whitespace();
-  
-    while (!isAtEnd() && match('<case')) {
-      whitespace();
-      var cond = switch advance() {
-        case '{': parseCode(1);
-        case '$': parseCode(0);
-        default:
-          throw error('<case> requires a condition', position - 1, position);
+      readWhile(() -> !isAtEnd() && !match('{'));
+      if (isAtEnd()) {
+        throw error('Expected a {', start, position);
       }
-      consume('>');
+      parseCode(1);
+
       whitespace();
-      var children = parseChildren('case');
-      whitespace();
-      cases.push({
-        cond: cond,
-        children: children
-      });
+
+      if (match('else')) {
+        if (!isIf) {
+          throw errorAt('Else is only allowed for @if blocks', 'else');
+        }
+      
+        hasElse = true;
+        
+        readWhile(() -> !isAtEnd() && !match('{'));
+        if (isAtEnd()) {
+          throw error('Expected a {', start, position);
+        }
+        parseCode(1);
+      }
+
+      var code = source.substring(start, position);
+      
+      if (isIf && !hasElse) {
+        code += ' else null';
+      } else if (isFor) {
+        code = '[${code}]';
+      }
+      
+      return {
+        node: MCode(code),
+        pos: getPos(start, position)
+      };
+    } else {
+      readWhile(() -> !isAtEnd() && !isWhitespace(peek()));
+      throw error('Only `@if`, `@switch` or `@for` are allowed here', start, position);
     }
-
-    consume('</switch>');
-
-    return {
-      node: MSwitch(target, cases),
-      pos: getPos(start, position)
-    };
   }
 
   function parseNode():MarkupNode {
@@ -174,13 +109,6 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     }
 
     name = path();
-
-    switch name {
-      case 'for': return parseFor();
-      case 'if': return parseIf();
-      case 'switch': return parseSwitch();
-      default:
-    }
     
     whitespace();
 

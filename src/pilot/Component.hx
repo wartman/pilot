@@ -87,10 +87,7 @@ class Component {
 
   public static function build() {
     var cls = Context.getLocalClass().get();
-    var clsTp:TypePath = {
-      pack: cls.pack,
-      name: cls.name
-    };
+    var clsTp:TypePath = { pack: cls.pack, name: cls.name };
     var fields = Context.getBuildFields();
     var newFields:Array<Field> = [];
     var props:Array<Field> = [];
@@ -100,6 +97,10 @@ class Component {
     var guards:Array<Expr> = [];
     var updates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
+
+    function add(fields:Array<Field>) {
+      newFields = newFields.concat(fields);
+    }
 
     // Don't implement core components: these are designed
     // to provide extra functionality.
@@ -120,7 +121,8 @@ class Component {
         var getName = 'get_${name}';
         var setName = 'set_${name}';
         var isMutable = false;
-        var guard:Expr;
+        var guardName = '_pilot_guard_${name}';
+        var guard:Expr = macro __a != __b;
 
         for (param in params) switch param {
           case macro mutable: isMutable = true;
@@ -137,7 +139,7 @@ class Component {
               : macro @:pos(f.pos) __context.get(${injectExpr});
           case macro optional: isOptional = true;
           case macro guard = ${e}:
-            guard = e;
+            guard = macro @:pos(e.pos) ${guard} && ${e}(__a, __b);
           case macro optional = ${e}: switch e {
             case macro true: isOptional = true;
             case macro false: isOptional = false;
@@ -146,10 +148,6 @@ class Component {
           }
           default:
             Context.error('Invalid attribute option', param.pos);
-        }
-
-        if (guard != null && !isMutable) {
-          Context.error('`guard` parameter is not allowed unless a field is mutable', guard.pos);
         }
         
         f.kind = isMutable 
@@ -168,37 +166,34 @@ class Component {
           });
         }
         
+        // TODO:
+        // Guards should happen in `_pilot_update` for all attributes, and we should ONLY render if 
+        // attributes change?
+
         updates.push(macro @:pos(f.pos) {
           if (Reflect.hasField(__props, $v{name})) switch [ _pilot_attrs.$name, Reflect.field(__props, $v{name}) ] {
-            case [ a, b ] if (a == b):
+            case [ a, b ] if (!this.$guardName(a, b)):
             case [ _, b ]: _pilot_attrs.$name = b;
           }
         });
 
-        newFields = newFields.concat((macro class {
+        add((macro class {
+
           function $getName() return _pilot_attrs.$name;
+          
+          inline function $guardName(__a, __b) return ${guard};
+
         }).fields);
 
         if (isMutable) {
-          if (guard != null) {
-            newFields = newFields.concat((macro class {
-              function $setName(__v) {
-                if (_pilot_context != null && ${guard}(__v)) {
-                  _pilot_update({ $name: __v }, [], _pilot_context);
-                }
-                return __v;
+          add((macro class {
+            function $setName(__v) {
+              if (_pilot_context != null && this.$guardName(__v, _pilot_attrs.$name)) {
+                _pilot_update({ $name: __v }, [], _pilot_context);
               }
-            }).fields);
-          } else {
-            newFields = newFields.concat((macro class {
-              function $setName(__v) {
-                if (_pilot_context != null) {
-                  _pilot_update({ $name: __v }, [], _pilot_context);
-                }
-                return __v;
-              }
-            }).fields);
-          }
+              return __v;
+            }
+          }).fields);
         }
 
         props.push({
@@ -306,7 +301,7 @@ class Component {
       guardCheck = macro if (${guardCheck}) return true else return false;
     }
 
-    newFields = newFields.concat((macro class {
+    add((macro class {
 
       @:noCompletion public static function _pilot_create(props:$propType, context:pilot.Context) {
         return new $clsTp(props, context);

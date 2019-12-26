@@ -25,23 +25,23 @@ enum MarkupNodeDef {
   MFragment(children:Array<MarkupNode>);
   MText(value:String);
   MCode(value:String);
-  MIf(
-    cond:String,
-    passing:Array<MarkupNode>,
-    ?failed:Array<MarkupNode>
-  );
-  MFor(
-    it:String,
-    children:Array<MarkupNode>,
-    ?failed:Array<MarkupNode>
-  );
-  MSwitch(
-    target:String,
-    cases:Array<{
-      cond:String,
-      children:Array<MarkupNode>
-    }>
-  );
+  // MIf(
+  //   cond:String,
+  //   passing:Array<MarkupNode>,
+  //   ?failed:Array<MarkupNode>
+  // );
+  // MFor(
+  //   it:String,
+  //   children:Array<MarkupNode>,
+  //   ?failed:Array<MarkupNode>
+  // );
+  // MSwitch(
+  //   target:String,
+  //   cases:Array<{
+  //     cond:String,
+  //     children:Array<MarkupNode>
+  //   }>
+  // );
   MNone;
 }
 

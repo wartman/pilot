@@ -30,15 +30,6 @@ class MarkupGenerator {
         case Code(value):
           Css.parse(macro @:pos(pos) $v{value}, true);
       }
-    },
-    'html' => (attr, pos) -> {
-      field: attr.name,
-      expr: switch attr.value.value {
-        case Raw(_):
-          throw new DslError('@html does not accept raw values', attr.pos);
-        case Code(value):
-          Markup.parse(macro @:pos(pos) $v{value});
-      }
     }
   ];
 
@@ -142,63 +133,15 @@ class MarkupGenerator {
         }
 
       case MCode(v):
-        var e = Context.parse(v, pos);
+        var e = parseExpr(v, pos);
         macro @:pos(pos) (${e}:pilot.VNodeValue);
 
       case MText(value):
         macro @:pos(pos) VNative(${generateNodeType(TEXT_NODE, pos)}, $v{value}, []);
 
-      case MFor(it, children, failed):
-        switch Context.parse(it, pos) {
-          case macro $i{name} in $target:
-            var body = generateChildren(children, pos);
-            var expr = macro @:pos(pos) VFragment([ for ($i{name} in ${target}) ${body} ]);
-            if (failed != null) {
-              var fBody = generateChildren(failed, pos);
-              macro @:pos(pos) if (${target} == null) ${fBody} else ${expr};
-            } else {
-              expr;
-            }
-          
-          case macro $i{name} => $i{value} in $target:
-            var body = generateChildren(children, pos);
-            var expr = macro @:pos(pos) VFragment([ for ($i{name} => $i{value} in ${target}) ${body} ]);
-            if (failed != null) {
-              var fBody = generateChildren(failed, pos);
-              macro @:pos(pos) if (${target} == null) ${fBody} else ${expr};
-            } else {
-              expr;
-            }
-
-          default:
-            Context.error('Invalid loop iterator', pos);
-            macro null;
-        }
-
-      case MIf(cond, passing, failed):
-        var expr = Context.parse(cond, pos);
-        var ifBranch = generateChildren(passing, pos);
-        var elseBranch = failed != null 
-          ? generateChildren(failed, pos)
-          : macro null;
-        macro @:pos(pos) if (${expr}) ${ifBranch} else ${elseBranch};
-
       case MFragment(children):
         var exprs:Array<Expr> = [ for (c in children) generateNode(c) ];
         macro @:pos(pos) VFragment([ $a{exprs} ]);
-
-      case MSwitch(target, cases):
-        {
-          expr: ESwitch(
-            Context.parse(target, pos),
-            [ for (c in cases) {
-                values: [ Context.parse(c.cond, pos) ],
-                expr: generateChildren(c.children, pos)
-            } ],
-            null
-          ),
-          pos: pos
-        };
 
       case MNone: null;
 
@@ -236,7 +179,7 @@ class MarkupGenerator {
             field: attr.name,
             expr: switch attr.value.value {
               case Raw(v): macro @:pos(pos) $v{v};
-              case Code(v): Context.parse(v, pos);
+              case Code(v): parseExpr(v, pos);
             }
           });
         }
@@ -255,7 +198,7 @@ class MarkupGenerator {
       var pos = makePos(attr.pos);
       return switch attr.value.value {
         case Raw(v): macro @:pos(pos) $v{v};
-        case Code(v): Context.parse(v, pos);
+        case Code(v): parseExpr(v, pos);
       }
     }
     return macro null;
@@ -267,6 +210,28 @@ class MarkupGenerator {
       max: pos.max,
       file: this.pos.getInfos().file
     });
+  }
+
+  function parseExpr(src:String, pos) {
+    var e = try Context.parseInlineString(src, pos)
+      catch (e:haxe.macro.Error) throw e
+      catch (e:Dynamic) Context.error(e, pos);
+    switch e.expr {
+      case EMeta({ name : ":markup" }, { expr : EConst(CString(value)), pos : pos }):
+        e = Markup.parse(macro @:pos(pos) $v{value});
+      default:
+        reenterLoop(e);
+    }
+    return e;
+  }
+
+  function reenterLoop(e:Expr) {
+    switch e.expr {
+      case EMeta({ name : ":markup" }, { expr : EConst(CString(value)), pos : pos }):
+        e.expr = Markup.parse(macro @:pos(pos) $v{value}).expr;
+      default:
+        haxe.macro.ExprTools.iter(e, e -> reenterLoop(e));
+    }
   }
 
 }

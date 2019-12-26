@@ -43,14 +43,12 @@ class HtmlReporter implements Reporter {
     root.update(Pilot.html(<Container>
       <Header title="Test Results" />
       <pre>{fullStatus}</pre>
-      <if {errors.length > 0}>
+      { if (errors.length > 0) <>
         <h2>Errors</h2>
         <ul>
-          <for {info in errors}>
-            <TestReport info={info} />
-          </for>
+          { [ for (info in errors) <TestReport info={info} /> ] }
         </ul>
-      </if>
+      </> else <></> }
     </Container>));
   }
 
@@ -62,9 +60,12 @@ class TestReport extends Component {
 
   override function render() return html(<li>
     <h3>{info.name}#{info.field}()</h3>
-    <if {info.description.length > 0}>
-      <p>{info.description}</p>
-    </if>
+    { 
+      if (info.description.length > 0)
+        <p>{info.description}</p>
+      else
+        null
+    }
     <pre>Status: {display(info.status)}</pre>
   </li>);
 

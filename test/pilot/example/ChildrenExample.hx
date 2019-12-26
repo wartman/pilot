@@ -16,11 +16,11 @@ class ChildrenExample extends Component {
         ? null
         : items.slice(0, items.length - 1)}>-</button>
       <ul>
-        <for {item in items}>
-          <li>{item}</li>
-        <else>
-          <li>No items</li>
-        </for>
+        { if (items == null) {
+          [ <li>No items</li> ];
+        } else [ for (item in items) {
+          <li>{item}</li>;
+        } ] }
       </ul>
     </ExampleContainer>
   );

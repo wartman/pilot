@@ -27,11 +27,11 @@ class App extends Component {
   ';
 
   override function render() return html(<div>
-    <if {shouldShowExample}>
+    @if (shouldShowExample) {
       <Example foo="Some Foo" />
-    <else>
-      Nothing to show here!
-    </if>
+    } else {
+      <>Nothing to show here!</>
+    }
     <button onClick={_ -> shouldShowExample = !shouldShowExample}>
       Toggle
     </button>
@@ -89,7 +89,7 @@ Methods with `@:guard` meta will be checked before every render -- if ANY `@:gua
 Markup Attribute Macros
 -----------------------
 
-Currently there are only two attribute macros: `@style` and `@html`. There may be more in the future (along with the ability to define your own). Attribute macros may be appended to any attribute name and will handle the value at compile time. 
+Currently there is only one attribute macro: `@style`. There may be more in the future (along with the ability to define your own). Attribute macros may be appended to any attribute name and will handle the value at compile time. 
 
 Use `@style` to parse styles. Generally used with `class`, although it can be used for any attribute that expects a `pilot.Style` as well.
 
@@ -98,17 +98,6 @@ Pilot.html(<div class@style={
   width: 200px;
   height: 50px;
 }>Hello world</div>);
-```
-
-Use `@html` to parse markup. This might be handy in situations where you have more than one slot for content.
-
-```haxe
-var title = 'bar';
-Pilot.html(<Alert
-  title@html={<h2>{title}</h2>}
->
-  <p>Some warning about a thing.</p>
-</Alert>);
 ```
 
 There are also two special attributes (for now) you can use: `@ref` and `@key`:
@@ -125,6 +114,43 @@ Pilot.html(
   >foo</div>
 );
 
+```
+
+Control Flow
+------------
+
+You can use `if`, `for` and `switch` inline in markup if you prefix them with `@` (and note that brackets are required):
+
+```haxe
+var foos = [ 'a', 'b', 'c' ];
+Pilot.html(<>
+  @if (foos.length == 0) {
+    'No foos!';
+  } else {
+    // We can use markup inside conditionals:
+    <ul>
+      @for (foo in foos) {
+        <li>{foo}</li>;
+      }
+    </ul>
+  }
+</>);
+```
+
+This is optional: the following will work as well:
+
+```haxe
+var foos = [ 'a', 'b', 'c' ];
+Pilot.html(<>
+  {
+    if (foos.length == 0) 
+      <span>No foos!</span>
+    else
+      <ul>{
+        [ for (foo in foos) <li>foo</li> ]
+      }</ul>
+  }
+</>);
 ```
 
 CSS Generation Options

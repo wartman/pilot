@@ -1,5 +1,4 @@
 import medic.Runner;
-import pilot.dom.*;
 import medic.HtmlReporter;
 import pilot.Root;
 import pilot.ComponentExample;

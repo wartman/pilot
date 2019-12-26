@@ -10,11 +10,11 @@ class StateExample extends Component {
     <ExampleContainer title="State Tracking">
       <button onClick={_ -> clicked++}>+</button>
       <button onClick={_ -> if (clicked > 0) clicked--}>-</button>
-      <switch {clicked}>
-        <case {0}>Never Clicked</case>
-        <case {1}>Clicked Once</case>
-        <case {i}>Clicked {i} Times</case>
-      </switch>
+      { switch clicked {
+        case 0: <>Never Clicked</>;
+        case 1: <>Clicked Once</>;
+        case i: <>Clicked {i} Times</>;
+      } }
     </ExampleContainer>
   );
 

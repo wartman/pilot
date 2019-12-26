@@ -36,6 +36,10 @@ class ComponentTest {
     comp.renderCount.equals(2);
     node.innerHTML.equals('<div>bar2</div>');
 
+    comp.value = 'skip';
+    comp.renderCount.equals(2);
+    node.innerHTML.equals('<div>bar2</div>');
+
     comp.value = 'bar';
     comp.renderCount.equals(2);
     node.innerHTML.equals('<div>bar2</div>');
@@ -67,9 +71,7 @@ class ComponentTester extends Component {
       <span>Text:{text}</span>
       <span>Opt:{opt}</span>
       <span>Def:{def}</span>
-      <if {isMutable}>
-        <span>Mut:true</span>
-      </if>
+      { if (isMutable) <span>Mut:true</span> else null }
     </div>
   </>);
 
@@ -81,7 +83,7 @@ class GuardedRender extends Component {
 
   @:attribute(
     mutable = true, 
-    guard = incoming -> incoming != value
+    guard = (incoming, current) -> incoming != 'skip'
   ) public var value:String;
   @:attribute(mutable) public var blockRender:Bool = false;
 
