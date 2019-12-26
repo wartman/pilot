@@ -15,6 +15,26 @@ class MarkupTest {
     return root;
   }
 
+  @test('@if with no else works')
+  public function testIf() {
+    var tester = (ok:Bool) -> 
+      Pilot.html(<>@if (ok) { 'Ok!'; }</>)
+      .render()
+      .toString();
+    tester(false).equals('<div></div>');
+    tester(true).equals('<div>Ok!</div>');
+  }
+
+  @test('@if with else works')
+  public function testIfElse() {
+    var tester = (ok:Bool) -> 
+      Pilot.html(<>@if (ok) { 'Ok!'; } else { 'Not ok.'; }</>)
+      .render()
+      .toString();
+    tester(false).equals('<div>Not ok.</div>');
+    tester(true).equals('<div>Ok!</div>');
+  }
+
   @test('For loop works')
   public function testLoop() {
     var items = [ 'a', 'b', 'c' ];
