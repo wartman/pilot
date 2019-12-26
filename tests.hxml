@@ -7,7 +7,7 @@
 --each
 
 -D real-position
--D pilot-css-output=test.css
+-D pilot-css-output=assets/test.css
 
 -php dist/php
 
