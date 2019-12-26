@@ -97,13 +97,14 @@ class Element extends Node {
     if (nodeType == DOCUMENT_NODE) {
       return [ for (c in childNodes) c.toString() ].join('');
     }
-    var out = '<${nodeName.toLowerCase()}';
+    var name = nodeName.toLowerCase();
+    var out = '<${name}';
     var attrs = [ for (attr in attributes) '${attr.key} = "${Std.string(attr.value).htmlEscape()}"' ];
     if (attrs.length > 0) {
       out += ' ${attrs.join(' ')}';
     }
     return if (childNodes.length > 0) 
-      out + '>' + [ for (c in childNodes) c.toString() ].join('') + '</${nodeName}>';
+      out + '>' + [ for (c in childNodes) c.toString() ].join('') + '</${name}>';
     else
       out + '/>';
   }
