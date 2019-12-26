@@ -153,6 +153,14 @@ Pilot.html(<>
 </>);
 ```
 
+If you want to turn off inline control flow entirely, you can set:
+
+```hxml
+-D pilot-markup-no-inline-control-flow
+```
+
+in your HXML.
+
 CSS Generation Options
 ----------------------
 

@@ -6,6 +6,8 @@ using StringTools;
 
 class MarkupParser extends Parser<Array<MarkupNode>> {
 
+  public var noInlineControlFlow:Bool = false;
+
   override function parse():Array<MarkupNode> {
     var out:Array<MarkupNode> = [
       while (!isAtEnd()) parseRoot(false)
@@ -28,7 +30,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       case '<' if (match('/')): 
         throw errorAt('Unexpected close tag', '</');
       case '<': parseNode();
-      case '@': parseInlineCode();
+      case '@' if (!noInlineControlFlow): parseInlineCode();
       case '$': parseCodeBlock(0);
       case '{': parseCodeBlock(1);
       default: parseText(previous());
@@ -188,8 +190,10 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
 
   function parseText(init:String):MarkupNode {
     var start = position;
-    // todo: allow escapes
-    var out = init + readWhile(() -> !checkAnyUnescaped([ '<', '$', '{', '@' ]));
+    var token = noInlineControlFlow
+      ? [ '<', '$', '{' ]
+      : [ '<', '$', '{', '@' ];
+    var out = init + readWhile(() -> !checkAnyUnescaped(token));
 
     out = out
       .replace('\\@', '@')

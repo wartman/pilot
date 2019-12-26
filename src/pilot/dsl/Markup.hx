@@ -7,6 +7,8 @@ import haxe.macro.Context;
 using haxe.macro.PositionTools;
 
 class Markup {
+
+  static final noInlineControlFlow:Bool = Context.defined('pilot-markup-no-inline-control-flow');
   
   public static function parse(expr:Expr) {
     expr = switch expr {
@@ -18,7 +20,9 @@ class Markup {
     switch expr.expr {
       case EConst(CString(s)):
         try {
-          var ast = new MarkupParser(s, info.file, info.min).parse();
+          var parser = new MarkupParser(s, info.file, info.min);
+          parser.noInlineControlFlow = noInlineControlFlow;
+          var ast = parser.parse();
           return new MarkupGenerator(ast, expr.pos).generate();
         } catch (e:DslError) {
           Context.error(e.message, Context.makePosition({

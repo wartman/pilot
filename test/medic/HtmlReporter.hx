@@ -38,7 +38,7 @@ class HtmlReporter implements Reporter {
     }
 
     // todo: rethink this display
-    fullStatus += '\n${failed == 0 ? 'OK' : 'FAILED'} ${total} tests, ${success} success, ${failed} failed';
+    fullStatus += '${failed == 0 ? 'OK' : 'FAILED'} ${total} tests, ${success} success, ${failed} failed';
 
     root.update(Pilot.html(<Container>
       <Header title="Test Results" />
