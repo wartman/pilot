@@ -25,10 +25,10 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       case '/' if (match('/')):
         ignoreLine();
         null;
-      case '@': parseInlineCode();
       case '<' if (match('/')): 
         throw errorAt('Unexpected close tag', '</');
       case '<': parseNode();
+      case '@': parseInlineCode();
       case '$': parseCodeBlock(0);
       case '{': parseCodeBlock(1);
       default: parseText(previous());
@@ -186,46 +186,16 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
     return children;
   }
 
-  function parseChildrenWithElse(closeTag:String):{
-    hasElseBranch:Bool,
-    children:Array<MarkupNode>
-  } {
-    var start = position;
-    var hasElseBranch:Bool = false;
-    var didClose:Bool = false;
-    var children:Array<MarkupNode> = [];
-
-    var isClosed = () -> {
-      if (match('<else>')) {
-        hasElseBranch = true;
-        didClose = true;
-        return true;
-      }
-      return didClose = match('</${closeTag}>');
-    };
-
-    whitespace();
-
-    while (!isAtEnd() && !isClosed()) {
-      var n = parseRoot();
-      if (n != null) children.push(n);
-      whitespace();
-    }
-
-    if (!didClose) {
-      throw error('Unclosed tag: ${closeTag}', start, position);
-    }
-
-    return {
-      hasElseBranch: hasElseBranch,
-      children: children
-    };
-  }
-
   function parseText(init:String):MarkupNode {
     var start = position;
     // todo: allow escapes
-    var out = init + readWhile(() -> !checkAny([ '<', '$', '{' ]));
+    var out = init + readWhile(() -> !checkAnyUnescaped([ '<', '$', '{', '@' ]));
+
+    out = out
+      .replace('\\@', '@')
+      .replace('\\$', '$')
+      .replace('\\{', '{')
+      .replace('\\<', '<');
 
     if (out.trim().length == 0) {
       return {
@@ -238,6 +208,16 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       node: MText(out),
       pos: getPos(start, position)
     };
+  }
+
+  function checkAnyUnescaped(items:Array<String>) {
+    for (item in items) {
+      if (check(item)) {
+        if (previous() == '\\') return false;
+        return true;
+      }
+    }
+    return false;
   }
 
   function parseCodeBlock(braces:Int):MarkupNode {

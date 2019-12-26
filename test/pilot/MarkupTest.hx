@@ -35,6 +35,14 @@ class MarkupTest {
     tester(true).equals('<div>Ok!</div>');
   }
 
+  @test('`@` can be escaped')
+  public function testEscapeAt() {
+    var out = Pilot.html(<span>\@\$\<</span>)
+      .render()
+      .toString();
+    out.equals('<div><span>@$&lt;</span></div>');
+  }
+
   @test('For loop works')
   public function testLoop() {
     var items = [ 'a', 'b', 'c' ];
