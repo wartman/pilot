@@ -274,12 +274,7 @@ class CssParser extends Parser<Array<CssExpr>> {
   }
 
   function parseSelectorPart():SelectorPart {
-    return parseSelectorPartNext(switch ident() {
-      case null: 
-        if (match('*')) advance();
-        null;
-      case s: s;
-    });
+    return parseSelectorPartNext(if (match('*')) '*' else ident());
   }
 
   function parseSelectorPartNext(tag:String):SelectorPart {

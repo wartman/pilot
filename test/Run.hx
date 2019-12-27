@@ -11,6 +11,12 @@ class Run {
         display: flex;
         font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
       }
+      html {
+        box-sizing: border-box;
+      }
+      *, *:before, *:after {
+        box-sizing: inherit;
+      }
       #example-root {
         flex: 1;
         margin-right: 10px;

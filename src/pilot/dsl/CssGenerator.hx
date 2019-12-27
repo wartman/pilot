@@ -209,7 +209,7 @@ class CssGenerator {
 
       function part(part:SelectorPart) {
         var out = switch part.tag {
-          case null | '' | '*': '';
+          case null | '': '';
           case s: s;
         }
 
