@@ -6,7 +6,10 @@ class SvgExample extends Component {
 
   override function render() return html(
     <ExampleContainer title="Svg Rendering">
-      <svg width="620" height="472" xmlns="http://www.w3.org/2000/svg">
+      <svg class@style={
+        width:620px; 
+        height:472px; 
+      } viewBox="0 0 620 472" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <path id="b" d="m0 0h77v210h-77z" stroke="#000" stroke-width="2"/>
           <path id="a" d="m0 0h77v60h-77z" stroke="#000" stroke-width="2"/>

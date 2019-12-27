@@ -42,12 +42,13 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
       switch key {
         case 'value' | 'selected' | 'checked' if (!isSvg):
           js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
-        case 'viewBox' if (isSvg):
-          if (newValue == null) {
-            el.removeAttributeNS(NodeType.SVG_NS, key);
-          } else {
-            el.setAttributeNS(NodeType.SVG_NS, key, newValue);
-          }
+        // // note: this seems incorrect 
+        // case 'viewBox' if (isSvg):
+        //   if (newValue == null) {
+        //     el.removeAttributeNS(NodeType.SVG_NS, key);
+        //   } else {
+        //     el.setAttributeNS(NodeType.SVG_NS, key, newValue);
+        //   }
         case 'xmlns' if (isSvg):
         case _ if (!isSvg && js.Syntax.code('{0} in {1}', key, el)):
           js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
