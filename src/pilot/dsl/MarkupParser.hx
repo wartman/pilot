@@ -39,32 +39,36 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
 
   function parseInlineCode():MarkupNode {
     var start = position;
+    
     if (checkAny([ 'if', 'for', 'switch' ])) {
       var isIf = match('if');
       var isFor = match('for');
       var isSwitch = match('switch');
       var hasElse = false;
 
-      readWhile(() -> !isAtEnd() && !match('{'));
-      if (isAtEnd()) {
-        throw error('Expected a {', start, position);
+      function readCode() {
+        readWhile(() -> !checkAny([ '{', '<' ]));
+        if (match('<')) {
+          if (isSwitch) {
+            throw error('`@switch` requires brackets', start, position);
+          }
+          parseNode();
+        } else {
+          consume('{');
+          parseCode(1);
+        }
       }
-      parseCode(1);
 
+      readCode();
       whitespace();
 
       if (match('else')) {
         if (!isIf) {
-          throw errorAt('Else is only allowed for @if blocks', 'else');
+          throw errorAt('`else` is only allowed for @if blocks', 'else');
         }
       
         hasElse = true;
-        
-        readWhile(() -> !isAtEnd() && !match('{'));
-        if (isAtEnd()) {
-          throw error('Expected a {', start, position);
-        }
-        parseCode(1);
+        readCode();
       }
 
       var code = source.substring(start, position);
@@ -80,7 +84,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
         pos: getPos(start, position)
       };
     } else {
-      readWhile(() -> !isAtEnd() && !isWhitespace(peek()));
+      readWhile(() -> !isWhitespace(peek()));
       throw error('Only `@if`, `@switch` or `@for` are allowed here', start, position);
     }
   }

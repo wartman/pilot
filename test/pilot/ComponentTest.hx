@@ -71,7 +71,7 @@ class ComponentTester extends Component {
       <span>Text:{text}</span>
       <span>Opt:{opt}</span>
       <span>Def:{def}</span>
-      { if (isMutable) <span>Mut:true</span> else null }
+      @if (isMutable) <span>Mut:true</span>
     </div>
   </>);
 

@@ -119,7 +119,7 @@ Pilot.html(
 Control Flow
 ------------
 
-You can use `if`, `for` and `switch` inline in markup if you prefix them with `@` (and note that brackets are required):
+You can use `if`, `for` and `switch` inline in markup if you prefix them with `@`:
 
 ```haxe
 var foos = [ 'a', 'b', 'c' ];
@@ -129,15 +129,25 @@ Pilot.html(<>
   } else {
     // We can use markup inside conditionals:
     <ul>
-      @for (foo in foos) {
-        <li>{foo}</li>;
-      }
-    </ul>
+
+      // Brackets are not required if there is only a
+      // single node expression:
+      @for (foo in foos) <li>{foo}</li>
+
+      // However, you can use brackets if needed, which could
+      // look something like this:
+      //
+      //   @for (foo in foos) {
+      //     var value = 'foo_${foo}';
+      //     <li>{value}</li>;
+      //   }
+
+    </ul>;
   }
 </>);
 ```
 
-This is optional: the following will work as well:
+This syntax is optional: the following code will yield the same result:
 
 ```haxe
 var foos = [ 'a', 'b', 'c' ];
