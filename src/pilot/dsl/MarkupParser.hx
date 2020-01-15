@@ -79,6 +79,10 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
         code = '[${code}]';
       }
       
+      // Currently this syntax works by just passing a string to the
+      // generator, where it gets parsed. That feels wrong: we should
+      // consider passing expressions instead of strings with MCode and
+      // handle all parsing and reentrency here in the MarkupParser.
       return {
         node: MCode(code),
         pos: getPos(start, position)

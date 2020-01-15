@@ -10,6 +10,8 @@ class EmbeddedCssExample extends Component {
         background: blue;
         color:white;
         padding: 10px;
+        margin-left: -40px;
+        width: calc(100% + 40px);
       }>Styled!</div>
     </ExampleContainer>
   );

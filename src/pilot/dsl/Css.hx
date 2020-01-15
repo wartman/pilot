@@ -103,8 +103,8 @@ class Css {
       meta: if (!forceEmbedding) [
         {
           name: ':pilot_css_output',
-          params: [  macro $v{css} ],
-          pos: Context.currentPos()
+          params: [ macro $v{css} ],
+          pos: pos
         }
       ] else [],
       fields: 
@@ -117,7 +117,7 @@ class Css {
           (macro class {
             public inline function new() this = new pilot.Style($v{name});
           }).fields,
-      pos: Context.currentPos()
+      pos: pos
     };
     Context.defineType(abs);
     return macro new pilot.styles.$clsName();

@@ -226,9 +226,9 @@ class MarkupGenerator {
   }
 
   function reenterLoop(e:Expr) {
-    switch e.expr {
-      case EMeta({ name : ":markup" }, { expr : EConst(CString(value)), pos : pos }):
-        e.expr = Markup.parse(macro @:pos(pos) $v{value}).expr;
+    switch e {
+      case macro @:markup $value:
+        e.expr = Markup.parse(value).expr;
       default:
         haxe.macro.ExprTools.iter(e, e -> reenterLoop(e));
     }

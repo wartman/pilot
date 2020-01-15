@@ -74,6 +74,8 @@ class CssGenerator {
   function generateValue(value:Value):String {
     return switch value.value {
       case VAtom(value): value;
+      case VBinOp(op, left, right):
+        return '${generateValue(left)} ${op} ${generateValue(right)}';
       case VCode(v):
         var expr = Context.parse(v, Context.makePosition({
           min: value.pos.min,

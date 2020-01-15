@@ -5,17 +5,14 @@ typedef CssExpr = {
   pos:DslPosition
 }
 
-// enum ValueDef {
-//   Raw(value:String);
-//   Code(value:String);
-// }
+enum abstract BinOp(String) from String to String {
+  var OpAdd = '+';
+  var OpSubt = '-';
+  var OpMult = '*';
+  var OpDiv = '/';
 
-// enum abstract BinOp(String) to String {
-//   var OpAdd = '+';
-//   var OpSubt = '-';
-//   var OpMult = '*';
-//   var OpDiv = '/';
-// }
+  public static final all:Array<String> = [ OpAdd, OpSubt, OpMult, OpDiv ];
+}
 
 enum abstract Unit(String) to String from String {
   var None = null;
@@ -42,7 +39,7 @@ enum ValueDef {
   VString(data:String);
   VColor(data:String);
   VCall(name:String, args:Array<Value>);
-  // VBinOp(op:BinOp, left:Value, right:Value);
+  VBinOp(op:BinOp, left:Value, right:Value);
   VCompound(values:Array<Value>);
   VList(left:Value, right:Value);
 }

@@ -404,7 +404,24 @@ class CssParser extends Parser<Array<CssExpr>> {
   }
 
   function parseExpr() {
-    return parseCall();
+    return parseBinOp();
+  }
+
+  function parseBinOp() {
+    var expr = parseCall();
+    whitespace();
+
+    if (matchAny(BinOp.all)) {
+      var op:BinOp = previous();
+      whitespace();
+      var right = parseCall();
+      expr = {
+        value: VBinOp(op, expr, right),
+        pos: getPos(expr.pos.min, position)
+      };
+    }
+
+    return expr;
   }
 
   function parseCall() {
