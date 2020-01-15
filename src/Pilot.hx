@@ -28,14 +28,7 @@ final class Pilot {
 
   static final rootNodes:Map<Node, Root> = [];
 
-  /**
-    Mount vNodes on the real dom. If no `pilot.Node` is provided, will default
-    to the document body.
-  **/
-  inline public static function mount(?node:Node, vNode:VNode):Root {
-    if (node == null) {
-      node = Document.root.body;
-    }
+  inline public static function mount(node:Node, vNode:VNode):Root {
     if (!rootNodes.exists(node)) {
       rootNodes.set(node, new Root(node));
     }

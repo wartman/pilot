@@ -15,11 +15,15 @@ class Document extends Element {
 
   static public final root = new Document();
   
+  public final documentElement:Node = new Element(ELEMENT_NODE, 'html');
   public final body:Node = new Element(ELEMENT_NODE, 'body');
-  public final html:Node = new Element(ELEMENT_NODE, 'html');
+  public final head:Node = new Element(ELEMENT_NODE, 'head');
 
   public function new() {
     super(DOCUMENT_NODE, '#document');
+    appendChild(documentElement);
+    documentElement.appendChild(body);
+    documentElement.appendChild(head);
   }
 
   public function createElement(tag:String) {
