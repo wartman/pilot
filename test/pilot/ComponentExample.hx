@@ -13,6 +13,7 @@ class ComponentExample extends Component {
       <ChildrenExample />
       <SvgExample />
       <EmbeddedCssExample />
+      <KeyframesExample />
     </ul>
   </Container>);
 

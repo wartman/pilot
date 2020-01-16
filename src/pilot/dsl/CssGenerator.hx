@@ -52,6 +52,9 @@ class CssGenerator {
       case CMediaQuery(conditions, properties):
         var decl = generateMediaQuery(conditions, properties, sel);
         if (decl != null) decls.push(decl);
+      case CKeyframes(name, properties):
+        var decl = generateKeyframes(name, properties);
+        if (decl != null) decls.push(decl);
       default:
         throw new DslError('Not implented yet', prop.pos);
     }
@@ -155,6 +158,18 @@ class CssGenerator {
     }
     // If not found, assume local or full type path.
     return name;
+  }
+
+  function generateKeyframes(name:String, properties:Array<CssExpr>) {
+    var out = '@keyframes ${name} {\n';
+    indent();
+    out += generateDeclaration({
+      selector: [ [ {} ] ],
+      pos: { min: 0, max: 0 }
+    }, properties);
+    outdent();
+    out += '\n${getIndent()}}';
+    return out;
   }
 
   function generateMediaQuery(conditions:Array<MediaCondition>, properties:Array<CssExpr>, ?sel:String):String {

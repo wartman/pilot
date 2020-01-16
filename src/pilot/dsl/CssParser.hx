@@ -117,7 +117,7 @@ class CssParser extends Parser<Array<CssExpr>> {
     }
 
     if (match('@keyframes')) {
-      throw errorAt('Not implemented yet', '@keyframes');
+      return parseKeyframes();
     }
 
     return switch attempt(() -> {
@@ -181,6 +181,61 @@ class CssParser extends Parser<Array<CssExpr>> {
     }
 
     return properties;
+  }
+
+  function parseKeyframes():CssExpr {
+    var start = position;
+    whitespace();
+    var name = ident();
+    var frames:Array<CssExpr> = [];
+    var didClose = false;
+    
+    function isClosed() {
+      return didClose = match('}');
+    }
+
+    whitespace();
+    consume('{');
+    whitespace();
+
+    while (!isAtEnd() && !isClosed()) {
+      whitespace();
+      var subStart = position;
+      var pos:String;
+      if (match('from')) {
+        pos = '100';
+      } else if (match('to')) {
+        pos = '0';
+      } else {
+        var num = parseExpr();
+        switch num.value {
+          case VNumeric(data, Pct): pos = data;
+          default:
+            throw error('Expected `to`, `from` or a percentage', num.pos.min, num.pos.max);
+        }
+      }
+      whitespace();
+      var props = parseBody();
+      whitespace();
+      // note: this is a bit of a hack, consider creating
+      //       a simple `KeyframeProperty` instead
+      frames.push({
+        expr: CDeclaration({
+          selector: [ [ { tag: pos + '%' } ] ],
+          pos: getPos(subStart, position)
+        }, props),
+        pos: getPos(subStart, position)
+      });
+    }
+
+    if (!didClose) {
+      throw error('Unclosed rule', start, position);
+    }
+
+    return {
+      expr: CKeyframes(name, frames),
+      pos: getPos(start, position)
+    };
   }
 
   function parseMediaQuery():CssExpr {
