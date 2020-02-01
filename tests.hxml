@@ -1,6 +1,9 @@
 -cp src
 -cp test
 
+-D analyzer-optimize
+-dce full
+
 -lib medic
 -main Run
 

@@ -2,10 +2,10 @@ package pilot;
 
 import pilot.dom.*;
 
-using medic.Assert;
 using pilot.MarkupTest;
+using Medic;
 
-class MarkupTest {
+class MarkupTest implements TestCase {
 
   public function new() {}
 

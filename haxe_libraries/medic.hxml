@@ -1,3 +1,3 @@
--D medic=0.0.1
-# @install: lix --silent download "gh://github.com/wartman/medic#ccc811aff00e73da64bed4a9d615c186edc4500f" into medic/0.0.1/github/ccc811aff00e73da64bed4a9d615c186edc4500f
--cp ${HAXE_LIBCACHE}/medic/0.0.1/github/ccc811aff00e73da64bed4a9d615c186edc4500f/src/
+# @install: lix --silent download "gh://github.com/wartman/medic#3920f53b342b1d03a5d486de30fd08917f2c53f3" into medic/0.1.1/github/3920f53b342b1d03a5d486de30fd08917f2c53f3
+-cp ${HAXE_LIBCACHE}/medic/0.1.1/github/3920f53b342b1d03a5d486de30fd08917f2c53f3/src/
+-D medic=0.1.1

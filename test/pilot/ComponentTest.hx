@@ -2,9 +2,9 @@ package pilot;
 
 import pilot.dom.*;
 
-using medic.Assert;
+using Medic;
 
-class ComponentTest {
+class ComponentTest implements TestCase {
   
   public function new() {}
 

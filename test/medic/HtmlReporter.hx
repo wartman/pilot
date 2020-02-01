@@ -59,7 +59,7 @@ class TestReport extends Component {
   @:attribute var info:TestInfo;
 
   override function render() return html(<li>
-    <h3>{info.name}#{info.field}()</h3>
+    <h3>{info.className}#{info.field}()</h3>
     { 
       if (info.description.length > 0)
         <p>{info.description}</p>
