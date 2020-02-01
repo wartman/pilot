@@ -5,9 +5,9 @@ package pilot;
 @:autoBuild(pilot.Component.build())
 class Component extends BaseWire<Dynamic> {
   
-  @:noCompletion var _pilot_parent:Wire<Dynamic>;
-  @:noCompletion var _pilot_context:Context;
-  @:noCompletion var _pilot_initialized:Bool = false;
+  @:noCompletion var __parent:Wire<Dynamic>;
+  @:noCompletion var __context:Context;
+  @:noCompletion var __initialized:Bool = false;
 
   function render():VNode {
     return null;
@@ -15,49 +15,50 @@ class Component extends BaseWire<Dynamic> {
 
   macro function html(e);
 
-  @:noCompletion override function _pilot_update(attrs:Dynamic, children:Array<VNode>, context:Context) {
-    _pilot_context = context;
-    _pilot_updateAttributes(attrs, context);
+  @:noCompletion override function __update(attrs:Dynamic, children:Array<VNode>, context:Context) {
+    __context = context;
+    __updateAttributes(attrs, context);
 
-    if (!_pilot_initialized) {
-      _pilot_initialized = true;
-      _pilot_doInits();
+    if (!__initialized) {
+      __initialized = true;
+      __doInits();
     }
 
-    if (_pilot_shouldRender(attrs)) {
-      _pilot_updateChildren(switch render() {
+    if (__shouldRender(attrs)) {
+      __updateChildren(switch render() {
+        case null: [ VNative(TextType, '', []) ]; // placeholder?
         case VFragment(children): children;
         case vn: [ vn ];
-      }, _pilot_context);
-      Util.later(_pilot_doEffects);
+      }, __context);
+      Util.later(__doEffects);
     }
   }
 
-  @:noCompletion function _pilot_shouldRender(attrs:Dynamic):Bool {
+  @:noCompletion function __shouldRender(attrs:Dynamic):Bool {
     return true;
   }
 
-  @:noCompletion override function _pilot_insertInto(parent:Wire<Dynamic>) {
-    _pilot_parent = parent;
-    _pilot_real = parent._pilot_getReal();
+  @:noCompletion override function __insertInto(parent:Wire<Dynamic>) {
+    __parent = parent;
+    __real = parent.__getReal();
   }
 
-  @:noCompletion override function _pilot_removeFrom(parent:Wire<Dynamic>) {
-    for (c in _pilot_childList) c._pilot_removeFrom(parent);
-    _pilot_dispose();
+  @:noCompletion override function __removeFrom(parent:Wire<Dynamic>) {
+    for (c in __childList) c.__removeFrom(parent);
+    __dispose();
   }
 
-  @:noCompletion override function _pilot_dispose() {
-    _pilot_parent = null;
-    _pilot_types = null;
-    _pilot_childList = null;
+  @:noCompletion override function __dispose() {
+    __parent = null;
+    __types = null;
+    __childList = null;
   }
 
-  @:noCompletion function _pilot_doInits() {
+  @:noCompletion function __doInits() {
     // noop -- handled by macro
   }
 
-  @:noCompletion function _pilot_doEffects() {
+  @:noCompletion function __doEffects() {
     // noop -- handled by macro
   }
 
@@ -92,7 +93,7 @@ class Component {
     var newFields:Array<Field> = [];
     var props:Array<Field> = [];
     var startup:Array<Expr> = [];
-    var teardown:Array<Expr> = [];
+    var dispose:Array<Expr> = [];
     var effect:Array<Expr> = [];
     var guards:Array<Expr> = [];
     var updates:Array<Expr> = [];
@@ -121,7 +122,7 @@ class Component {
         var getName = 'get_${name}';
         var setName = 'set_${name}';
         var isMutable = false;
-        var guardName = '_pilot_guard_${name}';
+        var guardName = '__guard_${name}';
         var guard:Expr = macro __a != __b;
 
         for (param in params) switch param {
@@ -167,19 +168,19 @@ class Component {
         }
         
         // TODO:
-        // Guards should happen in `_pilot_update` for all attributes, and we should ONLY render if 
+        // Guards should happen in `__update` for all attributes, and we should ONLY render if 
         // attributes change?
 
         updates.push(macro @:pos(f.pos) {
-          if (Reflect.hasField(__props, $v{name})) switch [ _pilot_attrs.$name, Reflect.field(__props, $v{name}) ] {
+          if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
             case [ a, b ] if (!this.$guardName(a, b)):
-            case [ _, b ]: _pilot_attrs.$name = b;
+            case [ _, b ]: __attrs.$name = b;
           }
         });
 
         add((macro class {
 
-          function $getName() return _pilot_attrs.$name;
+          function $getName() return __attrs.$name;
           
           inline function $guardName(__a, __b) return ${guard};
 
@@ -188,8 +189,8 @@ class Component {
         if (isMutable) {
           add((macro class {
             function $setName(__v) {
-              if (_pilot_context != null && this.$guardName(__v, _pilot_attrs.$name)) {
-                _pilot_update({ $name: __v }, [], _pilot_context);
+              if (__context != null && this.$guardName(__v, __attrs.$name)) {
+                __update({ $name: __v }, [], __context);
               }
               return __v;
             }
@@ -252,7 +253,7 @@ class Component {
 
       case FFun(_) if (f.meta.exists(m -> disposeMeta.has(m.name))):
         var name = f.name;
-        teardown.push(macro @:pos(f.pos) this.$name());
+        dispose.push(macro @:pos(f.pos) this.$name());
 
       case FFun(_) if (f.meta.exists(m -> effectMeta.has(m.name))):
         var name = f.name;
@@ -303,37 +304,37 @@ class Component {
 
     add((macro class {
 
-      @:noCompletion public static function _pilot_create(props:$propType, context:pilot.Context) {
+      @:noCompletion public static function __create(props:$propType, context:pilot.Context) {
         return new $clsTp(props, context);
       } 
       
       public function new(__props:$propType, __context:pilot.Context) {
-        _pilot_context = __context;
-        _pilot_attrs = ${ {
+        this.__context = __context;
+        __attrs = ${ {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
       }
 
-      @:noCompletion override function _pilot_updateAttributes(__props:Dynamic, __context:pilot.Context) {
+      @:noCompletion override function __updateAttributes(__props:Dynamic, __context:pilot.Context) {
         $b{updates};
       }
 
-      @:noCompletion override function _pilot_shouldRender(attrs:Dynamic) {
+      @:noCompletion override function __shouldRender(attrs:Dynamic) {
         ${guardCheck}
       }
 
-      @:noCompletion override function _pilot_doInits() {
+      @:noCompletion override function __doInits() {
         $b{startup};
       }
 
-      @:noCompletion override function _pilot_doEffects() {
+      @:noCompletion override function __doEffects() {
         $b{effect};
       }
 
-      @:noCompletion override function _pilot_dispose() {
-        $b{teardown};
-        super._pilot_dispose();
+      @:noCompletion override function __dispose() {
+        $b{dispose};
+        super.__dispose();
       }
 
     }).fields);

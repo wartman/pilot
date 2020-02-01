@@ -4,42 +4,42 @@ import pilot.dom.*;
 
 class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
-  var _pilot_attrs:Attrs;
-  var _pilot_types:Map<WireType<Dynamic>, WireRegistry> = [];
-  var _pilot_childList:Array<Wire<Dynamic>> = [];
-  var _pilot_real:Node;
+  var __attrs:Attrs;
+  var __types:Map<WireType<Dynamic>, WireRegistry> = [];
+  var __childList:Array<Wire<Dynamic>> = [];
+  var __real:Node;
 
-  public function _pilot_dispose():Void {
-    if (_pilot_childList != null) {
-      for (c in _pilot_childList) c._pilot_removeFrom(this);
+  public function __dispose():Void {
+    if (__childList != null) {
+      for (c in __childList) c.__removeFrom(this);
     }
-    _pilot_types = null;
-    _pilot_childList = null;
+    __types = null;
+    __childList = null;
   }
 
-  public function _pilot_getReal():Node {
-    return _pilot_real;
+  public function __getReal():Node {
+    return __real;
   }
 
-  public function _pilot_insertInto(parent:Wire<Dynamic>):Void {
-    parent._pilot_getReal().appendChild(_pilot_getReal());
+  public function __insertInto(parent:Wire<Dynamic>):Void {
+    parent.__getReal().appendChild(__getReal());
   }
 
-  public function _pilot_removeFrom(parent:Wire<Dynamic>):Void {
-    parent._pilot_getReal().removeChild(_pilot_getReal());
-    _pilot_dispose();
+  public function __removeFrom(parent:Wire<Dynamic>):Void {
+    parent.__getReal().removeChild(__getReal());
+    __dispose();
   }
 
-  public function _pilot_update(newAttrs:Attrs, children:Array<VNode>, context:Context):Void {
-    _pilot_updateAttributes(newAttrs, context);
-    _pilot_updateChildren(children, context);
+  public function __update(newAttrs:Attrs, children:Array<VNode>, context:Context):Void {
+    __updateAttributes(newAttrs, context);
+    __updateChildren(children, context);
   }
 
-  function _pilot_updateAttributes(newAttrs:Attrs, context:Context) {
+  function __updateAttributes(newAttrs:Attrs, context:Context) {
     throw 'not implemented';
   }
 
-  function _pilot_updateChildren(children:Array<VNode>, context:Context):Void {
+  function __updateChildren(children:Array<VNode>, context:Context):Void {
     var newChildList:Array<Wire<Dynamic>> = [];
     var newTypes:Map<WireType<Dynamic>, WireRegistry> = [];
 
@@ -54,26 +54,26 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
     function process(nodes:Array<VNode>) for (n in nodes) switch n {
       case null:
 
-      case VNative(type, attrs, children, key, ref): switch _pilot_resolveChildNode(type, key) {
+      case VNative(type, attrs, children, key, ref): switch __resolveChildNode(type, key) {
         case null:
-          var node = type._pilot_create(attrs, context);
-          node._pilot_insertInto(this);
-          node._pilot_update(attrs, children, context);
+          var node = type.__create(attrs, context);
+          node.__insertInto(this);
+          node.__update(attrs, children, context);
           add(key, type, node);
-          if (ref != null) ref(node._pilot_getReal());
+          if (ref != null) ref(node.__getReal());
         case previous:
-          previous._pilot_update(attrs, children, context);
+          previous.__update(attrs, children, context);
           add(key, type, previous);
       }
 
-      case VComponent(type, attrs, key): switch _pilot_resolveChildNode(type, key) {
+      case VComponent(type, attrs, key): switch __resolveChildNode(type, key) {
         case null:
-          var node = type._pilot_create(attrs, context);
-          node._pilot_insertInto(this);
-          node._pilot_update(attrs, [], context);
+          var node = type.__create(attrs, context);
+          node.__insertInto(this);
+          node.__update(attrs, [], context);
           add(key, type, node);
         case previous:
-          previous._pilot_update(attrs, [], context);
+          previous.__update(attrs, [], context);
           add(key, type, previous);
       }
 
@@ -83,21 +83,21 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
     process(children);
 
-    if (_pilot_childList != null && _pilot_childList.length > 0) {
-      for (node in _pilot_childList) {
-        node._pilot_removeFrom(this);
+    if (__childList != null && __childList.length > 0) {
+      for (node in __childList) {
+        node.__removeFrom(this);
       }
     }
 
-    _pilot_types = newTypes;
-    _pilot_childList = newChildList;
+    __types = newTypes;
+    __childList = newChildList;
   }
 
-  function _pilot_resolveChildNode(type:WireType<Dynamic>, ?key:Key) {
-    var registry = _pilot_types.get(type);
+  function __resolveChildNode(type:WireType<Dynamic>, ?key:Key) {
+    var registry = __types.get(type);
     if (registry == null) return null;
     var n = registry.pull(key);
-    _pilot_childList.remove(n);
+    __childList.remove(n);
     return n;
   }
 

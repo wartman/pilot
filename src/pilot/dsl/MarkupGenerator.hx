@@ -8,43 +8,21 @@ import pilot.dsl.MarkupNode;
 using StringTools;
 using haxe.macro.PositionTools;
 
+typedef MarkupMacro = (attr:MarkupAttribute, pos:Position)->ObjectField;
+
 class MarkupGenerator {
 
   static inline final TEXT_NODE = '__text__';
   
-  static final attributeMacros:Map<String, (attr:MarkupAttribute, pos:Position)->ObjectField> = [
-    'style' => (attr, pos) -> {
-      field: attr.name,
-      expr: switch attr.value.value {
-        case Raw(_):
-          throw new DslError('@style does not accept raw values', attr.pos);
-        case Code(value):
-          Css.parse(macro @:pos(pos) $v{value});
-      }
-    },
-    'style-embed' => (attr, pos) -> {
-      field: attr.name,
-      expr: switch attr.value.value {
-        case Raw(_):
-          throw new DslError('@style-embed does not accept raw values', attr.pos);
-        case Code(value):
-          Css.parse(macro @:pos(pos) $v{value}, true);
-      }
-    }
-  ];
-
-  static public function registerMacro(name, handler) {
-    attributeMacros.set(name, handler);
-  }
-  
+  final attributeMacros:Map<String, MarkupMacro>;
   final nodes:Array<MarkupNode>;
   final pos:Position;
   var isSvg:Bool = false;
 
-  public function new(nodes, pos) {
+  public function new(nodes, pos, macros) {
     this.nodes = nodes;
     this.pos = pos;
-    // todo: allow custom macros
+    this.attributeMacros = macros;
   }
 
   public function generate():Expr {

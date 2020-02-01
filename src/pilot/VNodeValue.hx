@@ -24,8 +24,8 @@ abstract VNodeValue(VNode) from VNode to VNode {
 
   @:from inline public static function ofComponentInstance(component:Component):VNodeValue {
     return VNode.VComponent({
-      _pilot_create: (_, _) -> component
-    }, @:privateAccess component._pilot_attrs);
+      __create: (_, _) -> component
+    }, @:privateAccess component.__attrs);
   }
 
 }

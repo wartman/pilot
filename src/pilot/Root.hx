@@ -22,7 +22,7 @@ class Root {
   }
 
   public function update(vNode:VNode) {
-    target._pilot_update({}, [ vNode ], context);
+    target.__update({}, [ vNode ], context);
   }
 
   public inline function getContext() {
@@ -30,7 +30,7 @@ class Root {
   }
 
   public inline function getNode() {
-    return target._pilot_getReal();
+    return target.__getReal();
   }
 
   public inline function toString() {

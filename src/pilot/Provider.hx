@@ -8,10 +8,10 @@ final class Provider<T> extends Component {
 
   override function render() return html(<>{children}</>);
 
-  override function _pilot_update(attrs:Dynamic, children:Array<VNode>, context:Context) {
+  override function __update(attrs:Dynamic, children:Array<VNode>, context:Context) {
     var subContext = context.copy();
     subContext.set(id, value);
-    super._pilot_update(attrs, children, subContext);
+    super.__update(attrs, children, subContext);
   }
 
 }

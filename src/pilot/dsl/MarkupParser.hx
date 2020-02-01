@@ -4,9 +4,18 @@ import pilot.dsl.MarkupNode;
 
 using StringTools;
 
+typedef MarkupParserOptions = {
+  noInlineControlFlow:Bool
+};
+
 class MarkupParser extends Parser<Array<MarkupNode>> {
 
-  public var noInlineControlFlow:Bool = false;
+  final options:MarkupParserOptions;
+
+  public function new(options, source, fileName, filePos) {
+    super(source, fileName, filePos);
+    this.options = options;
+  }
 
   override function parse():Array<MarkupNode> {
     var out:Array<MarkupNode> = [
@@ -30,7 +39,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       case '<' if (match('/')): 
         throw errorAt('Unexpected close tag', '</');
       case '<': parseNode();
-      case '@' if (!noInlineControlFlow): parseInlineCode();
+      case '@' if (!options.noInlineControlFlow): parseInlineCode();
       case '$': parseCodeBlock(0);
       case '{': parseCodeBlock(1);
       default: parseText(previous());
@@ -198,7 +207,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
 
   function parseText(init:String):MarkupNode {
     var start = position;
-    var token = noInlineControlFlow
+    var token = options.noInlineControlFlow
       ? [ '<', '$', '{' ]
       : [ '<', '$', '{', '@' ];
     var out = init + readWhile(() -> !checkAnyUnescaped(token));

@@ -29,7 +29,7 @@ class NodeType<Attrs:{}> {
     this.isSvg = isSvg;
   }
 
-  public function _pilot_create(attrs:Attrs, context:Context):Wire<Attrs> {
+  public function __create(attrs:Attrs, context:Context):Wire<Attrs> {
     var doc = Document.root;
     return new NodeWire(
       isSvg 
