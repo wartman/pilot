@@ -8,10 +8,6 @@ class Root {
     return new Root(Document.root.getElementById(id));
   }
 
-  // public inline static function forBody() {
-  //   return new Root(Browser);
-  // }
-
   var target:NodeWire<Dynamic>;
   final context:Context;
 

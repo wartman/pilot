@@ -8,6 +8,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   var __types:Map<WireType<Dynamic>, WireRegistry> = [];
   var __childList:Array<Wire<Dynamic>> = [];
   var __real:Node;
+  var __cursor:Cursor;
 
   public function __dispose():Void {
     if (__childList != null) {
@@ -20,6 +21,10 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   public function __getReal():Node {
     return __real;
   }
+  
+  public function __getCursor():Cursor {
+    return __cursor;
+  }
 
   public function __insertInto(parent:Wire<Dynamic>):Void {
     parent.__getReal().appendChild(__getReal());
@@ -30,9 +35,15 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
     __dispose();
   }
 
+  public function __isUpdating() {
+    return __cursor != null;
+  }
+
   public function __update(newAttrs:Attrs, children:Array<VNode>, context:Context):Void {
+    __cursor = new Cursor(__real, __real.firstChild);
     __updateAttributes(newAttrs, context);
     __updateChildren(children, context);
+    __cursor = null;
   }
 
   function __updateAttributes(newAttrs:Attrs, context:Context) {
@@ -51,27 +62,36 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
       newChildList.push(wire);
     }
 
+    function addNode(node:Node) {
+      if (__cursor.getCurrent() == node) { 
+        __cursor.step();
+      } else {
+        __cursor.insert(node);
+      }
+    }
+
     function process(nodes:Array<VNode>) for (n in nodes) switch n {
       case null:
 
       case VNative(type, attrs, children, key, ref): switch __resolveChildNode(type, key) {
         case null:
-          var node = type.__create(attrs, context);
-          node.__insertInto(this);
-          node.__update(attrs, children, context);
-          add(key, type, node);
-          if (ref != null) ref(node.__getReal());
+          var wire = type.__create(attrs, context);
+          wire.__update(attrs, children, context);
+          add(key, type, wire);
+          addNode(wire.__getReal());
+          if (ref != null) ref(wire.__getReal());
         case previous:
           previous.__update(attrs, children, context);
           add(key, type, previous);
+          addNode(previous.__getReal());
       }
 
       case VComponent(type, attrs, key): switch __resolveChildNode(type, key) {
         case null:
-          var node = type.__create(attrs, context);
-          node.__insertInto(this);
-          node.__update(attrs, [], context);
-          add(key, type, node);
+          var wire = type.__create(attrs, context);
+          wire.__insertInto(this);
+          wire.__update(attrs, [], context);
+          add(key, type, wire);
         case previous:
           previous.__update(attrs, [], context);
           add(key, type, previous);
@@ -91,6 +111,10 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
     __types = newTypes;
     __childList = newChildList;
+  }
+
+  function __getPrevious() {
+    return __childList[0];
   }
 
   function __resolveChildNode(type:WireType<Dynamic>, ?key:Key) {

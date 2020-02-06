@@ -14,6 +14,14 @@ class TextWire implements Wire<String> {
     return real;
   }
 
+  public function __getCursor():Cursor {
+    return null;
+  }
+
+  public function __isUpdating() {
+    return false;
+  }
+
   public function __dispose():Void {
     // noop
   }

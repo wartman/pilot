@@ -21,17 +21,38 @@ class Component extends BaseWire<Dynamic> {
 
     if (!__initialized) {
       __initialized = true;
+      __cursor = new Cursor(__parent.__getReal(), __getFirstNode());
       __doInits();
+    } else {
+      __cursor = new Cursor(__parent.__getReal(), __getFirstNode());
     }
 
     if (__shouldRender(attrs)) {
       __updateChildren(switch render() {
-        case null: [ VNative(TextType, '', []) ]; // placeholder?
+        case null: [ VNative(TextType, '', []) ]; // placeholder
         case VFragment(children): children;
         case vn: [ vn ];
       }, __context);
       Util.later(__doEffects);
     }
+
+    // Sync cursors? Probably needs some work.
+    if (__parent.__isUpdating()) {
+      var pc = __parent.__getCursor();
+      while (pc.getCurrent() != __cursor.getCurrent()) {
+        if (!pc.step()) break;
+      }
+    }
+
+    __cursor = null;
+  }
+
+  @:noCompletion function __getFirstNode() {
+    return __childList != null && __childList.length > 0 
+      ? __childList[0].__getReal() 
+      : __parent.__isUpdating()
+        ? __parent.__getCursor().getCurrent()
+        : __parent.__getReal().firstChild;
   }
 
   @:noCompletion function __shouldRender(attrs:Dynamic):Bool {

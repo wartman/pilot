@@ -45,7 +45,7 @@ class MarkupTest implements TestCase {
     tester(true).equals('<div><p>Ok!</p></div>');
   }
 
-  @test('`@` can be escaped')
+  @test('Special characters can be escaped')
   public function testEscapeAt() {
     var out = Pilot.html(<span>\@\$\<</span>)
       .render()
@@ -93,5 +93,65 @@ class MarkupTest implements TestCase {
     tester('bar').equals('<div><span>Bar</span></div>');
     tester('bax').equals('<div><span>Other bax</span></div>');
   }
+
+  @test('Keys preserve order')
+  public function testKeys() {
+    var root = new Root(Document.root.createElement('div'));
+    var tester = (values:Array<{ content:String }>) -> Pilot.html(<ul>
+      @for (value in values) <li @key={value}>{value.content}</li>
+      <li>Last</li>
+    </ul>);
+    
+    var a = { content: 'a' };
+    var b = { content: 'b' };
+
+    root.update(tester([ a, b ]));
+    
+    root.toString().equals('<div><ul><li>a</li><li>b</li><li>Last</li></ul></div>');
+  
+    a.content = 'bin';
+
+    root.update(tester([
+      a,
+      { content: 'froob' },
+      b
+    ]));
+    root.toString().equals('<div><ul><li>bin</li><li>froob</li><li>b</li><li>Last</li></ul></div>');
+  }
+
+  @test('Components render their children without loosing order')
+  public function testOrder() {
+    var root = new Root(Document.root.createElement('div'));
+    var tester = (items:Array<Array<String>>) -> Pilot.html(<>
+      @for (item in items) <OrderTestComponent items={item} />
+      <div>Last</div> 
+    </>);
+    root.update(tester([
+      [ 'one-one', 'one-two' ],
+      [ 'two-one', 'two-two' ],
+    ]));
+    root.toString().equals('<div><div>one-one</div><div>one-two</div><div>two-one</div><div>two-two</div><div>Last</div></div>');
+    root.update(tester([
+      [ 'one-foo', 'one-two', 'one-bar' ],
+      [ 'three-one', 'three-two' ],
+      [ 'two-one', 'two-two' ],
+    ]));
+    root.toString().equals('<div><div>one-foo</div><div>one-two</div><div>one-bar</div><div>three-one</div><div>three-two</div><div>two-one</div><div>two-two</div><div>Last</div></div>');
+    root.update(tester([
+      [ 'one-one', 'one-two' ],
+      [ 'two-one', 'two-two' ],
+    ]));
+    root.toString().equals('<div><div>one-one</div><div>one-two</div><div>two-one</div><div>two-two</div><div>Last</div></div>');
+  }
+
+}
+
+class OrderTestComponent extends Component {
+
+  @:attribute var items:Array<String>;
+
+  override function render() return html(<>
+    @for (item in items) <div>{item}</div>  
+  </>);
 
 }

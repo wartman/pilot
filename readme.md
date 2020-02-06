@@ -157,7 +157,7 @@ Pilot.html(<>
       <span>No foos!</span>
     else
       <ul>{
-        [ for (foo in foos) <li>foo</li> ]
+        [ for (foo in foos) <li>{foo}</li> ]
       }</ul>
   }
 </>);
