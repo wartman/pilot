@@ -27,11 +27,24 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   }
 
   public function __insertInto(parent:Wire<Dynamic>):Void {
-    parent.__getReal().appendChild(__getReal());
+    if (parent.__isUpdating()) {
+      var cursor = parent.__getCursor();
+      if (cursor.getCurrent() == __real) {
+        cursor.step();
+      } else {
+        cursor.insert(__real);
+      }
+    } else {
+      parent.__getReal().appendChild(__real);
+    }
   }
 
   public function __removeFrom(parent:Wire<Dynamic>):Void {
-    parent.__getReal().removeChild(__getReal());
+    if (parent.__isUpdating() && parent.__getCursor().getCurrent() == __real) {
+      parent.__getCursor().remove();
+    } else {
+      parent.__getReal().removeChild(__real);
+    }
     __dispose();
   }
 
@@ -62,28 +75,20 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
       newChildList.push(wire);
     }
 
-    function addNode(node:Node) {
-      if (__cursor.getCurrent() == node) { 
-        __cursor.step();
-      } else {
-        __cursor.insert(node);
-      }
-    }
-
     function process(nodes:Array<VNode>) for (n in nodes) switch n {
       case null:
 
       case VNative(type, attrs, children, key, ref): switch __resolveChildNode(type, key) {
         case null:
           var wire = type.__create(attrs, context);
+          wire.__insertInto(this);
           wire.__update(attrs, children, context);
           add(key, type, wire);
-          addNode(wire.__getReal());
           if (ref != null) ref(wire.__getReal());
-        case previous:
-          previous.__update(attrs, children, context);
-          add(key, type, previous);
-          addNode(previous.__getReal());
+        case wire:
+          wire.__update(attrs, children, context);
+          wire.__insertInto(this); // Note: this just moves the cursor forward
+          add(key, type, wire);
       }
 
       case VComponent(type, attrs, key): switch __resolveChildNode(type, key) {

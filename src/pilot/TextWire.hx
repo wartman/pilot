@@ -27,11 +27,24 @@ class TextWire implements Wire<String> {
   }
 
   public function __insertInto(parent:Wire<Dynamic>) {
-    parent.__getReal().appendChild(real);
+    if (parent.__isUpdating()) {
+      var cursor = parent.__getCursor();
+      if (cursor.getCurrent() == real) {
+        cursor.step();
+      } else {
+        cursor.insert(real);
+      }
+    } else {
+      parent.__getReal().appendChild(real);
+    }
   }
   
   public function __removeFrom(parent:Wire<Dynamic>) {
-    parent.__getReal().removeChild(real);
+    if (parent.__isUpdating() && parent.__getCursor().getCurrent() == real) {
+      parent.__getCursor().remove();
+    } else {
+      parent.__getReal().removeChild(real);
+    }
     __dispose();
   }
   
