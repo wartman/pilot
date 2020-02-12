@@ -87,7 +87,9 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
           if (ref != null) ref(wire.__getReal());
         case wire:
           wire.__update(attrs, children, context);
-          wire.__insertInto(this); // Note: this just moves the cursor forward
+          // Ensure the cursor is at the right place
+          __cursor.sync(wire.__getReal());
+          __cursor.step();
           add(key, type, wire);
       }
 

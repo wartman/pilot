@@ -33,15 +33,12 @@ class Component extends BaseWire<Dynamic> {
         case VFragment(children): children;
         case vn: [ vn ];
       }, __context);
+      // @todo: Add some sort of render queue 
       Util.later(__doEffects);
     }
 
-    // Sync cursors? Probably needs some work.
     if (__parent.__isUpdating()) {
-      var pc = __parent.__getCursor();
-      while (pc.getCurrent() != __cursor.getCurrent()) {
-        if (!pc.step()) break;
-      }
+      __parent.__getCursor().sync(__cursor.getCurrent());
     }
 
     __cursor = null;

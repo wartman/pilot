@@ -35,6 +35,12 @@ class Cursor {
     }
   }
 
+  public function sync(node:Node) {
+    while (current != node) {
+      if (!step()) break;
+    }
+  }
+
   public function getCurrent() {
     return current;
   }
