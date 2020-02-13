@@ -5,6 +5,7 @@ package pilot;
 @:autoBuild(pilot.Component.build())
 class Component extends BaseWire<Dynamic> {
   
+  @:noCompletion var __alive:Bool = false;
   @:noCompletion var __parent:Wire<Dynamic>;
   @:noCompletion var __context:Context;
   @:noCompletion var __initialized:Bool = false;
@@ -16,16 +17,19 @@ class Component extends BaseWire<Dynamic> {
   macro function html(e);
 
   @:noCompletion override function __update(attrs:Dynamic, children:Array<VNode>, context:Context) {
+    if (!__alive) {
+      throw 'Cannot update a component that has not been inserted';
+    }
+
     __context = context;
     __updateAttributes(attrs, context);
 
     if (!__initialized) {
       __initialized = true;
-      __cursor = new Cursor(__parent.__getReal(), __getFirstNode());
       __doInits();
-    } else {
-      __cursor = new Cursor(__parent.__getReal(), __getFirstNode());
     }
+    
+    __cursor = new Cursor(__parent.__getNode(), __getFirstNode());
 
     if (__shouldRender(attrs)) {
       __updateChildren(switch render() {
@@ -35,21 +39,31 @@ class Component extends BaseWire<Dynamic> {
       }, __context);
       // @todo: Add some sort of render queue 
       Util.later(__doEffects);
+    } else {
+      __cursor = null;
     }
 
     if (__parent.__isUpdating()) {
-      __parent.__getCursor().sync(__cursor.getCurrent());
+      __parent.__getCursor().sync(__getLastNode());
     }
 
     __cursor = null;
   }
 
-  @:noCompletion function __getFirstNode() {
+  @:noCompletion override function __getFirstNode() {
     return __childList != null && __childList.length > 0 
-      ? __childList[0].__getReal() 
+      ? __childList[0].__getFirstNode() 
       : __parent.__isUpdating()
         ? __parent.__getCursor().getCurrent()
-        : __parent.__getReal().firstChild;
+        : __parent.__getNode().firstChild;
+  }
+
+  @:noCompletion override function __getLastNode() {
+    return __isUpdating()
+      ? __cursor.getCurrent()
+      : __childList != null && __childList.length > 0 
+        ? __childList[__childList.length - 1].__getLastNode()
+        : null;
   }
 
   @:noCompletion function __shouldRender(attrs:Dynamic):Bool {
@@ -57,8 +71,12 @@ class Component extends BaseWire<Dynamic> {
   }
 
   @:noCompletion override function __insertInto(parent:Wire<Dynamic>) {
+    if (__alive) {
+      throw 'Component has already been inserted';
+    }
+    __alive = true;
     __parent = parent;
-    __real = parent.__getReal();
+    __node = parent.__getNode();
   }
 
   @:noCompletion override function __removeFrom(parent:Wire<Dynamic>) {
@@ -67,6 +85,7 @@ class Component extends BaseWire<Dynamic> {
   }
 
   @:noCompletion override function __dispose() {
+    __alive = false;
     __parent = null;
     __types = null;
     __childList = null;

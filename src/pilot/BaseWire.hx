@@ -7,7 +7,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   var __attrs:Attrs;
   var __types:Map<WireType<Dynamic>, WireRegistry> = [];
   var __childList:Array<Wire<Dynamic>> = [];
-  var __real:Node;
+  var __node:Node;
   var __cursor:Cursor;
 
   public function __dispose():Void {
@@ -18,32 +18,40 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
     __childList = null;
   }
 
-  public function __getReal():Node {
-    return __real;
+  public function __getNode():Node {
+    return __node;
   }
   
   public function __getCursor():Cursor {
     return __cursor;
   }
 
+  public function __getFirstNode():Node {
+    return __node;
+  }
+
+  public function __getLastNode():Node {
+    return __node;
+  }
+
   public function __insertInto(parent:Wire<Dynamic>):Void {
     if (parent.__isUpdating()) {
       var cursor = parent.__getCursor();
-      if (cursor.getCurrent() == __real) {
+      if (cursor.getCurrent() == __node) {
         cursor.step();
       } else {
-        cursor.insert(__real);
+        cursor.insert(__node);
       }
     } else {
-      parent.__getReal().appendChild(__real);
+      parent.__getNode().appendChild(__node);
     }
   }
 
   public function __removeFrom(parent:Wire<Dynamic>):Void {
-    if (parent.__isUpdating() && parent.__getCursor().getCurrent() == __real) {
+    if (parent.__isUpdating() && parent.__getCursor().getCurrent() == __node) {
       parent.__getCursor().remove();
     } else {
-      parent.__getReal().removeChild(__real);
+      parent.__getNode().removeChild(__node);
     }
     __dispose();
   }
@@ -53,7 +61,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   }
 
   public function __update(newAttrs:Attrs, children:Array<VNode>, context:Context):Void {
-    __cursor = new Cursor(__real, __real.firstChild);
+    __cursor = new Cursor(__node, __node.firstChild);
     __updateAttributes(newAttrs, context);
     __updateChildren(children, context);
     __cursor = null;
@@ -84,12 +92,12 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
           wire.__insertInto(this);
           wire.__update(attrs, children, context);
           add(key, type, wire);
-          if (ref != null) ref(wire.__getReal());
+          if (ref != null) ref(wire.__getNode());
         case wire:
+          // Note: we call `__insertInto` even if the new node is already
+          // in the parent as its order may have changed.
+          wire.__insertInto(this);
           wire.__update(attrs, children, context);
-          // Ensure the cursor is at the right place
-          __cursor.sync(wire.__getReal());
-          __cursor.step();
           add(key, type, wire);
       }
 
@@ -99,9 +107,9 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
           wire.__insertInto(this);
           wire.__update(attrs, [], context);
           add(key, type, wire);
-        case previous:
-          previous.__update(attrs, [], context);
-          add(key, type, previous);
+        case wire:
+          wire.__update(attrs, [], context);
+          add(key, type, wire);
       }
 
       case VFragment(children):

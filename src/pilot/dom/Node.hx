@@ -6,6 +6,8 @@ typedef Node = js.html.Node;
 
 #else
 
+using Lambda;
+
 enum abstract NodeType(Int) from Int to Int {
   var ELEMENT_NODE = 1;
   var TEXT_NODE = 3;

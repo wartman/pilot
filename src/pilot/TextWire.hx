@@ -4,18 +4,26 @@ import pilot.dom.*;
 
 class TextWire implements Wire<String> {
   
-  final real:Text;
+  final node:Text;
 
   public function new(content) {
-    real = Document.root.createTextNode(content);
+    node = Document.root.createTextNode(content);
   }
 
-  public function __getReal():Node {
-    return real;
+  public function __getNode():Node {
+    return node;
   }
 
   public function __getCursor():Cursor {
     return null;
+  }
+  
+  public function __getFirstNode():Node {
+    return node;
+  }
+
+  public function __getLastNode():Node {
+    return node;
   }
 
   public function __isUpdating() {
@@ -29,28 +37,28 @@ class TextWire implements Wire<String> {
   public function __insertInto(parent:Wire<Dynamic>) {
     if (parent.__isUpdating()) {
       var cursor = parent.__getCursor();
-      if (cursor.getCurrent() == real) {
+      if (cursor.getCurrent() == node) {
         cursor.step();
       } else {
-        cursor.insert(real);
+        cursor.insert(node);
       }
     } else {
-      parent.__getReal().appendChild(real);
+      parent.__getNode().appendChild(node);
     }
   }
   
   public function __removeFrom(parent:Wire<Dynamic>) {
-    if (parent.__isUpdating() && parent.__getCursor().getCurrent() == real) {
+    if (parent.__isUpdating() && parent.__getCursor().getCurrent() == node) {
       parent.__getCursor().remove();
     } else {
-      parent.__getReal().removeChild(real);
+      parent.__getNode().removeChild(node);
     }
     __dispose();
   }
   
   public function __update(attrs:String, children:Array<VNode>, context:Context):Void {
-    if (attrs == real.textContent) return;
-    real.textContent = attrs;
+    if (attrs == node.textContent) return;
+    node.textContent = attrs;
   }
 
 }

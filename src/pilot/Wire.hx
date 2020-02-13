@@ -4,7 +4,9 @@ import pilot.dom.*;
 
 interface Wire<Attrs> {
   public function __dispose():Void;
-  public function __getReal():Node;
+  public function __getNode():Node;
+  public function __getFirstNode():Node;
+  public function __getLastNode():Node;
   public function __getCursor():Cursor;
   public function __isUpdating():Bool;
   public function __insertInto(parent:Wire<Dynamic>):Void;

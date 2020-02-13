@@ -106,17 +106,21 @@ class MarkupTest implements TestCase {
     var b = { content: 'b' };
 
     root.update(tester([ a, b ]));
-    
     root.toString().equals('<div><ul><li>a</li><li>b</li><li>Last</li></ul></div>');
   
-    a.content = 'bin';
+    b.content = 'first';
 
+    root.update(tester([ b, a ]));
+    root.toString().equals('<div><ul><li>first</li><li>a</li><li>Last</li></ul></div>');
+  
+    a.content = 'bin';
+    b.content = 'after';
     root.update(tester([
       a,
       { content: 'froob' },
       b
     ]));
-    root.toString().equals('<div><ul><li>bin</li><li>froob</li><li>b</li><li>Last</li></ul></div>');
+    root.toString().equals('<div><ul><li>bin</li><li>froob</li><li>after</li><li>Last</li></ul></div>');
   }
 
   @test('Components render their children without loosing order')
@@ -151,7 +155,15 @@ class OrderTestComponent extends Component {
   @:attribute var items:Array<String>;
 
   override function render() return html(<>
-    @for (item in items) <div>{item}</div>  
+    @for (item in items) <NestedOrderTestComponent>{item}</NestedOrderTestComponent>  
   </>);
+
+}
+
+class NestedOrderTestComponent extends Component {
+
+  @:attribute var children:Children;
+
+  override function render() return html(<div>{children}</div>);
 
 }
