@@ -5,15 +5,6 @@ import pilot.dom.Node;
 
 @:autoBuild(pilot.Component.build())
 class Component extends BaseWire<Dynamic> {
-
-  // Temp
-  inline static function later(cb:()->Void) {
-    #if (js && !nodejs)
-      js.Browser.window.requestAnimationFrame(_ -> cb());
-    #else
-      cb();
-    #end
-  }
   
   @:noCompletion var __alive:Bool = false;
   @:noCompletion var __parent:Wire<Dynamic>;
@@ -28,12 +19,19 @@ class Component extends BaseWire<Dynamic> {
   macro function html(e);
 
   @:noCompletion public function __patch(attrs:Dynamic) {
+    var later:Array<()->Void> = [];
     var previousCount = __nodes.length;
-    __update(attrs, [], __context);
+    __update(attrs, [], __context, later);
     __setChildren(__nodes, previousCount);
+    if (later.length > 0) for (cb in later) cb();
   }
 
-  @:noCompletion override function __update(attrs:Dynamic, children:Array<VNode>, context:Context) {
+  @:noCompletion override function __update(
+    attrs:Dynamic,
+    children:Array<VNode>,
+    context:Context,
+    later:Array<()->Void>
+  ) {
     if (!__alive) {
       throw 'Cannot update a component that has not been inserted';
     }
@@ -50,9 +48,8 @@ class Component extends BaseWire<Dynamic> {
       __nodes = __updateChildren(switch render() {
         case VFragment(children): children;
         case vn: [ vn ];
-      }, __context);
-      // @todo: Add some sort of render queue 
-      later(__doEffects);
+      }, __context, later);
+      later.push(__doEffects);
     }
   }
 

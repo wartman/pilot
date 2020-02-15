@@ -18,7 +18,9 @@ class Root {
   }
 
   public function update(vNode:VNode) {
-    target.__update({}, [ vNode ], context);
+    var later:Array<()->Void> = [];
+    target.__update({}, [ vNode ], context, later);
+    if (later.length > 0) for (cb in later) cb();
   }
 
   public inline function getContext() {

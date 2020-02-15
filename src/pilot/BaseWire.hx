@@ -20,7 +20,8 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   public function __update(
     attrs:Attrs,
     children:Array<VNode>,
-    context:Context
+    context:Context,
+    later:Array<()->Void>
   ) {
     throw 'Not implemented';
   }
@@ -56,7 +57,8 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
   function __updateChildren(
     children:Array<VNode>,
-    context:Context
+    context:Context,
+    later:Array<()->Void>
   ) {
     var newChildList:Array<Wire<Dynamic>> = [];
     var newTypes:Map<WireType<Dynamic>, WireRegistry> = [];
@@ -78,15 +80,14 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
         case null:
           var wire = type.__create(attrs, context);
           wire.__setup(this);
-          wire.__update(attrs, children, context);
+          wire.__update(attrs, children, context, later);
           add(key, type, wire);
-          // todo: figure out how to handle ref
-          // if (ref != null) ref(wire.__getNode());
-          if (ref != null) {
-            trace("Warning: Ref isn't implemented yet");
-          }
+          if (ref != null) later.push(() -> ref(switch wire.__getNodes() {
+            case [ node ]: node;
+            default: throw 'assert';
+          }));
         case wire:
-          wire.__update(attrs, children, context);
+          wire.__update(attrs, children, context, later);
           add(key, type, wire);
       }
 
@@ -94,10 +95,10 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
         case null:
           var wire = type.__create(attrs, context);
           wire.__setup(this);
-          wire.__update(attrs, [], context);
+          wire.__update(attrs, [], context, later);
           add(key, type, wire);
         case wire:
-          wire.__update(attrs, [], context);
+          wire.__update(attrs, [], context, later);
           add(key, type, wire);
       }
 

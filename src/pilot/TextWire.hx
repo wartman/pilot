@@ -26,7 +26,12 @@ class TextWire implements Wire<String> {
     // noop
   }
   
-  public function __update(attrs:String, children:Array<VNode>, context:Context):Void {
+  public function __update(
+    attrs:String, 
+    children:Array<VNode>, 
+    context:Context,
+    later:Array<()->Void>
+  ):Void {
     if (attrs == node.textContent) return;
     node.textContent = attrs;
   }

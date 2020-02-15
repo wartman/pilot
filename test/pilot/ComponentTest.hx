@@ -57,6 +57,23 @@ class ComponentTest implements TestCase {
     node.innerHTML.equals('<div>foo4</div>');
   }
 
+  @test('simple effects')
+  public function testEffect() {
+    var node = Document.root.createElement('div');
+    var root = new Root(node);
+    var comp = new GuardedRender({
+      value: 'foo'
+    }, root.getContext());
+
+    root.update(Pilot.html(<>{comp}</>));
+    
+    comp.effectCount.equals(1);
+
+    root.update(Pilot.html(<>{comp}</>));
+    
+    comp.effectCount.equals(2);
+  }
+
 }
 
 class ComponentTester extends Component {
@@ -80,6 +97,7 @@ class ComponentTester extends Component {
 class GuardedRender extends Component {
 
   public var renderCount:Int = 0;
+  public var effectCount:Int = 0;
 
   @:attribute(
     mutable = true, 
@@ -90,6 +108,11 @@ class GuardedRender extends Component {
   @:guard
   function shouldBlock(attrs) {
     return !(blockRender || attrs.blockRender);
+  }
+
+  @:effect
+  public function testEffect() {
+    effectCount++;
   }
 
   override function render() {
