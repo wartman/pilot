@@ -1,7 +1,6 @@
 package pilot;
 
 import pilot.dom.*;
-using pilot.DiffingTools;
 
 class BaseWire<Attrs:{}> implements Wire<Attrs> {
 

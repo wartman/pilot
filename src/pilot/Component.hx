@@ -45,6 +45,8 @@ class Component extends BaseWire<Dynamic> {
     }
 
     if (__shouldRender(attrs)) {
+      // Note: Components do not update the Dom directly unless you call
+      //       `Compinent#__patch`.
       __nodes = __updateChildren(switch render() {
         case VFragment(children): children;
         case vn: [ vn ];

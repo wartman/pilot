@@ -1,7 +1,6 @@
 package pilot;
 
 import haxe.DynamicAccess;
-import pilot.dom.*;
 
 class DiffingTools {
   
