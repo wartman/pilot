@@ -1,8 +1,9 @@
 package pilot;
 
 import haxe.DynamicAccess;
+import pilot.dom.*;
 
-class Util {
+class DiffingTools {
   
   static final EMPTY = {};
   
@@ -31,12 +32,5 @@ class Util {
     } 
   }
 
-  public inline static function later(cb:()->Void) {
-    #if (js && !nodejs)
-      js.Browser.window.requestAnimationFrame(_ -> cb());
-    #else
-      cb();
-    #end
-  }
 
 }

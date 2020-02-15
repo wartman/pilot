@@ -26,7 +26,7 @@ class Root {
   }
 
   public inline function getNode() {
-    return target.__getNode();
+    return target.__getNodes()[0];
   }
 
   public inline function toString() {

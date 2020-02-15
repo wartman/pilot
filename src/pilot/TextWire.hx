@@ -10,50 +10,20 @@ class TextWire implements Wire<String> {
     node = Document.root.createTextNode(content);
   }
 
-  public function __getNode():Node {
-    return node;
+  public function __getNodes():Array<Node> {
+    return [ node ];
   }
 
   public function __getCursor():Cursor {
     return null;
   }
-  
-  public function __getFirstNode():Node {
-    return node;
-  }
 
-  public function __getLastNode():Node {
-    return node;
-  }
-
-  public function __isUpdating() {
-    return false;
+  public function __setup(parent:Wire<Dynamic>) {
+    // noop
   }
 
   public function __dispose():Void {
     // noop
-  }
-
-  public function __insertInto(parent:Wire<Dynamic>) {
-    if (parent.__isUpdating()) {
-      var cursor = parent.__getCursor();
-      if (cursor.getCurrent() == node) {
-        cursor.step();
-      } else {
-        cursor.insert(node);
-      }
-    } else {
-      parent.__getNode().appendChild(node);
-    }
-  }
-  
-  public function __removeFrom(parent:Wire<Dynamic>) {
-    if (parent.__isUpdating() && parent.__getCursor().getCurrent() == node) {
-      parent.__getCursor().remove();
-    } else {
-      parent.__getNode().removeChild(node);
-    }
-    __dispose();
   }
   
   public function __update(attrs:String, children:Array<VNode>, context:Context):Void {

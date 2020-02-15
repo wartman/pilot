@@ -4,7 +4,7 @@ import pilot.dom.*;
 
 class Cursor {
 
-  final parent:Node;
+  public final parent:Node;
   var current:Node;
 
   public function new(parent, current) {
@@ -32,12 +32,6 @@ class Cursor {
         current = node.nextSibling;
         parent.removeChild(node);
         true;
-    }
-  }
-
-  public function sync(node:Node) {
-    while (current != node) {
-      if (!step()) break;
     }
   }
 

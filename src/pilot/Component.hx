@@ -1,20 +1,37 @@
 package pilot;
 
+import pilot.dom.Node;
 #if !macro
 
 @:autoBuild(pilot.Component.build())
 class Component extends BaseWire<Dynamic> {
+
+  // Temp
+  inline static function later(cb:()->Void) {
+    #if (js && !nodejs)
+      js.Browser.window.requestAnimationFrame(_ -> cb());
+    #else
+      cb();
+    #end
+  }
   
   @:noCompletion var __alive:Bool = false;
   @:noCompletion var __parent:Wire<Dynamic>;
   @:noCompletion var __context:Context;
   @:noCompletion var __initialized:Bool = false;
+  @:noCompletion var __nodes:Array<Node> = [];
 
   function render():VNode {
     return null;
   }
 
   macro function html(e);
+
+  @:noCompletion public function __patch(attrs:Dynamic) {
+    var previousCount = __nodes.length;
+    __update(attrs, [], __context);
+    __setChildren(__nodes, previousCount);
+  }
 
   @:noCompletion override function __update(attrs:Dynamic, children:Array<VNode>, context:Context) {
     if (!__alive) {
@@ -28,60 +45,29 @@ class Component extends BaseWire<Dynamic> {
       __initialized = true;
       __doInits();
     }
-    
-    __cursor = new Cursor(__parent.__getNode(), __getFirstNode());
 
     if (__shouldRender(attrs)) {
-      __updateChildren(switch render() {
-        case null: [ VNative(TextType, '', []) ]; // placeholder
+      __nodes = __updateChildren(switch render() {
         case VFragment(children): children;
         case vn: [ vn ];
       }, __context);
       // @todo: Add some sort of render queue 
-      Util.later(__doEffects);
-    } else {
-      __cursor = null;
+      later(__doEffects);
     }
-
-    if (__parent.__isUpdating()) {
-      __parent.__getCursor().sync(__getLastNode());
-    }
-
-    __cursor = null;
   }
 
-  @:noCompletion override function __getFirstNode() {
-    return __childList != null && __childList.length > 0 
-      ? __childList[0].__getFirstNode() 
-      : __parent.__isUpdating()
-        ? __parent.__getCursor().getCurrent()
-        : __parent.__getNode().firstChild;
-  }
-
-  @:noCompletion override function __getLastNode() {
-    return __isUpdating()
-      ? __cursor.getCurrent()
-      : __childList != null && __childList.length > 0 
-        ? __childList[__childList.length - 1].__getLastNode()
-        : null;
-  }
-
-  @:noCompletion function __shouldRender(attrs:Dynamic):Bool {
-    return true;
-  }
-
-  @:noCompletion override function __insertInto(parent:Wire<Dynamic>) {
-    if (__alive) {
-      throw 'Component has already been inserted';
-    }
+  override function __setup(parent:Wire<Dynamic>) {
     __alive = true;
     __parent = parent;
-    __node = parent.__getNode();
   }
 
-  @:noCompletion override function __removeFrom(parent:Wire<Dynamic>) {
-    for (c in __childList) c.__removeFrom(parent);
-    __dispose();
+  override function __getNodes():Array<Node> {
+    return __nodes;
+  }
+
+  override function __getCursor():Cursor {
+    var first = __nodes[0];
+    return new Cursor(first.parentNode, first);
   }
 
   @:noCompletion override function __dispose() {
@@ -97,6 +83,10 @@ class Component extends BaseWire<Dynamic> {
 
   @:noCompletion function __doEffects() {
     // noop -- handled by macro
+  }
+
+  @:noCompletion function __shouldRender(attrs:Dynamic):Bool {
+    return true;
   }
 
 }
@@ -227,7 +217,7 @@ class Component {
           add((macro class {
             function $setName(__v) {
               if (__context != null && this.$guardName(__v, __attrs.$name)) {
-                __update({ $name: __v }, [], __context);
+                __patch({ $name: __v });
               }
               return __v;
             }

@@ -2,20 +2,28 @@ package pilot;
 
 import pilot.dom.*;
 
+using pilot.DiffingTools;
+
 class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
 
+  final node:Node;
   final isSvg:Bool;
 
-  public function new(node, initialAttrs:Attrs, context:Context, isSvg = false) {
+  public function new(
+    node, 
+    initialAttrs:Attrs,
+    context:Context,
+    isSvg = false
+  ) {
     this.isSvg = isSvg;
-    __node = node;
+    this.node = node;
     __updateAttributes(initialAttrs, context);
   }
 
   public function hydrate(context:Context) {
     if (__childList.length > 0) return;
 
-    for (n in __node.childNodes) {
+    for (n in node.childNodes) {
       var isSvg = isSvg || n.nodeName == 'svg';
       var type = isSvg ? NodeType.getSvg(n.nodeName) : NodeType.get(n.nodeName);
       var nn = new NodeWire(n, {}, context, isSvg);
@@ -28,17 +36,36 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
     }
   }
 
-  override function __updateAttributes(newAttrs:Attrs, context:Context) {
+  override function __getNodes():Array<Node> {
+    return [ node ];
+  }
+
+  override function __update(
+    attrs:Attrs,
+    children:Array<VNode>,
+    context:Context
+  ) {
+    var previousCount = node.childNodes.length;
+    __updateAttributes(attrs, context);
+    var nextNodes = __updateChildren(children, context);
+    __setChildren(nextNodes, previousCount);
+  }
+
+  override function __updateAttributes(attrs:Attrs, context:Context) {
     var previous:Attrs = __attrs;
     if (previous == null) previous = cast {};
-    __attrs = newAttrs;
-    Util.diffObject(previous, newAttrs, applyAttribute);
+    __attrs = attrs;
+    previous.diffObject(attrs, applyAttribute);
+  }
+  
+  override function __getCursor():Cursor {
+    return new Cursor(node, node.firstChild);
   }
 
   #if js
     
     function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
-      var el:Element = cast __node;
+      var el:Element = cast node;
       switch key {
         case 'value' | 'selected' | 'checked' if (!isSvg):
           js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
@@ -70,7 +97,7 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   #else
 
     function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
-      var el:Element = cast __node;
+      var el:Element = cast node;
       if (key.charAt(0) == 'o' && key.charAt(1) == 'n') {
         // noop
       } else if (newValue == null || newValue == false) {
@@ -83,5 +110,6 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
     }
 
   #end
+
 
 }
