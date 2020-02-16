@@ -31,5 +31,15 @@ class DiffingTools {
     } 
   }
 
+  public static function flatten(vnode:VNode) {
+    return switch vnode {
+      case null: null;
+      case VFragment([]): null;
+      case VFragment(children): VNode.VFragment(
+        children.map(flatten).filter(vn -> vn != null)
+      );
+      case vn: vn; 
+    }
+  }
 
 }

@@ -49,6 +49,7 @@ class MarkupGenerator {
 
         var ref = extractAttribute('@ref', attrs);
         var key = extractAttribute('@key', attrs);
+        var dangerouslySetInnerHTML = extractAttribute('@dangerouslySetInnerHTML', attrs);
         var fields = generateAttrs(attrs);
         var type = generateNodeType(name, pos);
 
@@ -67,6 +68,7 @@ class MarkupGenerator {
           ${attrs}, 
           [ $a{children} ],
           ${key},
+          ${dangerouslySetInnerHTML},
           ${ref}
         );
         

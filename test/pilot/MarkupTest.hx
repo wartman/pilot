@@ -94,6 +94,14 @@ class MarkupTest implements TestCase {
     tester('bax').equals('<div><span>Other bax</span></div>');
   }
 
+  @test('innerHTML')
+  public function testDangerousHTML() {
+    Pilot.html(<div @dangerouslySetInnerHTML="<p>foo</p>"></div>)
+      .render()
+      .toString()
+      .equals('<div><div><p>foo</p></div></div>');
+  }
+
   @test('Keys preserve order')
   public function testKeys() {
     var root = new Root(Document.root.createElement('div'));

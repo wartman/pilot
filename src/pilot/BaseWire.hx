@@ -71,21 +71,47 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
       nodes = nodes.concat(wire.__getNodes());
     }
 
+    // todo: clear up these errors in the parser?
+    function updateNative(
+      wire:Wire<Dynamic>, 
+      innerHTML:Null<String>,
+      attrs:Dynamic,
+      children:Array<VNode>,
+      context:Context,
+      later:Later
+    ) {
+      wire.__update(attrs, children, context, later);
+      if (innerHTML != null) {
+        if (children.length > 0) {
+          throw 'Do not use @dangerouslySetInnerHTML with child VNodes';
+        }
+        switch wire.__getNodes() {
+          case [ node ]: switch Std.downcast(node, Element) {
+            case null: throw '@dangerouslySetInnerHTML must be used with a valid element';
+            case el: el.innerHTML = innerHTML;
+          }
+          default: throw 'assert';
+        }
+      }
+    }
+
     function process(nodes:Array<VNode>) for (n in nodes) switch n {
       case null:
 
-      case VNative(type, attrs, children, key, ref): switch __resolveChildNode(type, key) {
+      case VNative(type, attrs, children, key, dangerouslySetInnerHTML, ref): switch __resolveChildNode(type, key) {
         case null:
           var wire = type.__create(attrs, context);
           wire.__setup(this);
-          wire.__update(attrs, children, context, later);
+          updateNative(wire, dangerouslySetInnerHTML, attrs, children, context, later);
+          // wire.__update(attrs, children, context, later);
           add(key, type, wire);
           if (ref != null) later.add(() -> ref(switch wire.__getNodes() {
             case [ node ]: node;
             default: throw 'assert';
           }));
         case wire:
-          wire.__update(attrs, children, context, later);
+          updateNative(wire, dangerouslySetInnerHTML, attrs, children, context, later);
+          // wire.__update(attrs, children, context, later);
           add(key, type, wire);
       }
 

@@ -1,7 +1,10 @@
 package pilot;
 
-import pilot.dom.Node;
 #if !macro
+
+import pilot.dom.Node;
+
+using pilot.DiffingTools;
 
 @:autoBuild(pilot.Component.build())
 class Component extends BaseWire<Dynamic> {
@@ -47,8 +50,8 @@ class Component extends BaseWire<Dynamic> {
 
     if (__shouldRender(attrs)) {
       // Note: Components do not update the Dom directly unless you call
-      //       `Compinent#__patch`.
-      __nodes = __updateChildren(switch render() {
+      //       `Component#__patch`.
+      __nodes = __updateChildren(switch render().flatten() {
         case null | VFragment([]): [ VNode.VNative(TextType, '', []) ];
         case VFragment(children): children;
         case vn: [ vn ];

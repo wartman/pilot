@@ -8,6 +8,7 @@ enum VNode {
     attrs:Attrs,
     children:Array<VNode>,
     ?key:Key,
+    ?dangerouslySetInnerHTML:String,
     ?ref:(node:Node)->Void
   );
   VComponent<Attrs>(

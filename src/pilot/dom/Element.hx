@@ -44,9 +44,13 @@ class Element extends Node {
     return toString();
   }
 
-  public var innerHTML(get, never):String;
+  public var innerHTML(get, set):String;
   inline function get_innerHTML():String {
     return [ for (c in childNodes) c.toString() ].join('');
+  }
+  inline function set_innerHTML(html:String) {
+    // todo
+    return html;
   }
 
   public function getAttribute(key:String) {

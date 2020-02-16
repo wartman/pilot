@@ -79,6 +79,8 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
         //     el.setAttributeNS(NodeType.SVG_NS, key, newValue);
         //   }
         case 'xmlns' if (isSvg):
+        case 'innerHTML':
+          throw 'Don\'t use `innerHTML` -- use `@dangerouslySetInnerHTML` instead';
         case _ if (!isSvg && js.Syntax.code('{0} in {1}', key, el)):
           js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
         default: 
@@ -100,6 +102,11 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
 
     function applyAttribute(key:String, oldValue:Dynamic, newValue:Dynamic) {
       var el:Element = cast node;
+      
+      if (key == 'innerHTML') {
+        throw 'Don\'t use `innerHTML` -- use `@dangerouslySetInnerHTML` instead';
+      }
+
       if (key.charAt(0) == 'o' && key.charAt(1) == 'n') {
         // noop
       } else if (newValue == null || newValue == false) {
