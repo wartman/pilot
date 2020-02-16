@@ -1,3 +1,4 @@
 test-common.hxml
 
+-D php7
 -php dist/php
