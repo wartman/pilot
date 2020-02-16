@@ -12,7 +12,7 @@ final class Provider<T> extends Component {
     attrs:Dynamic, 
     children:Array<VNode>,
     context:Context,
-    later:Array<()->Void>  
+    later:Later
   ) {
     var subContext = context.copy();
     subContext.set(id, value);
