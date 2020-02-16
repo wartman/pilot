@@ -5,12 +5,14 @@ haxe:
 - stable
 
 before_install:
-# using git until medic is published
 - haxelib git medic https://github.com/wartman/medic --always
 - haxelib install hxnodejs --always
+
+- sudo apt-get install -y php7.2
 
 script:
 - haxe test-nodejs.hxml
 - node dist/node/index.js
 
-#todo: other targets
+- haxe test-php.hxml
+- php dist/php/index.php
