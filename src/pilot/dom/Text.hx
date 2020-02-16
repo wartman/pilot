@@ -22,7 +22,7 @@ class Text extends Node {
   function set_textContent(textContent:String) return nodeValue = textContent;
 
   override function toString() {
-    return nodeValue.htmlEscape();
+    return nodeValue == null ? '' : nodeValue.htmlEscape();
   }
 
 }

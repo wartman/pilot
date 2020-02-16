@@ -11,9 +11,9 @@ class Root {
   var target:NodeWire<Dynamic>;
   final context:Context;
 
-  public function new(node:Node, ?initialContext:Map<String, Dynamic>) {
+  public function new(el:Element, ?initialContext:Map<String, Dynamic>) {
     context = new Context(initialContext);
-    target = new NodeWire(node, {}, context);
+    target = new NodeWire(el, {}, context);
     target.hydrate(context);
   }
 

@@ -6,61 +6,58 @@ import pilot.ComponentExample;
 class Run {
 
   static function main() {
-    Pilot.globalCss('
-      body {
-        display: flex;
-        font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
-      }
-      html {
-        box-sizing: border-box;
-      }
-      *, *:before, *:after {
-        box-sizing: inherit;
-      }
-      #example-root {
-        flex: 1;
-        margin-right: 10px;
-      }
-      #root {
-        flex: 1;
-      }
-      @media screen and (max-width: 750px) {
+    #if (js && !nodejs)
+
+      Pilot.globalCss('
         body {
-          flex-direction: column;
+          display: flex;
+          font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
-      }
-    ');
-
-    var exampleRoot = Pilot.document.getElementById('example-root'); 
-    Pilot.mount(
-      exampleRoot,
-      Pilot.html(<ComponentExample />)
-    );
-
-    var root = Pilot.document.getElementById('root');
-    var reporter = new HtmlReporter(new Root(root));
-    var runner = new Runner(reporter);
-
-    runner.add(new pilot.ComponentTest());
-    runner.add(new pilot.MarkupTest());
-
-    runner.run();
-
-    #if sys
-      Sys.print('
-        <!doctype html>
-        <head>
-          <style>
-            ${pilot.StyleManager.toString()}
-          </style>
-        </head>
-        <html>
-          <body>
-            ${exampleRoot}
-            ${root}
-          <body>
-        </html>
+        html {
+          box-sizing: border-box;
+        }
+        *, *:before, *:after {
+          box-sizing: inherit;
+        }
+        #example-root {
+          flex: 1;
+          margin-right: 10px;
+        }
+        #root {
+          flex: 1;
+        }
+        @media screen and (max-width: 750px) {
+          body {
+            flex-direction: column;
+          }
+        }
       ');
+
+      var exampleRoot = Pilot.document.getElementById('example-root'); 
+      Pilot.mount(
+        exampleRoot,
+        Pilot.html(<ComponentExample />)
+      );
+
+      var root = Pilot.document.getElementById('root');
+      var reporter = new HtmlReporter(new Root(root));
+      var runner = new Runner(reporter);
+
+      runner.add(new pilot.ComponentTest());
+      runner.add(new pilot.MarkupTest());
+
+      runner.run();
+
+    #else
+
+      var runner = new Runner(new medic.DefaultReporter({
+        trackProgress: true,
+        verbose: true
+      }));
+      runner.add(new pilot.ComponentTest());
+      runner.add(new pilot.MarkupTest());
+      runner.run();
+
     #end
   }
 

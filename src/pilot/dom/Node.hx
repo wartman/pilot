@@ -32,7 +32,7 @@ class Node extends EventTarget {
 
   public final nodeType:NodeType;
   public final nodeName:String;
-  public final childNodes:Array<Node> = [];
+  public var childNodes:Array<Node> = [];
   public var parentNode:Node;
 
   public function new(nodeType, nodeName) {

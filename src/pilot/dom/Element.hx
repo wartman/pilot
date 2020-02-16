@@ -17,6 +17,12 @@ typedef Attribute = {
 
 class Element extends Node {
 
+  static final VOID_ELEMENTS = [
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 
+    'input', 'keygen', 'link', 'meta', 'param', 'source', 
+    'track', 'wbr',
+  ];
+
   final attributes:Array<Attribute> = [];
   final style:Dynamic = {};
   public var namespace:String;
@@ -49,7 +55,7 @@ class Element extends Node {
     return [ for (c in childNodes) c.toString() ].join('');
   }
   inline function set_innerHTML(html:String) {
-    // todo
+    childNodes = [ new HTMLContent(html) ];
     return html;
   }
 
@@ -90,27 +96,30 @@ class Element extends Node {
   }
 
   // maybe
-  public function getElementById(id:String) {
-    return childNodes.find(n -> switch Std.downcast(n, Element) {
+  public function getElementById(id:String):Element {
+    return cast childNodes.find(n -> switch Std.downcast(n, Element) {
       case null: false;
       case el: el.getAttribute('id') == id;
     });
   }
 
   override function toString() {
-    if (nodeType == DOCUMENT_NODE) {
+    if (nodeType == DOCUMENT_NODE || nodeType == DOCUMENT_FRAGMENT_NODE) {
       return [ for (c in childNodes) c.toString() ].join('');
     }
+
     var name = nodeName.toLowerCase();
     var out = '<${name}';
     var attrs = [ for (attr in attributes) '${attr.key} = "${Std.string(attr.value).htmlEscape()}"' ];
     if (attrs.length > 0) {
       out += ' ${attrs.join(' ')}';
     }
-    return if (childNodes.length > 0) 
+    return if (childNodes.length > 0)
       out + '>' + [ for (c in childNodes) c.toString() ].join('') + '</${name}>';
-    else
+    else if (VOID_ELEMENTS.indexOf(name) > -1)
       out + '/>';
+    else
+      out + '></${name}>';
   }
 
 }

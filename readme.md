@@ -100,7 +100,7 @@ Pilot.html(<div class@style={
 }>Hello world</div>);
 ```
 
-There are also two special attributes (for now) you can use: `@ref` and `@key`:
+There are also three special attributes (for now) you can use: `@ref`, `@key` and `@dangrouslySetInnerHtml`:
 
 ```haxe
 Pilot.html(
@@ -111,9 +111,18 @@ Pilot.html(
       trace(node);
     }}
     @key="A unique key!"
+    @dangrouslySetInnerHtml="
+      <p>This will replace the innerHTML of this element.</p>
+      <p>
+        It won't get escaped or validated or anything, so you should
+        be cautious with it.
+      </p>
+      <script>
+        alert('this will probably get run, for example');
+      </script>
+    "
   >foo</div>
 );
-
 ```
 
 Control Flow

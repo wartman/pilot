@@ -26,13 +26,13 @@ final class Pilot {
     return pilot.dsl.Css.parse(expr, true, true);
   }
 
-  static final rootNodes:Map<Node, Root> = [];
+  static final rootNodes:Map<Element, Root> = [];
 
-  inline public static function mount(node:Node, vNode:VNode):Root {
-    if (!rootNodes.exists(node)) {
-      rootNodes.set(node, new Root(node));
+  inline public static function mount(el:Element, vNode:VNode):Root {
+    if (!rootNodes.exists(el)) {
+      rootNodes.set(el, new Root(el));
     }
-    var root = rootNodes.get(node);
+    var root = rootNodes.get(el);
     root.update(vNode);
     return root;
   }

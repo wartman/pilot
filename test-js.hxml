@@ -1,0 +1,5 @@
+test-common.hxml
+
+-D js-es=6
+-D pilot-css-output=test.css
+-js dist/assets/test.js

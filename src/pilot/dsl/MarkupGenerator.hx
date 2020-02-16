@@ -61,6 +61,14 @@ class MarkupGenerator {
           generateNode(c)
         ].filter(e -> e != null);
 
+        switch dangerouslySetInnerHTML {
+          case macro null:
+          default:
+            if (children.length > 0) {
+              Context.error('You should not use @dangerouslySetInnerHTML with a VNode with children', dangerouslySetInnerHTML.pos);
+            }
+        }
+
         isSvg = svgBefore;
         
         macro @:pos(pos) VNative(

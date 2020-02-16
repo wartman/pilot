@@ -1,0 +1,3 @@
+test-common.hxml
+-lib hxnodejs
+-js dist/node/index.js
