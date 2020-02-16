@@ -1,9 +1,8 @@
 Pilot
 =====
+[![Build Status](https://travis-ci.com/wartman/pilot.svg?branch=master)](https://travis-ci.com/wartman/pilot)
 
 A batteries-included UI framework.
-
-> Under heavy reworking.
 
 Usage
 -----

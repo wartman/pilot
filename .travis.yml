@@ -7,7 +7,7 @@ haxe:
 before_install:
 # using git until medic is published
 - haxelib git medic https://github.com/wartman/medic --always
-- haxelib hxnodejs --always
+- haxelib install hxnodejs --always
 
 script:
 - haxe test-js.hxml
