@@ -8,6 +8,8 @@ before_install:
 - haxelib git medic https://github.com/wartman/medic --always
 - haxelib install hxnodejs --always
 
+- sudo add-apt-repository ppa:ondrej/php -y
+- sudo apt-get update
 - sudo apt-get install -y php7.2
 
 script:
