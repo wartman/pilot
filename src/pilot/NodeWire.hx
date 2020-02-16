@@ -44,12 +44,13 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
     attrs:Attrs,
     children:Array<VNode>,
     context:Context,
-    later:Array<()->Void>
+    later:Later
   ) {
     var previousCount = node.childNodes.length;
+    var cursor = __getCursor();
     __updateAttributes(attrs, context);
     var nextNodes = __updateChildren(children, context, later);
-    __setChildren(nextNodes, previousCount);
+    __setChildren(nextNodes, cursor, previousCount);
   }
 
   override function __updateAttributes(attrs:Attrs, context:Context) {

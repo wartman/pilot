@@ -19,18 +19,19 @@ class Component extends BaseWire<Dynamic> {
   macro function html(e);
 
   @:noCompletion public function __patch(attrs:Dynamic) {
-    var later:Array<()->Void> = [];
+    var later = new Later();
+    var cursor = __getCursor();
     var previousCount = __nodes.length;
     __update(attrs, [], __context, later);
-    __setChildren(__nodes, previousCount);
-    if (later.length > 0) for (cb in later) cb();
+    __setChildren(__nodes, cursor, previousCount);
+    later.dispatch();
   }
 
   @:noCompletion override function __update(
     attrs:Dynamic,
     children:Array<VNode>,
     context:Context,
-    later:Array<()->Void>
+    later:Later
   ) {
     if (!__alive) {
       throw 'Cannot update a component that has not been inserted';
@@ -48,11 +49,11 @@ class Component extends BaseWire<Dynamic> {
       // Note: Components do not update the Dom directly unless you call
       //       `Compinent#__patch`.
       __nodes = __updateChildren(switch render() {
-        case null: [ VNode.VNative(TextType, '', []) ];
+        case null | VFragment([]): [ VNode.VNative(TextType, '', []) ];
         case VFragment(children): children;
         case vn: [ vn ];
       }, __context, later);
-      later.push(__doEffects);
+      later.add(__doEffects);
     }
   }
 
@@ -71,10 +72,11 @@ class Component extends BaseWire<Dynamic> {
   }
 
   @:noCompletion override function __dispose() {
+    for (c in __childList) c.__dispose();
+    __childList = null;
     __alive = false;
     __parent = null;
     __types = null;
-    __childList = null;
   }
 
   @:noCompletion function __doInits() {

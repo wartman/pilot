@@ -58,7 +58,8 @@ class ComponentTest implements TestCase {
   }
 
   @test('simple effects')
-  public function testEffect() {
+  @async
+  public function testEffect(done) {
     var node = Document.root.createElement('div');
     var root = new Root(node);
     var comp = new GuardedRender({
@@ -66,12 +67,12 @@ class ComponentTest implements TestCase {
     }, root.getContext());
 
     root.update(Pilot.html(<>{comp}</>));
-    
-    comp.effectCount.equals(1);
-
     root.update(Pilot.html(<>{comp}</>));
     
-    comp.effectCount.equals(2);
+    haxe.Timer.delay(() -> {
+      comp.effectCount.equals(2);
+      done();
+    }, 100);
   }
 
 }

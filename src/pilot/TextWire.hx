@@ -30,7 +30,7 @@ class TextWire implements Wire<String> {
     attrs:String, 
     children:Array<VNode>, 
     context:Context,
-    later:Array<()->Void>
+    later:Later
   ):Void {
     if (attrs == node.textContent) return;
     node.textContent = attrs;

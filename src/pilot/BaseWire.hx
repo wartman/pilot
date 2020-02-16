@@ -20,7 +20,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
     attrs:Attrs,
     children:Array<VNode>,
     context:Context,
-    later:Array<()->Void>
+    later:Later
   ) {
     throw 'Not implemented';
   }
@@ -33,8 +33,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
     throw 'not implemented';
   }
 
-  function __setChildren(nextNodes:Array<Node>, previousCount:Int) {
-    var cursor = __getCursor();
+  function __setChildren(nextNodes:Array<Node>, cursor:Cursor, previousCount:Int) {
     if (cursor == null) return;
     
     var insertedCount = 0;
@@ -57,7 +56,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   function __updateChildren(
     children:Array<VNode>,
     context:Context,
-    later:Array<()->Void>
+    later:Later
   ) {
     var newChildList:Array<Wire<Dynamic>> = [];
     var newTypes:Map<WireType<Dynamic>, WireRegistry> = [];
@@ -81,7 +80,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
           wire.__setup(this);
           wire.__update(attrs, children, context, later);
           add(key, type, wire);
-          if (ref != null) later.push(() -> ref(switch wire.__getNodes() {
+          if (ref != null) later.add(() -> ref(switch wire.__getNodes() {
             case [ node ]: node;
             default: throw 'assert';
           }));

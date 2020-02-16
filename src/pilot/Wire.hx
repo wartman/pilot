@@ -7,7 +7,7 @@ interface Wire<Attrs> {
     attrs:Attrs,
     children:Array<VNode>,
     context:Context,
-    later:Array<()->Void>
+    later:Later
   ):Void;
   public function __getNodes():Array<Node>;
   public function __setup(parent:Wire<Dynamic>):Void;

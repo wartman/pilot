@@ -8,13 +8,17 @@ class StateExample extends Component {
 
   override function render() return html(
     <ExampleContainer title="State Tracking">
-      <button onClick={_ -> clicked++}>+</button>
-      <button onClick={_ -> if (clicked > 0) clicked--}>-</button>
-      { switch clicked {
-        case 0: <>Never Clicked</>;
-        case 1: <>Clicked Once</>;
-        case i: <>Clicked {i} Times</>;
-      } }
+      <div>
+        { switch clicked {
+          case 0: <>Never Clicked</>;
+          case 1: <>Clicked Once</>;
+          case i: <>Clicked {i} Times</>;
+        } }
+      </div>
+      <div>
+        <button onClick={_ -> clicked++}>+</button>
+        <button onClick={_ -> if (clicked > 0) clicked--}>-</button>
+      </div>
     </ExampleContainer>
   );
 
