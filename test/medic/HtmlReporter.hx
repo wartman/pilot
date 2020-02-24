@@ -71,12 +71,12 @@ class TestReport extends Component {
 
   function display(status:TestInfo.TestStatus):String {
     return switch status {
-      case Passed: 'Passed';
+      case Passed: 'Passed\n';
       case Failed(e): switch e {
-        case Warning(message): '(warning) ${message}';
-        case Assertion(message, pos): '(failed) ${pos.fileName}:${pos.lineNumber} - ${message}';
-        case UnhandledException(message, backtrace): '(unhandled exception) ${message} ${backtrace}';
-        case Multiple(errors): [ for (e in errors) display(Failed(e)) ].join(''); 
+        case Warning(message): '(warning) ${message}\n';
+        case Assertion(message, pos): '(failed) ${pos.fileName}:${pos.lineNumber} - ${message}\n';
+        case UnhandledException(message, backtrace): '(unhandled exception) ${message} ${backtrace}\n';
+        case Multiple(errors): [ for (e in errors) display(Failed(e)) ].join('') + '\n';
       }
     }
   }

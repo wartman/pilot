@@ -22,6 +22,12 @@ class Component extends BaseWire<Dynamic> {
   macro function html(e);
 
   @:noCompletion public function __patch(attrs:Dynamic) {
+    // Todo: patches should be batched!
+
+    if (!__alive) {
+      throw 'Cannot patch a component that has not been inserted';
+    }
+
     var later = new Later();
     var cursor = __getCursor();
     var previousCount = __nodes.length;
@@ -221,9 +227,7 @@ class Component {
         if (isMutable) {
           add((macro class {
             function $setName(__v) {
-              if (__context != null && this.$guardName(__v, __attrs.$name)) {
-                __patch({ $name: __v });
-              }
+              if (this.$guardName(__v, __attrs.$name)) __patch({ $name: __v });
               return __v;
             }
           }).fields);

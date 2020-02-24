@@ -35,9 +35,9 @@ class DiffingTools {
     return switch vnode {
       case null: null;
       case VFragment([]): null;
-      case VFragment(children): VNode.VFragment(
-        children.map(flatten).filter(vn -> vn != null)
-      );
+      case VFragment(children):
+        var c = children.map(flatten).filter(vn -> vn != null);
+        if (c.length == 0) null else VNode.VFragment(c);
       case vn: vn; 
     }
   }
