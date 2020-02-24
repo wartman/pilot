@@ -14,7 +14,7 @@ abstract Later(Array<()->Void>) {
     #if (js && !nodejs)
       js.Browser.window.requestAnimationFrame(_ -> for (cb in this) cb());
     #else
-      haxe.Timer.delay(() -> for (cb in this) cb(), 10);
+      for (cb in this) cb();
     #end
   }
 

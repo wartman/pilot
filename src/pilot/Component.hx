@@ -4,6 +4,7 @@ package pilot;
 
 import pilot.dom.Node;
 
+using Reflect;
 using pilot.DiffingTools;
 
 @:autoBuild(pilot.Component.build())
@@ -14,6 +15,8 @@ class Component extends BaseWire<Dynamic> {
   @:noCompletion var __context:Context;
   @:noCompletion var __initialized:Bool = false;
   @:noCompletion var __nodes:Array<Node> = [];
+  @:noCompletion var __pendingAttributes:{};
+  @:noCompletion var __updatePending:Bool = false;
 
   function render():VNode {
     return null;
@@ -22,18 +25,33 @@ class Component extends BaseWire<Dynamic> {
   macro function html(e);
 
   @:noCompletion public function __patch(attrs:Dynamic) {
-    // Todo: patches should be batched!
-
     if (!__alive) {
       throw 'Cannot patch a component that has not been inserted';
     }
 
-    var later = new Later();
-    var cursor = __getCursor();
-    var previousCount = __nodes.length;
-    __update(attrs, [], __context, later);
-    __setChildren(__nodes, cursor, previousCount);
-    later.dispatch();
+    if (__pendingAttributes == null) {
+      __pendingAttributes = attrs;
+    } else {
+      for (field in attrs.fields()) {
+        __pendingAttributes.setField(field, attrs.field(field));
+      }
+    }
+
+    if (!__updatePending) {
+      __updatePending = true;
+      var next = new Later();
+      next.add(() -> {
+        var later = new Later();
+        var cursor = __getCursor();
+        var previousCount = __nodes.length;
+        __update(__pendingAttributes, [], __context, later);
+        __setChildren(__nodes, cursor, previousCount);
+        __pendingAttributes = null;
+        __updatePending = false;
+        later.dispatch();
+      });
+      next.dispatch();
+    }
   }
 
   @:noCompletion override function __update(

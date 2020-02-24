@@ -1,6 +1,7 @@
 package pilot;
 
 import pilot.dom.*;
+import pilot.Later;
 
 using Medic;
 
@@ -9,18 +10,25 @@ class ComponentTest implements TestCase {
   public function new() {}
 
   @test('Component instance can be passed as a value')
-  public function testInstance() {
+  @async
+  public function testInstance(done) {
     var node = Document.root.createElement('div');
     var root = new Root(node);
     var comp = new ComponentTester({ text: 'foo', isMutable: false }, root.getContext());
     root.update(Pilot.html(<>{comp}</>));
     node.innerHTML.equals('<div><span>Text:foo</span><span>Opt:</span><span>Def:def</span></div>');
     comp.isMutable = true;
-    node.innerHTML.equals('<div><span>Text:foo</span><span>Opt:</span><span>Def:def</span><span>Mut:true</span></div>');
+
+    // Patch will happen async.
+    wait(() -> {
+      node.innerHTML.equals('<div><span>Text:foo</span><span>Opt:</span><span>Def:def</span><span>Mut:true</span></div>');
+      done();
+    });
   }
   
   @test('Simple guards')
-  public function testGuards() {
+  @async(2000)
+  public function testGuards(done) {
     var node = Document.root.createElement('div');
     var root = new Root(node);
     var comp = new GuardedRender({
@@ -33,28 +41,43 @@ class ComponentTest implements TestCase {
     node.innerHTML.equals('<div>foo1</div>');
 
     comp.value = 'bar';
-    comp.renderCount.equals(2);
-    node.innerHTML.equals('<div>bar2</div>');
+    wait(() -> {
+      comp.renderCount.equals(2);
+      node.innerHTML.equals('<div>bar2</div>');
 
-    comp.value = 'skip';
-    comp.renderCount.equals(2);
-    node.innerHTML.equals('<div>bar2</div>');
+      comp.value = 'skip';
+      wait(() -> {
+        comp.renderCount.equals(2);
+        node.innerHTML.equals('<div>bar2</div>');
 
-    comp.value = 'bar';
-    comp.renderCount.equals(2);
-    node.innerHTML.equals('<div>bar2</div>');
-    
-    comp.blockRender = true;
-    comp.value = 'ignored';
-    comp.renderCount.equals(2);
-    node.innerHTML.equals('<div>bar2</div>');
+        comp.value = 'bar';
+        wait(() -> {
+          comp.renderCount.equals(2);
+          node.innerHTML.equals('<div>bar2</div>');
+          
+          comp.blockRender = true;
+          comp.value = 'ignored';
+          wait(() -> {
+            comp.renderCount.equals(2);
+            node.innerHTML.equals('<div>bar2</div>');
 
-    comp.blockRender = false;
-    comp.renderCount.equals(3);
-    node.innerHTML.equals('<div>ignored3</div>');
-    comp.value = 'foo';
-    comp.renderCount.equals(4);
-    node.innerHTML.equals('<div>foo4</div>');
+            
+            comp.blockRender = false;
+            wait(() -> {
+              comp.renderCount.equals(3);
+              node.innerHTML.equals('<div>ignored3</div>');
+              
+              comp.value = 'foo';
+              wait(() -> {
+                comp.renderCount.equals(4);
+                node.innerHTML.equals('<div>foo4</div>');
+                done();
+              });
+            });
+          });
+        });
+      });
+    });
   }
 
   @test('simple effects')
@@ -69,10 +92,16 @@ class ComponentTest implements TestCase {
     root.update(Pilot.html(<>{comp}</>));
     root.update(Pilot.html(<>{comp}</>));
     
-    haxe.Timer.delay(() -> {
+    wait(() -> {
       comp.effectCount.equals(2);
       done();
-    }, 100);
+    });
+  }
+
+  function wait(cb:()->Void) {
+    var l = new Later();
+    l.add(cb);
+    l.dispatch();
   }
 
 }
