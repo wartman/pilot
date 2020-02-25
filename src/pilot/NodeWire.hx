@@ -56,9 +56,24 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   override function __updateAttributes(attrs:Attrs) {
     var previous:Attrs = __attrs;
     if (previous == null) previous = cast {};
+
+    #if js
+      syncNodeProperty(node, 'value', previous);
+      syncNodeProperty(node, 'selected', previous);
+      syncNodeProperty(node, 'checked', previous);
+    #end
+
     __attrs = attrs;
     previous.diffObject(attrs, applyAttribute);
   }
+
+  #if js
+    function syncNodeProperty(node:Node, prop:String, attrs:Attrs) {
+      if (js.Syntax.code('{1} in {0} && {0}[{1}]', node, prop)) {
+        js.Syntax.code( '{0}[{1}] = {2}[{1}]', attrs, prop, node);
+      }
+    }
+  #end
   
   override function __getCursor():Cursor {
     return new Cursor(node, node.firstChild);

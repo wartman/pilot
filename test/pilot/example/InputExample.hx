@@ -4,20 +4,29 @@ import pilot.Component;
 
 class InputExample extends Component {
 
-  @:attribute(state) var value:String = '';
+  @:attribute var value:String = '';
+  @:attribute var displayValue:String = '';
 
   override function render() return html(<ExampleContainer title="Input Handling">
-    <input value={value} onKeyDown={e -> {
+    <input value={displayValue} onKeyDown={e -> {
       #if (js && !nodejs)
       var input:js.html.InputElement = cast e.target;
       var keyboardEvent:js.html.KeyboardEvent = cast e;
       if (keyboardEvent.key == 'Enter') {
-        value = input.value;
+        setValue(input.value);
         input.blur();
       }
       #end
     }} />
     <span>Current Value: {value}</span>
   </ExampleContainer>);
+
+  @:update
+  function setValue(value:String) {
+    return {
+      displayValue: '',
+      value: value
+    };
+  }
 
 }
