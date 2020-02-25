@@ -22,16 +22,16 @@ class Component extends BaseWire<Dynamic> {
 
   macro function html(e);
 
-  public function __requestUpdate(attrs:Dynamic) {
+  public function __requestUpdate(nextAttrs:Dynamic) {
     if (!__alive || __context == null) {
       throw 'Cannot update a component that has not been inserted';
     }
 
-    if (__pendingAttributes == null && __pendingAttributes != __attrs) {
-      __pendingAttributes = attrs;
+    if (__pendingAttributes == null) {
+      __pendingAttributes = nextAttrs;
     } else {
-      for (field in attrs.fields()) {
-        __pendingAttributes.setField(field, attrs.field(field));
+      for (field in nextAttrs.fields()) {
+        __pendingAttributes.setField(field, nextAttrs.field(field));
       }
     }
 
@@ -128,6 +128,7 @@ class Component {
   static final guardMeta = [ ':guard' ];
   static final attrsMeta = [ ':attr', ':attribute' ];
   static final styleMeta = [ ':style' ];
+  static final updateMeta = [ ':update' ];
   static final coreComponent = ':coreComponent';
 
   static function html(_, e) {
@@ -140,11 +141,12 @@ class Component {
     var fields = Context.getBuildFields();
     var newFields:Array<Field> = [];
     var props:Array<Field> = [];
+    var updateProps:Array<Field> = [];
     var startup:Array<Expr> = [];
     var dispose:Array<Expr> = [];
     var effect:Array<Expr> = [];
     var guards:Array<Expr> = [];
-    var updates:Array<Expr> = [];
+    var attributeUpdates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
 
     function add(fields:Array<Field>) {
@@ -214,12 +216,21 @@ class Component {
             expr: macro __props.$name
           });
         }
+
+        updateProps.push({
+          name: name,
+          kind: FVar(t, null),
+          access: [ APublic ],
+          meta: [ { name: 'isOptional', params: [], pos: f.pos } ],
+          pos: (macro null).pos
+        });
+      
         
         // TODO:
         // Guards should happen in `__update` for all attributes, and we should ONLY render if 
         // attributes change?
 
-        updates.push(macro @:pos(f.pos) {
+        attributeUpdates.push(macro @:pos(f.pos) {
           if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
             case [ a, b ] if (!this.$guardName(a, b)):
             case [ _, b ]: __attrs.$name = b;
@@ -338,6 +349,25 @@ class Component {
       default:
     }
 
+    var updateRet = TAnonymous(updateProps);
+
+    for (f in fields) switch f.kind {
+
+      case FFun(func) if (f.meta.exists(m -> updateMeta.has(m.name))):
+        if (func.ret != null) {
+          Context.error('`@:update` functions should not define their return type manually', f.pos);
+        }
+        var e = func.expr;
+        func.ret = macro:Void;
+        func.expr = macro {
+          var closure:()->$updateRet = () -> ${e};
+          __requestUpdate(closure());
+        }
+
+      default: // noop
+
+    }
+
     var propType = TAnonymous(props);
     var guardCheck = macro return true;
     if (guards.length > 0) {
@@ -363,7 +393,7 @@ class Component {
       }
 
       override function __updateAttributes(__props:Dynamic) {
-        $b{updates};
+        $b{attributeUpdates};
       }
 
       override function __shouldRender(attrs:Dynamic) {
