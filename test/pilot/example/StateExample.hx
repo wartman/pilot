@@ -4,7 +4,7 @@ import pilot.Component;
 
 class StateExample extends Component {
   
-  @:attribute(mutable = true) var clicked:Int = 0;
+  @:attribute(state) var clicked:Int = 0;
 
   override function render() return html(
     <ExampleContainer title="State Tracking">

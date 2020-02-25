@@ -18,7 +18,7 @@ class TextWire implements Wire<String> {
     return null;
   }
 
-  public function __setup(parent:Wire<Dynamic>) {
+  public function __setup(parent:Wire<Dynamic>, context:Context) {
     // noop
   }
 
@@ -28,8 +28,7 @@ class TextWire implements Wire<String> {
   
   public function __update(
     attrs:String, 
-    children:Array<VNode>, 
-    context:Context,
+    children:Array<VNode>,
     later:Later
   ):Void {
     if (attrs == node.textContent) return;

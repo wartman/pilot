@@ -4,7 +4,7 @@ import pilot.Component;
 
 class ChildrenExample extends Component {
 
-  @:attribute(mutable = true) var items:Array<String> = [];
+  @:attribute(state) var items:Array<String> = [];
 
   override function render() return html(
     <ExampleContainer title="Mutable Children">

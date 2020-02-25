@@ -17,7 +17,8 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   ) {
     this.isSvg = isSvg;
     this.node = node;
-    __updateAttributes(initialAttrs, context);
+    __context = context;
+    __updateAttributes(initialAttrs);
   }
 
   public function hydrate(context:Context) {
@@ -43,17 +44,16 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   override function __update(
     attrs:Attrs,
     children:Array<VNode>,
-    context:Context,
     later:Later
   ) {
     var previousCount = node.childNodes.length;
     var cursor = __getCursor();
-    __updateAttributes(attrs, context);
-    var nextNodes = __updateChildren(children, context, later);
+    __updateAttributes(attrs);
+    var nextNodes = __updateChildren(children, later);
     __setChildren(nextNodes, cursor, previousCount);
   }
 
-  override function __updateAttributes(attrs:Attrs, context:Context) {
+  override function __updateAttributes(attrs:Attrs) {
     var previous:Attrs = __attrs;
     if (previous == null) previous = cast {};
     __attrs = attrs;

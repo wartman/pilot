@@ -17,7 +17,7 @@ import pilot.Component;
 
 class App extends Component {
 
-  @:attribute(mutable = true) var shouldShowExample:Bool = false;
+  @:attribute(state = true) var shouldShowExample:Bool = false;
   @:style(global = true) var root = '
     body {
       background: black;

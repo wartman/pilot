@@ -10,13 +10,11 @@ using pilot.DiffingTools;
 @:autoBuild(pilot.Component.build())
 class Component extends BaseWire<Dynamic> {
   
-  @:noCompletion var __alive:Bool = false;
-  @:noCompletion var __parent:Wire<Dynamic>;
-  @:noCompletion var __context:Context;
-  @:noCompletion var __initialized:Bool = false;
-  @:noCompletion var __nodes:Array<Node> = [];
-  @:noCompletion var __pendingAttributes:{};
-  @:noCompletion var __updatePending:Bool = false;
+  var __alive:Bool = false;
+  var __parent:Wire<Dynamic>;
+  var __initialized:Bool = false;
+  var __nodes:Array<Node> = [];
+  var __pendingAttributes:{};
 
   function render():VNode {
     return null;
@@ -24,12 +22,12 @@ class Component extends BaseWire<Dynamic> {
 
   macro function html(e);
 
-  @:noCompletion public function __patch(attrs:Dynamic) {
-    if (!__alive) {
-      throw 'Cannot patch a component that has not been inserted';
+  public function __requestUpdate(attrs:Dynamic) {
+    if (!__alive || __context == null) {
+      throw 'Cannot update a component that has not been inserted';
     }
 
-    if (__pendingAttributes == null) {
+    if (__pendingAttributes == null && __pendingAttributes != __attrs) {
       __pendingAttributes = attrs;
     } else {
       for (field in attrs.fields()) {
@@ -37,35 +35,27 @@ class Component extends BaseWire<Dynamic> {
       }
     }
 
-    if (!__updatePending) {
-      __updatePending = true;
-      var next = new Later();
-      next.add(() -> {
-        var later = new Later();
-        var cursor = __getCursor();
-        var previousCount = __nodes.length;
-        __update(__pendingAttributes, [], __context, later);
-        __setChildren(__nodes, cursor, previousCount);
-        __pendingAttributes = null;
-        __updatePending = false;
-        later.dispatch();
-      });
-      next.dispatch();
-    }
+    __context.enqueueRender(this, () -> {
+      var later = new Later();
+      var cursor = __getCursor();
+      var previousCount = __nodes.length;
+      __update(__pendingAttributes, [], later);
+      __setChildren(__nodes, cursor, previousCount);
+      __pendingAttributes = __attrs;
+      later.enqueue();
+    });
   }
 
-  @:noCompletion override function __update(
+  override function __update(
     attrs:Dynamic,
     children:Array<VNode>,
-    context:Context,
     later:Later
   ) {
     if (!__alive) {
       throw 'Cannot update a component that has not been inserted';
     }
 
-    __context = context;
-    __updateAttributes(attrs, context);
+    __updateAttributes(attrs);
 
     if (!__initialized) {
       __initialized = true;
@@ -74,19 +64,20 @@ class Component extends BaseWire<Dynamic> {
 
     if (__shouldRender(attrs)) {
       // Note: Components do not update the Dom directly unless you call
-      //       `Component#__patch`.
+      //       `Component#__requestUpdate`.
       __nodes = __updateChildren(switch render().flatten() {
         case null | VFragment([]): [ VNode.VNative(TextType, '', []) ];
         case VFragment(children): children;
         case vn: [ vn ];
-      }, __context, later);
+      }, later);
       later.add(__doEffects);
     }
   }
 
-  override function __setup(parent:Wire<Dynamic>) {
+  override function __setup(parent:Wire<Dynamic>, context:Context) {
     __alive = true;
     __parent = parent;
+    __context = context;
   }
 
   override function __getNodes():Array<Node> {
@@ -98,23 +89,24 @@ class Component extends BaseWire<Dynamic> {
     return new Cursor(first.parentNode, first);
   }
 
-  @:noCompletion override function __dispose() {
+  override function __dispose() {
     for (c in __childList) c.__dispose();
     __childList = null;
     __alive = false;
     __parent = null;
     __types = null;
+    super.__dispose();
   }
 
-  @:noCompletion function __doInits() {
+  function __doInits() {
     // noop -- handled by macro
   }
 
-  @:noCompletion function __doEffects() {
+  function __doEffects() {
     // noop -- handled by macro
   }
 
-  @:noCompletion function __shouldRender(attrs:Dynamic):Bool {
+  function __shouldRender(attrs:Dynamic):Bool {
     return true;
   }
 
@@ -177,15 +169,15 @@ class Component {
         var params = f.meta.find(m -> attrsMeta.has(m.name)).params;
         var getName = 'get_${name}';
         var setName = 'set_${name}';
-        var isMutable = false;
+        var isState = false;
         var guardName = '__guard_${name}';
         var guard:Expr = macro __a != __b;
 
         for (param in params) switch param {
-          case macro mutable: isMutable = true;
-          case macro mutable = ${e}: switch e {
-            case macro false: isMutable = false;
-            case macro true: isMutable = true;
+          case macro state: isState = true;
+          case macro state = ${e}: switch e {
+            case macro false: isState = false;
+            case macro true: isState = true;
             default: 
               Context.error('Attribute option `mutable` must be Bool', param.pos);
           }
@@ -207,7 +199,7 @@ class Component {
             Context.error('Invalid attribute option', param.pos);
         }
         
-        f.kind = isMutable 
+        f.kind = isState 
           ? FProp('get', 'set', t, null)
           : FProp('get', 'never', t, null);
 
@@ -242,10 +234,10 @@ class Component {
 
         }).fields);
 
-        if (isMutable) {
+        if (isState) {
           add((macro class {
             function $setName(__v) {
-              if (this.$guardName(__v, __attrs.$name)) __patch({ $name: __v });
+              if (this.$guardName(__v, __attrs.$name)) __requestUpdate({ $name: __v });
               return __v;
             }
           }).fields);
@@ -358,7 +350,7 @@ class Component {
 
     add((macro class {
 
-      @:noCompletion public static function __create(props:$propType, context:pilot.Context) {
+      public static function __create(props:$propType, context:pilot.Context) {
         return new $clsTp(props, context);
       } 
       
@@ -370,23 +362,23 @@ class Component {
         } };
       }
 
-      @:noCompletion override function __updateAttributes(__props:Dynamic, __context:pilot.Context) {
+      override function __updateAttributes(__props:Dynamic) {
         $b{updates};
       }
 
-      @:noCompletion override function __shouldRender(attrs:Dynamic) {
+      override function __shouldRender(attrs:Dynamic) {
         ${guardCheck}
       }
 
-      @:noCompletion override function __doInits() {
+      override function __doInits() {
         $b{startup};
       }
 
-      @:noCompletion override function __doEffects() {
+      override function __doEffects() {
         $b{effect};
       }
 
-      @:noCompletion override function __dispose() {
+      override function __dispose() {
         $b{dispose};
         super.__dispose();
       }

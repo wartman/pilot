@@ -19,8 +19,8 @@ class Root {
 
   public function update(vNode:VNode) {
     var later = new Later();
-    target.__update({}, [ vNode ], context, later);
-    later.dispatch();
+    target.__update({}, [ vNode ], later);
+    later.enqueue();
   }
 
   public inline function getContext() {

@@ -4,7 +4,7 @@ import pilot.Component;
 
 class InputExample extends Component {
 
-  @:attribute(mutable = true) var value:String = '';
+  @:attribute(state) var value:String = '';
 
   override function render() return html(<ExampleContainer title="Input Handling">
     <input value={value} onKeyDown={e -> {
