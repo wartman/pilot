@@ -2,18 +2,12 @@ package pilot;
 
 import pilot.dom.*;
 
-using pilot.MarkupTest;
 using Medic;
+using pilot.TestHelpers;
 
 class MarkupTest implements TestCase {
 
   public function new() {}
-
-  public static function render(vn:VNode) {
-    var root = new Root(Document.root.createElement('div'));
-    root.update(vn);
-    return root;
-  }
 
   @test('@if with no else works')
   public function testIf() {

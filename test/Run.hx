@@ -44,6 +44,7 @@ class Run {
       var runner = new Runner(reporter);
 
       runner.add(new pilot.ComponentTest());
+      runner.add(new pilot.ProviderTest());
       runner.add(new pilot.MarkupTest());
 
       runner.run();
@@ -55,6 +56,7 @@ class Run {
         verbose: true
       }));
       runner.add(new pilot.ComponentTest());
+      runner.add(new pilot.ProviderTest());
       runner.add(new pilot.MarkupTest());
       runner.run();
 

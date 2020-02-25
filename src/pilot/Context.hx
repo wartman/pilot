@@ -30,7 +30,7 @@ class Context {
     data.remove(name);
   }
 
-  public function copy() {
+  public function getChild() {
     return new Context([], this);
   }
 
