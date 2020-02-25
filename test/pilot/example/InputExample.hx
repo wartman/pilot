@@ -20,13 +20,15 @@ class InputExample extends Component {
     }} />
     <span>Current Value: {value}</span>
   </ExampleContainer>);
-
-  @:update
-  function setValue(value:String) {
-    return {
-      displayValue: '',
-      value: value
-    };
-  }
+  
+  #if (js && !nodejs)
+    @:update
+    function setValue(value:String) {
+      return {
+        displayValue: '',
+        value: value
+      };
+    }
+  #end
 
 }

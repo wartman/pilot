@@ -221,7 +221,7 @@ class Component {
           name: name,
           kind: FVar(t, null),
           access: [ APublic ],
-          meta: [ { name: 'isOptional', params: [], pos: f.pos } ],
+          meta: [ { name: ':optional', pos: f.pos } ],
           pos: (macro null).pos
         });
       
