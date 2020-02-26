@@ -35,7 +35,7 @@ class Component extends BaseWire<Dynamic> {
       }
     }
 
-    __context.enqueueRender(this, () -> {
+    __context.enqueueRender(() -> {
       var later = new Later();
       var cursor = __getCursor();
       var previousCount = __nodes.length;

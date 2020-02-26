@@ -6,7 +6,7 @@ class Context {
 
   final data:Map<String, Dynamic>;
   final parent:Context;
-  var renderQueue:Map<Wire<Dynamic>, ()->Void>;
+  final renderQueue:Array<()->Void> = [];
 
   public function new(?initialData, ?parent) {
     data = if (initialData != null) initialData else [];
@@ -34,24 +34,25 @@ class Context {
     return new Context([], this);
   }
 
-  public function enqueueRender(wire:Wire<Dynamic>, update:()->Void) {
+  public function enqueueRender(update:()->Void) {
     if (parent != null) {
       // Ensure only the root context enqueues rendering.
-      parent.enqueueRender(wire, update);
+      parent.enqueueRender(update);
       return;
     }
-    if (renderQueue == null) scheduleRenderQueueProcessing();
-    renderQueue.set(wire, update);
+    if (renderQueue.push(update) == 1) {
+      scheduleRenderQueueProcessing();
+    }
   }
 
+  // this probably isn't working right -- look into a real debounce function.
   function scheduleRenderQueueProcessing() {
-    renderQueue = [];
     var later = new Later();
     later.add(() -> {
-      for (_ => update in renderQueue) update();
-      renderQueue = null;
+      var update;
+      while ((update = renderQueue.pop()) != null) update();
     });
     later.enqueue();
   }
-
+  
 }
