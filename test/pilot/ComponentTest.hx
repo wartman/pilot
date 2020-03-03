@@ -1,7 +1,7 @@
 package pilot;
 
 import pilot.dom.*;
-import pilot.Later;
+import pilot.Signal;
 
 using Medic;
 
@@ -99,9 +99,9 @@ class ComponentTest implements TestCase {
   }
 
   function wait(cb:()->Void) {
-    var l = new Later();
-    l.add(cb);
-    l.enqueue();
+    var l = new Signal<Any>();
+    l.addOnce(_ -> cb());
+    l.enqueue(null);
   }
 
 }

@@ -46,6 +46,7 @@ class Run {
       runner.add(new pilot.ComponentTest());
       runner.add(new pilot.ProviderTest());
       runner.add(new pilot.MarkupTest());
+      runner.add(new pilot.message.MessageTest());
 
       runner.run();
 
@@ -58,6 +59,7 @@ class Run {
       runner.add(new pilot.ComponentTest());
       runner.add(new pilot.ProviderTest());
       runner.add(new pilot.MarkupTest());
+      runner.add(new pilot.message.MessageTest());
       runner.run();
 
     #end

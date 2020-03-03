@@ -44,7 +44,7 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   override function __update(
     attrs:Attrs,
     children:Array<VNode>,
-    later:Later
+    later:Signal<Any>
   ) {
     var previousCount = node.childNodes.length;
     var cursor = __getCursor();
@@ -68,7 +68,7 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   }
 
   #if js
-    function syncNodeProperty(node:Node, prop:String, attrs:Attrs) {
+    inline function syncNodeProperty(node:Node, prop:String, attrs:Attrs) {
       if (js.Syntax.code('{1} in {0} && {0}[{1}]', node, prop)) {
         js.Syntax.code( '{0}[{1}] = {2}[{1}]', attrs, prop, node);
       }

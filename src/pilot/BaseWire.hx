@@ -2,6 +2,7 @@ package pilot;
 
 import pilot.dom.*;
 
+@:allow(pilot.Plugin)
 class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
   var __attrs:Attrs;
@@ -20,7 +21,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
   public function __update(
     attrs:Attrs,
     children:Array<VNode>,
-    later:Later
+    later:Signal<Any>
   ) {
     throw 'Not implemented';
   }
@@ -55,7 +56,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
   function __updateChildren(
     children:Array<VNode>,
-    later:Later
+    later:Signal<Any>
   ) {
     var newChildList:Array<Wire<Dynamic>> = [];
     var newTypes:Map<WireType<Dynamic>, WireRegistry> = [];
@@ -76,7 +77,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
       innerHTML:Null<String>,
       attrs:Dynamic,
       children:Array<VNode>,
-      later:Later
+      later:Signal<Any>
     ) {
       wire.__update(attrs, children, later);
       if (innerHTML != null) {
@@ -102,7 +103,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
           wire.__setup(this, __context);
           updateNative(wire, dangerouslySetInnerHTML, attrs, children, later);
           add(key, type, wire);
-          if (ref != null) later.add(() -> ref(switch wire.__getNodes() {
+          if (ref != null) later.addOnce(_ -> ref(switch wire.__getNodes() {
             case [ node ]: node;
             default: throw 'assert';
           }));

@@ -7,6 +7,7 @@ import pilot.dom.Node;
 using Reflect;
 using pilot.DiffingTools;
 
+@:allow(pilot.Plugin)
 @:autoBuild(pilot.Component.build())
 class Component extends BaseWire<Dynamic> {
   
@@ -15,6 +16,9 @@ class Component extends BaseWire<Dynamic> {
   var __initialized:Bool = false;
   var __nodes:Array<Node> = [];
   var __pendingAttributes:{};
+  final __onInit:Signal<Component> = new Signal();
+  final __onEffect:Signal<Component> = new Signal();
+  final __onDisposal:Signal<Component> = new Signal();
 
   function render():VNode {
     return null;
@@ -36,20 +40,20 @@ class Component extends BaseWire<Dynamic> {
     }
 
     __context.enqueueRender(() -> {
-      var later = new Later();
+      var later:Signal<Any> = new Signal();
       var cursor = __getCursor();
       var previousCount = __nodes.length;
       __update(__pendingAttributes, [], later);
       __setChildren(__nodes, cursor, previousCount);
       __pendingAttributes = __attrs;
-      later.enqueue();
+      later.enqueue(null);
     });
   }
 
   override function __update(
     attrs:Dynamic,
     children:Array<VNode>,
-    later:Later
+    later:Signal<Any>
   ) {
     if (!__alive) {
       throw 'Cannot update a component that has not been inserted';
@@ -59,7 +63,7 @@ class Component extends BaseWire<Dynamic> {
 
     if (!__initialized) {
       __initialized = true;
-      __doInits();
+      __onInit.dispatch(this);
     }
 
     if (__shouldRender(attrs)) {
@@ -70,7 +74,7 @@ class Component extends BaseWire<Dynamic> {
         case VFragment(children): children;
         case vn: [ vn ];
       }, later);
-      later.add(__doEffects);
+      later.addOnce(_ -> __onEffect.dispatch(this));
     }
   }
 
@@ -95,15 +99,8 @@ class Component extends BaseWire<Dynamic> {
     __alive = false;
     __parent = null;
     __types = null;
+    __onDisposal.dispatch(this);
     super.__dispose();
-  }
-
-  function __doInits() {
-    // noop -- handled by macro
-  }
-
-  function __doEffects() {
-    // noop -- handled by macro
   }
 
   function __shouldRender(attrs:Dynamic):Bool {
@@ -174,6 +171,10 @@ class Component {
         var isState = false;
         var guardName = '__guard_${name}';
         var guard:Expr = macro __a != __b;
+        var isPlugin = switch t.toString() {
+          case 'Any' | 'Dynamic': false;
+          default: Context.unify(t.toType(), Context.getType('pilot.Plugin'));
+        }
 
         for (param in params) switch param {
           case macro state: isState = true;
@@ -181,7 +182,7 @@ class Component {
             case macro false: isState = false;
             case macro true: isState = true;
             default: 
-              Context.error('Attribute option `mutable` must be Bool', param.pos);
+              Context.error('Attribute option `state` must be Bool', param.pos);
           }
           case macro inject = ${injectExpr}:
             isOptional = true;
@@ -199,6 +200,10 @@ class Component {
           }
           default:
             Context.error('Invalid attribute option', param.pos);
+        }
+
+        if (isPlugin && isState) {
+          Context.error('Plugins cannot be stateful', f.pos);
         }
         
         f.kind = isState 
@@ -225,17 +230,32 @@ class Component {
           pos: (macro null).pos
         });
       
-        
+        if (isPlugin) {
+          startup.push(macro if (this.$name != null) this.$name.__connect(this));
+        }
+
         // TODO:
         // Guards should happen in `__update` for all attributes, and we should ONLY render if 
         // attributes change?
 
-        attributeUpdates.push(macro @:pos(f.pos) {
-          if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
-            case [ a, b ] if (!this.$guardName(a, b)):
-            case [ _, b ]: __attrs.$name = b;
-          }
-        });
+        if (isPlugin) {
+          attributeUpdates.push(macro @:pos(f.pos) {
+            if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
+              case [ a, b ] if (!this.$guardName(a, b)):
+              case [ _, b ]:
+                __attrs.$name.__disconnect(this);
+                __attrs.$name = b;
+                __attrs.$name.__connect(this);
+            }
+          });
+        } else {
+          attributeUpdates.push(macro @:pos(f.pos) {
+            if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
+              case [ a, b ] if (!this.$guardName(a, b)):
+              case [ _, b ]: __attrs.$name = b;
+            }
+          });
+        }
 
         add((macro class {
 
@@ -390,6 +410,12 @@ class Component {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
+        __onInit.add(_ -> {
+          $b{startup};
+        });
+        __onEffect.add(_ -> {
+          $b{effect};
+        });
       }
 
       override function __updateAttributes(__props:Dynamic) {
@@ -398,14 +424,6 @@ class Component {
 
       override function __shouldRender(attrs:Dynamic) {
         ${guardCheck}
-      }
-
-      override function __doInits() {
-        $b{startup};
-      }
-
-      override function __doEffects() {
-        $b{effect};
       }
 
       override function __dispose() {

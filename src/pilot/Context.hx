@@ -47,12 +47,12 @@ class Context {
 
   // this probably isn't working right -- look into a real debounce function.
   function scheduleRenderQueueProcessing() {
-    var later = new Later();
-    later.add(() -> {
+    var later = new Signal<Any>();
+    later.addOnce(_ -> {
       var update;
       while ((update = renderQueue.pop()) != null) update();
     });
-    later.enqueue();
+    later.enqueue(null);
   }
   
 }
