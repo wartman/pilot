@@ -17,7 +17,7 @@ import pilot.Component;
 
 class App extends Component {
 
-  @:attribute(mutable = true) var shouldShowExample:Bool = false;
+  @:attribute(state = true) var shouldShowExample:Bool = false;
   @:style(global = true) var root = '
     body {
       background: black;
@@ -47,7 +47,21 @@ class Example extends Component {
     line-height: 20px;
   }>
     <h1>${foo}</h1>
+    <button onClick={_ -> changeFoo(foo + 'foo')}>Change</button>
   </div>);
+
+  // Instead of making an attribute a `state`, you can define
+  // `update` methods like this, which will re-render the 
+  // view when they are called:
+  @:update
+  function changeFoo(newFoo:String) {
+    // The returned object is mapped to the Component's attributes --
+    // even stateless attributes may be changed here. This is similar
+    // to calling `setState` on React components.
+    return {
+      foo: newFoo
+    };
+  }
 
 }
 

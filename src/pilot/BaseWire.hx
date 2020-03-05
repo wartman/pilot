@@ -2,31 +2,32 @@ package pilot;
 
 import pilot.dom.*;
 
+@:allow(pilot.Plugin)
 class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
   var __attrs:Attrs;
   var __types:Map<WireType<Dynamic>, WireRegistry> = [];
   var __childList:Array<Wire<Dynamic>> = [];
+  var __context:Context;
   
   public function __getNodes():Array<Node> {
     throw 'not implemented';
   }
 
-  public function __setup(parent:Wire<Dynamic>):Void {
-    // Noop
+  public function __setup(parent:Wire<Dynamic>, context:Context):Void {
+    __context = context;
   }
 
   public function __update(
     attrs:Attrs,
     children:Array<VNode>,
-    context:Context,
-    later:Later
+    later:Signal<Any>
   ) {
     throw 'Not implemented';
   }
 
   public function __dispose() {
-    // noop;
+    __context = null;
   }
 
   public function __getCursor():Cursor {
@@ -55,8 +56,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
   function __updateChildren(
     children:Array<VNode>,
-    context:Context,
-    later:Later
+    later:Signal<Any>
   ) {
     var newChildList:Array<Wire<Dynamic>> = [];
     var newTypes:Map<WireType<Dynamic>, WireRegistry> = [];
@@ -77,10 +77,9 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
       innerHTML:Null<String>,
       attrs:Dynamic,
       children:Array<VNode>,
-      context:Context,
-      later:Later
+      later:Signal<Any>
     ) {
-      wire.__update(attrs, children, context, later);
+      wire.__update(attrs, children, later);
       if (innerHTML != null) {
         if (children.length > 0) {
           throw 'Do not use @dangerouslySetInnerHTML with child VNodes';
@@ -100,29 +99,27 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
 
       case VNative(type, attrs, children, key, dangerouslySetInnerHTML, ref): switch __resolveChildNode(type, key) {
         case null:
-          var wire = type.__create(attrs, context);
-          wire.__setup(this);
-          updateNative(wire, dangerouslySetInnerHTML, attrs, children, context, later);
-          // wire.__update(attrs, children, context, later);
+          var wire = type.__create(attrs, __context);
+          wire.__setup(this, __context);
+          updateNative(wire, dangerouslySetInnerHTML, attrs, children, later);
           add(key, type, wire);
-          if (ref != null) later.add(() -> ref(switch wire.__getNodes() {
+          if (ref != null) later.addOnce(_ -> ref(switch wire.__getNodes() {
             case [ node ]: node;
             default: throw 'assert';
           }));
         case wire:
-          updateNative(wire, dangerouslySetInnerHTML, attrs, children, context, later);
-          // wire.__update(attrs, children, context, later);
+          updateNative(wire, dangerouslySetInnerHTML, attrs, children, later);
           add(key, type, wire);
       }
 
       case VComponent(type, attrs, key): switch __resolveChildNode(type, key) {
         case null:
-          var wire = type.__create(attrs, context);
-          wire.__setup(this);
-          wire.__update(attrs, [], context, later);
+          var wire = type.__create(attrs, __context);
+          wire.__setup(this, __context);
+          wire.__update(attrs, [], later);
           add(key, type, wire);
         case wire:
-          wire.__update(attrs, [], context, later);
+          wire.__update(attrs, [], later);
           add(key, type, wire);
       }
 
@@ -144,7 +141,7 @@ class BaseWire<Attrs:{}> implements Wire<Attrs> {
     return nodes;
   }
 
-  function __updateAttributes(attrs:Attrs, context:Context) {
+  function __updateAttributes(attrs:Attrs) {
     throw 'not implemented';
   }
 

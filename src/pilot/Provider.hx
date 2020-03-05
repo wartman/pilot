@@ -3,20 +3,22 @@ package pilot;
 final class Provider<T> extends Component {
 
   @:attribute var id:String;
-  @:attribute var value:Dynamic;
+  @:attribute var value:Any;
   @:attribute var children:Children;
 
   override function render() return html(<>{children}</>);
 
+  override function __setup(parent:Wire<Dynamic>, context:Context) {
+    super.__setup(parent, context.getChild());
+  }
+
   override function __update(
     attrs:Dynamic, 
     children:Array<VNode>,
-    context:Context,
-    later:Later
+    later:Signal<Any>
   ) {
-    var subContext = context.copy();
-    subContext.set(id, value);
-    super.__update(attrs, children, subContext, later);
+    __context.set(id, value);
+    super.__update(attrs, children, later);
   }
 
 }

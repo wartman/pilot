@@ -11,10 +11,34 @@ class HtmlReporter implements Reporter {
 
   public function new(root:Root) {
     this.root = root;
+    render();
+  }
+
+  public function render(?result:pilot.VNode) {
+    root.update(Pilot.html(
+      <Container>
+        <Header title="Test Results" />
+        { if (result == null) <pre>
+          { switch infos.length {
+            case 0: 'working...';
+            default: [ for (info in infos) switch info.status {
+              case Passed: '.';
+              case Failed(e): switch e {
+                case Warning(_): 'W';
+                case Assertion(_, _): 'F';
+                case UnhandledException(_, _): 'E';
+                case Multiple(_): 'E';
+              }
+            } ];
+          } }  
+        </pre> else result }
+      </Container>
+    ));
   }
 
   public function progress(info:TestInfo):Void {
     infos.push(info);
+    render();
   }
 
   public function report(result:Result):Void {
@@ -40,8 +64,7 @@ class HtmlReporter implements Reporter {
     // todo: rethink this display
     fullStatus += '${failed == 0 ? 'OK' : 'FAILED'} ${total} tests, ${success} success, ${failed} failed';
 
-    root.update(Pilot.html(<Container>
-      <Header title="Test Results" />
+    render(Pilot.html(<>
       <pre>{fullStatus}</pre>
       { if (errors.length > 0) <>
         <h2>Errors</h2>
@@ -49,7 +72,7 @@ class HtmlReporter implements Reporter {
           { [ for (info in errors) <TestReport info={info} /> ] }
         </ul>
       </> else <></> }
-    </Container>));
+    </>));
   }
 
 }

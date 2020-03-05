@@ -17,7 +17,8 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   ) {
     this.isSvg = isSvg;
     this.node = node;
-    __updateAttributes(initialAttrs, context);
+    __context = context;
+    __updateAttributes(initialAttrs);
   }
 
   public function hydrate(context:Context) {
@@ -43,22 +44,36 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   override function __update(
     attrs:Attrs,
     children:Array<VNode>,
-    context:Context,
-    later:Later
+    later:Signal<Any>
   ) {
     var previousCount = node.childNodes.length;
     var cursor = __getCursor();
-    __updateAttributes(attrs, context);
-    var nextNodes = __updateChildren(children, context, later);
+    __updateAttributes(attrs);
+    var nextNodes = __updateChildren(children, later);
     __setChildren(nextNodes, cursor, previousCount);
   }
 
-  override function __updateAttributes(attrs:Attrs, context:Context) {
+  override function __updateAttributes(attrs:Attrs) {
     var previous:Attrs = __attrs;
     if (previous == null) previous = cast {};
+
+    #if js
+      syncNodeProperty(node, 'value', previous);
+      syncNodeProperty(node, 'selected', previous);
+      syncNodeProperty(node, 'checked', previous);
+    #end
+
     __attrs = attrs;
     previous.diffObject(attrs, applyAttribute);
   }
+
+  #if js
+    inline function syncNodeProperty(node:Node, prop:String, attrs:Attrs) {
+      if (js.Syntax.code('{1} in {0} && {0}[{1}]', node, prop)) {
+        js.Syntax.code( '{0}[{1}] = {2}[{1}]', attrs, prop, node);
+      }
+    }
+  #end
   
   override function __getCursor():Cursor {
     return new Cursor(node, node.firstChild);

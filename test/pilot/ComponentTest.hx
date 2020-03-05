@@ -1,7 +1,7 @@
 package pilot;
 
 import pilot.dom.*;
-import pilot.Later;
+import pilot.Signal;
 
 using Medic;
 
@@ -14,14 +14,14 @@ class ComponentTest implements TestCase {
   public function testInstance(done) {
     var node = Document.root.createElement('div');
     var root = new Root(node);
-    var comp = new ComponentTester({ text: 'foo', isMutable: false }, root.getContext());
+    var comp = new ComponentTester({ text: 'foo', isState: false }, root.getContext());
     root.update(Pilot.html(<>{comp}</>));
     node.innerHTML.equals('<div><span>Text:foo</span><span>Opt:</span><span>Def:def</span></div>');
-    comp.isMutable = true;
+    comp.isState = true;
 
     // Patch will happen async.
     wait(() -> {
-      node.innerHTML.equals('<div><span>Text:foo</span><span>Opt:</span><span>Def:def</span><span>Mut:true</span></div>');
+      node.innerHTML.equals('<div><span>Text:foo</span><span>Opt:</span><span>Def:def</span><span>State:true</span></div>');
       done();
     });
   }
@@ -99,9 +99,9 @@ class ComponentTest implements TestCase {
   }
 
   function wait(cb:()->Void) {
-    var l = new Later();
-    l.add(cb);
-    l.dispatch();
+    var l = new Signal<Any>();
+    l.addOnce(_ -> cb());
+    l.enqueue(null);
   }
 
 }
@@ -111,14 +111,14 @@ class ComponentTester extends Component {
   @:attribute var text:String;
   @:attribute @:optional var opt:String;
   @:attribute var def:String = 'def';
-  @:attribute(mutable) public var isMutable:Bool;
+  @:attribute(state) public var isState:Bool;
 
   override function render() return html(<>
     <div>
       <span>Text:{text}</span>
       <span>Opt:{opt}</span>
       <span>Def:{def}</span>
-      @if (isMutable) <span>Mut:true</span>
+      @if (isState) <span>State:true</span>
     </div>
   </>);
 
@@ -130,10 +130,10 @@ class GuardedRender extends Component {
   public var effectCount:Int = 0;
 
   @:attribute(
-    mutable = true, 
+    state = true, 
     guard = (incoming, current) -> incoming != 'skip'
   ) public var value:String;
-  @:attribute(mutable) public var blockRender:Bool = false;
+  @:attribute(state) public var blockRender:Bool = false;
 
   @:guard
   function shouldBlock(attrs) {
