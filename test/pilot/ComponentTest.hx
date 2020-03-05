@@ -1,9 +1,9 @@
 package pilot;
 
 import pilot.dom.*;
-import pilot.Signal;
 
 using Medic;
+using pilot.TestHelpers;
 
 class ComponentTest implements TestCase {
   
@@ -98,10 +98,8 @@ class ComponentTest implements TestCase {
     });
   }
 
-  function wait(cb:()->Void) {
-    var l = new Signal<Any>();
-    l.addOnce(_ -> cb());
-    l.enqueue(null);
+  inline function wait(cb:()->Void) {
+    cb.later();
   }
 
 }

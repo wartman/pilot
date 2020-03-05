@@ -124,7 +124,7 @@ Pilot.html(
       trace(node);
     }}
     @key="A unique key!"
-    @dangrouslySetInnerHtml="
+    @dangrouslySetInnerHTML="
       <p>This will replace the innerHTML of this element.</p>
       <p>
         It won't get escaped or validated or anything, so you should

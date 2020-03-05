@@ -7,9 +7,9 @@
     "contributors": [
         "wartman"
     ],
-    "releasenote": "Super alpha!",
+    "releasenote": "Added signals and a plugin API.",
     "classPath": "src",
-    "version": "0.2.0-alpha.2",
+    "version": "0.2.1",
     "url": "https://github.com/wartman/pilot",
     "dependencies": {}
 }
