@@ -12,7 +12,7 @@ class Store<Action, Data> {
   static final ID:String = '__pilot_message_Store__';
 
   final onUpdate:Signal<Data> = new Signal();
-  final updaters:Array<MessageUpdate<Action, Data>> = [];
+  final updaters:Array<Update<Action, Data>> = [];
   var data:Data;
   var isDispatching:Bool = false;
   
@@ -36,11 +36,11 @@ class Store<Action, Data> {
       None;
   }
 
-  public function addUpdater(updater:MessageUpdate<Action, Data>) {
+  public function addUpdater(updater:Update<Action, Data>) {
     if (!hasUpdater(updater)) updaters.push(updater);
   }
 
-  public function hasUpdater(updater:MessageUpdate<Action, Data>) {
+  public function hasUpdater(updater:Update<Action, Data>) {
     return updaters.has(updater);
   }
 

@@ -40,7 +40,7 @@ class Component extends BaseWire<Dynamic> {
     }
 
     __context.enqueueRender(() -> {
-      var later:Signal<Any> = new Signal();
+      var later = Signal.createVoidSignal();
       var cursor = __getCursor();
       var previousCount = __nodes.length;
       __update(__pendingAttributes, [], later);

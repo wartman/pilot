@@ -37,9 +37,7 @@ typedef TestData = {
 })
 class TestMessage extends Message<TestAction, TestData> {
 
-  @:state(
-    map = data.foo
-  ) var message:String;
+  @:state( map = data.foo ) var message:String;
 
   @:send
   public function setFoo(foo:String):TestAction {
