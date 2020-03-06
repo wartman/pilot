@@ -7,9 +7,7 @@ A batteries-included UI framework.
 Usage
 -----
 
-Pilot handles CSS, HTML and VNode diffing for both browsers and servers, allowing you to use almost the same code across many different targets. Additionally, pilot is quite small: most of the complicated stuff is handled during compiling. 
-
-That's the dream, anyway.
+Pilot handles CSS, HTML and VNode diffing for both browsers and servers, allowing you to use almost the same code across many different targets.
 
 ```haxe
 
@@ -17,13 +15,7 @@ import pilot.Component;
 
 class App extends Component {
 
-  @:attribute(state = true) var shouldShowExample:Bool = false;
-  @:style(global = true) var root = '
-    body {
-      background: black;
-      color: white;
-    }
-  ';
+  @:attribute(state) var shouldShowExample:Bool = false;
 
   override function render() return html(<div>
     @if (shouldShowExample) {
@@ -42,10 +34,10 @@ class Example extends Component {
 
   @:attribute var foo:String;
 
-  override function render() return html(<div class@style={
+  override function render() return html(<div class={css('
     height: 20px;
     line-height: 20px;
-  }>
+  ')}>
     <h1>${foo}</h1>
     <button onClick={_ -> changeFoo(foo + 'foo')}>Change</button>
   </div>);
@@ -68,6 +60,14 @@ class Example extends Component {
 class Main {
 
   public static function main() {
+    // Define global styles:
+    Pilot.css('
+      body {
+        background: black;
+        color: white;
+      }
+    ', { global: true });
+
     Pilot.mount(
       // `Pilot.document` is an alias for `js.Browser.document` on
       // js targets or for `pilot.dom.Document.root` on sys targets
@@ -99,21 +99,10 @@ Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@
 
 Methods with `@:guard` meta will be checked before every render -- if ANY `@:guard` methods return false the component will not be rendered.  
 
-Markup Attribute Macros
------------------------
+Special Attributes
+------------------
 
-Currently there is only one attribute macro: `@style`. There may be more in the future (along with the ability to define your own). Attribute macros may be appended to any attribute name and will handle the value at compile time. 
-
-Use `@style` to parse styles. Generally used with `class`, although it can be used for any attribute that expects a `pilot.Style` as well.
-
-```haxe
-Pilot.html(<div class@style={
-  width: 200px;
-  height: 50px;
-}>Hello world</div>);
-```
-
-There are also three special attributes (for now) you can use: `@ref`, `@key` and `@dangrouslySetInnerHtml`:
+There are three special attributes (for now) you can use: `@ref`, `@key` and `@dangrouslySetInnerHTML`:
 
 ```haxe
 Pilot.html(
@@ -191,7 +180,7 @@ If you want to turn off inline control flow entirely, you can set:
 -D pilot-markup-no-inline-control-flow
 ```
 
-in your HXML.
+in your HXML, or by using `html(<>...</>, { noInlineControlFlow: true })`.
 
 CSS Generation Options
 ----------------------
@@ -239,19 +228,16 @@ For example, say we have a Modal component. This might never get used in a PHP o
 ```haxe
 import pilot.Component;
 
-class ModalOrSomething extends Component {
-
-  // Mark @:style meta for embedding (you can also use `embed = true`):
-  @:style(embed) var foo = '
-    background: blue;
-  ';
+class MyComponent extends Component {
 
   override function render() return html(
-    <div class={foo}>
-      // We can also use `@style-embed` in our markup to get the same result:
-      <div class@style-embed={
-        background: white;
-      }>Stuff</div>
+    <div class={css('
+      background: blue
+    ', { 
+      // Simply set `embed` as `true` in the `css` options!  
+      embed: true
+    })}>
+      <p>Stuff</p>
     </div>
   );
 

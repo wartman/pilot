@@ -14,15 +14,13 @@ class MarkupGenerator {
 
   static inline final TEXT_NODE = '__text__';
   
-  final attributeMacros:Map<String, MarkupMacro>;
   final nodes:Array<MarkupNode>;
   final pos:Position;
   var isSvg:Bool = false;
 
-  public function new(nodes, pos, macros) {
+  public function new(nodes, pos) {
     this.nodes = nodes;
     this.pos = pos;
-    this.attributeMacros = macros;
   }
 
   public function generate():Expr {
@@ -157,20 +155,13 @@ class MarkupGenerator {
     for (attr in attrs) { 
       var pos = makePos(attr.value.pos);
       if (allowKey(attr.name)) {
-        if (attr.macroName != null) {
-          if (!attributeMacros.exists(attr.macroName)) {
-            throw new DslError('Undefined macro @${attr.macroName}', attr.pos);
+        fields.push({
+          field: attr.name,
+          expr: switch attr.value.value {
+            case Raw(v): macro @:pos(pos) $v{v};
+            case Code(v): parseExpr(v, pos);
           }
-          fields.push(attributeMacros[attr.macroName](attr, pos));
-        } else {
-          fields.push({
-            field: attr.name,
-            expr: switch attr.value.value {
-              case Raw(v): macro @:pos(pos) $v{v};
-              case Code(v): parseExpr(v, pos);
-            }
-          });
-        }
+        });
       }
     }
     return fields;

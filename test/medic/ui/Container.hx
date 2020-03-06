@@ -8,7 +8,7 @@ class Container extends Component {
   @:attribute var children:Children;
 
   override function render() return html(
-    <div class@style={
+    <div class={css('
       padding: 10px;
       border-radius: 5px;
       background: rgb( 232, 232, 232 );
@@ -18,7 +18,7 @@ class Container extends Component {
         border: 1px solid #000;
         padding: 10px;
       }
-    }>
+    ')}>
       {children}
     </div>
   );

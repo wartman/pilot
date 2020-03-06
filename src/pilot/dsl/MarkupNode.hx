@@ -6,7 +6,6 @@ typedef MarkupAttribute = {
     value:MarkupAttributeValue,
     pos:DslPosition
   },
-  ?macroName:String,
   pos:DslPosition
 }
 

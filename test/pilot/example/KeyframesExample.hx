@@ -6,12 +6,12 @@ class KeyframesExample extends Component {
   
   override function render() return html(
     <ExampleContainer title="Keyframes">
-      <div class@style={
+      <div class={css('
         display: relative;
         height: 150px;
         width: 100%;
-      }>
-        <div class@style={
+      ')}>
+        <div class={css('
           position: relative;
           border: 16px solid #f3f3f3;
           border-radius: 50%;
@@ -25,7 +25,7 @@ class KeyframesExample extends Component {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
           }
-        } />
+        ')} />
       </div>
     </ExampleContainer>
   );

@@ -24,7 +24,9 @@ class Component extends BaseWire<Dynamic> {
     return null;
   }
 
-  macro function html(e);
+  macro function html(e, ?options);
+
+  macro function css(e, ?options);
 
   public function __requestUpdate(nextAttrs:Dynamic) {
     if (!__alive || __context == null) {
@@ -124,12 +126,15 @@ class Component {
   static final effectMeta = [ ':effect' ];
   static final guardMeta = [ ':guard' ];
   static final attrsMeta = [ ':attr', ':attribute' ];
-  static final styleMeta = [ ':style' ];
   static final updateMeta = [ ':update' ];
   static final coreComponent = ':coreComponent';
 
-  static function html(_, e) {
-    return pilot.dsl.Markup.parse(e);
+  static function html(_, e, ?options) {
+    return pilot.Html.create(e, options);
+  }
+
+  static function css(_, e, ?options:haxe.macro.Expr) {
+    return pilot.Style.create(e, options);
   }
 
   public static function build() {
@@ -281,48 +286,6 @@ class Component {
           meta: isOptional ? [ { name: ':optional', pos: f.pos } ] : [],
           pos: f.pos
         });
-
-      case FVar(t, e) if (f.meta.exists(m -> styleMeta.has(m.name))):
-        
-        if (f.meta.filter(m -> styleMeta.has(m.name)).length > 1) {
-          Context.error('More than one `@:style` is not allowed per var', f.pos);
-        }
-
-        if (e == null) {
-          Context.error('An expression is required for @:style', f.pos);
-        }
-
-        var forceEmbedding = false;
-        var isGlobal = false;
-        var params = f.meta.find(m -> styleMeta.has(m.name)).params;
-
-        for (param in params) switch param {
-          case macro embed: forceEmbedding = true;
-          case macro embed = ${e}: switch e {
-            case macro true: forceEmbedding = true;
-            case macro false:
-            default:
-              Context.error('Bool expected', param.pos);
-          }
-          case macro global: isGlobal = true;
-          case macro global = ${e}: switch e {
-            case macro true: isGlobal = true;
-            case macro false:
-            default:
-              Context.error('Bool expected', param.pos);
-          }
-          default:
-            Context.error('Invalid attribute option', param.pos);
-        }
-
-        f.kind = FVar(macro:pilot.Style, pilot.dsl.Css.parse(e, forceEmbedding, isGlobal));
-        if (isGlobal) {
-          f.meta.push({
-            name: '@:keep',
-            params: [],
-            pos: f.pos
-          });
-        }
       
       case FFun(_) if (f.meta.exists(m -> initMeta.has(m.name))):
         var name = f.name;

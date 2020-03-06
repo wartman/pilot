@@ -6,24 +6,12 @@ final class Pilot {
   
   public static final document:Document = Document.root;
 
-  macro public static function html(expr) {
-    return pilot.dsl.Markup.parse(expr);
+  macro public static function html(expr, ?options) {
+    return pilot.Html.create(expr, options);
   }
 
-  macro public static function css(expr) {
-    return pilot.dsl.Css.parse(expr);
-  }
-
-  macro public static function globalCss(expr) {
-    return pilot.dsl.Css.parse(expr, false, true);
-  }
-    
-  macro public static function embedCss(expr) {
-    return pilot.dsl.Css.parse(expr, true);
-  }
-
-  macro public static function embedGlobalCss(expr) {
-    return pilot.dsl.Css.parse(expr, true, true);
+  macro public static function css(expr, ?options) {
+    return pilot.Style.create(expr, options);
   }
 
   static final rootNodes:Map<Element, Root> = [];

@@ -8,7 +8,7 @@ class Run {
   static function main() {
     #if (js && !nodejs)
 
-      Pilot.globalCss('
+      Pilot.css('
         body {
           display: flex;
           font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -31,7 +31,7 @@ class Run {
             flex-direction: column;
           }
         }
-      ');
+      ', { global: true });
 
       var exampleRoot = Pilot.document.getElementById('example-root'); 
       Pilot.mount(
