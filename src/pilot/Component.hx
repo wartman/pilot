@@ -237,6 +237,7 @@ class Component {
       
         if (isPlugin) {
           startup.push(macro if (this.$name != null) this.$name.__connect(this));
+          dispose.push(macro if (this.$name != null) this.$name.__disconnect(this));
         }
 
         // TODO:

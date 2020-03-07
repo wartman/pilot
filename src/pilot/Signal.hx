@@ -11,7 +11,6 @@ class Signal<T> {
   }
 
   var subscriptions:Array<SignalSubscription<T>> = [];
-  var isDispatching:Bool = false;
 
   public function new() {}
 
@@ -24,39 +23,34 @@ class Signal<T> {
   }
 
   function __add(listener:SignalListener<T>, once:Bool) {
-    if (isDispatching) {
-      throw 'Cannot add a listener inside a Signal that is dispatching.';
-    }
     var sub = new SignalSubscription(listener, this, once);
     subscriptions.push(sub);
     return sub;
   }
 
   public function remove(listener:SignalListener<T>) {
-    if (isDispatching) {
-      throw 'Cannot remove a listener inside a Signal that is dispatching.';
-    }
     subscriptions = subscriptions.filter(s -> s.listener != listener);
   }
 
   public function dispatch(data:T) {
-    if (isDispatching) {
-      throw 'Already dispatching Signal';
-    }
-    isDispatching = true;
     if (subscriptions.length == 0) return;
     for (s in subscriptions) s.invoke(data);
     subscriptions = subscriptions.filter(s -> !s.onlyOnce);
-    isDispatching = false;
   }
 
   public function enqueue(data:T) {
+    var cbs = subscriptions.copy();
+    subscriptions = [];
+    function handle() {
+      for (s in cbs) s.invoke(data);
+      subscriptions = cbs.filter(s -> !s.onlyOnce).concat(subscriptions);
+    }
     #if js
       if (hasRaf)
-        js.Browser.window.requestAnimationFrame(_ -> dispatch(data));
+        js.Browser.window.requestAnimationFrame(_ -> handle());
       else
     #end
-      haxe.Timer.delay(() -> dispatch(data), 10);
+      haxe.Timer.delay(() -> handle(), 10);
   }
 
   public function clear() {
