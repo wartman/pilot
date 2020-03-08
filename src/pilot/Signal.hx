@@ -34,27 +34,20 @@ class Signal<T> {
 
   public function dispatch(data:T) {
     if (subscriptions.length == 0) return;
-    for (s in subscriptions) s.invoke(data);
-    subscriptions = subscriptions.filter(s -> !s.onlyOnce);
+    for (s in subscriptions.slice(0, subscriptions.length)) s.invoke(data);
   }
 
   public function enqueue(data:T) {
-    var cbs = subscriptions.copy();
-    subscriptions = [];
-    function handle() {
-      for (s in cbs) s.invoke(data);
-      subscriptions = cbs.filter(s -> !s.onlyOnce).concat(subscriptions);
-    }
     #if js
       if (hasRaf)
-        js.Browser.window.requestAnimationFrame(_ -> handle());
+        js.Browser.window.requestAnimationFrame(_ -> dispatch(data));
       else
     #end
-      haxe.Timer.delay(() -> handle(), 10);
+      haxe.Timer.delay(() -> dispatch(data), 10);
   }
 
   public function clear() {
-    for (s in subscriptions) s.cancel();
+    for (s in subscriptions.slice(0, subscriptions.length)) s.cancel();
   }
 
 }
@@ -78,6 +71,7 @@ abstract SignalSubscription<T>({
 
   public inline function invoke(data:T) {
     this.listener(data);
+    if (this.onlyOnce) cancel();
   }
 
   public inline function cancel() {

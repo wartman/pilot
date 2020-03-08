@@ -15,6 +15,7 @@ class Component extends BaseWire<Dynamic> {
   var __parent:Wire<Dynamic>;
   var __initialized:Bool = false;
   var __nodes:Array<Node> = [];
+  var __updating:Bool = false;
   var __pendingAttributes:{};
   final __onInit:Signal<Component> = new Signal();
   final __onEffect:Signal<Component> = new Signal();
@@ -41,6 +42,9 @@ class Component extends BaseWire<Dynamic> {
       }
     }
 
+    if (__updating) return;
+
+    __updating = true;
     __context.enqueueRender(() -> {
       var later = Signal.createVoidSignal();
       var cursor = __getCursor();
@@ -48,6 +52,7 @@ class Component extends BaseWire<Dynamic> {
       __update(__pendingAttributes, [], later);
       __setChildren(__nodes, cursor, previousCount);
       __pendingAttributes = __attrs;
+      __updating = false;
       later.enqueue(null);
     });
   }
@@ -71,12 +76,16 @@ class Component extends BaseWire<Dynamic> {
     if (__shouldRender(attrs)) {
       // Note: Components do not update the Dom directly unless you call
       //       `Component#__requestUpdate`.
-      __nodes = __updateChildren(switch render().flatten() {
-        case null | VFragment([]): [ VNode.VNative(TextType, '', []) ];
-        case VFragment(children): children;
-        case vn: [ vn ];
-      }, later);
+      __nodes = __updateChildren(__getRendered(), later);
       later.addOnce(_ -> __onEffect.dispatch(this));
+    }
+  }
+
+  function __getRendered():Array<VNode> {
+    return switch render().flatten() {
+      case null | VFragment([]): [ VNode.VNative(TextType, '', []) ];
+      case VFragment(children): children;
+      case vn: [ vn ];
     }
   }
 
@@ -361,6 +370,12 @@ class Component {
       }
       guardCheck = macro if (${guardCheck}) return true else return false;
     }
+    var initInits = startup.length > 0
+      ? macro __onInit.add(_ -> { $b{startup}; })
+      : macro null;
+    var initEffects = effect.length > 0
+      ? macro __onEffect.add(_ -> { $b{effect}; })
+      : macro null;
 
     add((macro class {
 
@@ -374,12 +389,8 @@ class Component {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
-        __onInit.add(_ -> {
-          $b{startup};
-        });
-        __onEffect.add(_ -> {
-          $b{effect};
-        });
+        ${initInits};
+        ${initEffects};
       }
 
       override function __updateAttributes(__props:Dynamic) {

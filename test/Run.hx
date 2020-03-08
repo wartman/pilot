@@ -43,26 +43,23 @@ class Run {
       var reporter = new HtmlReporter(new Root(root));
       var runner = new Runner(reporter);
 
-      runner.add(new pilot.ComponentTest());
-      runner.add(new pilot.ProviderTest());
-      runner.add(new pilot.MarkupTest());
-      runner.add(new pilot.PluginTest());
-
-      runner.run();
-
     #else
 
       var runner = new Runner(new medic.DefaultReporter({
         trackProgress: true,
         verbose: true
       }));
-      runner.add(new pilot.ComponentTest());
-      runner.add(new pilot.ProviderTest());
-      runner.add(new pilot.MarkupTest());
-      runner.add(new pilot.PluginTest());
-      runner.run();
-
+    
     #end
+    
+    runner.add(new pilot.ComponentTest());
+    runner.add(new pilot.ProviderTest());
+    runner.add(new pilot.MarkupTest());
+    runner.add(new pilot.PluginTest());
+    runner.add(new pilot.SignalTest());
+
+    runner.run();
+
   }
 
 }
