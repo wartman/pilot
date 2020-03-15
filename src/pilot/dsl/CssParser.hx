@@ -459,6 +459,20 @@ class CssParser extends Parser<Array<CssExpr>> {
   }
 
   function parseExpr() {
+    return parseUnOp();
+  }
+
+  function parseUnOp() {
+    var start = position;
+    if (matchAny(UnOp.all)) {
+      var op:UnOp = previous();
+      whitespace();
+      var right = parseBinOp();
+      return {
+        value: VUnOp(op, right),
+        pos: getPos(start, position)
+      }
+    }
     return parseBinOp();
   }
 

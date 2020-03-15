@@ -4,10 +4,14 @@ import pilot.dom.*;
 
 using pilot.DiffingTools;
 
-class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
+class NodeWire<Attrs:{}> implements Wire<Attrs> {
 
   final node:Node;
   final isSvg:Bool;
+  var attrs:Attrs;
+  var types:Map<WireType<Dynamic>, WireRegistry> = [];
+  var childList:Array<Wire<Dynamic>> = [];
+  var context:Context;
 
   public function new(
     node, 
@@ -17,44 +21,64 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
   ) {
     this.isSvg = isSvg;
     this.node = node;
-    __context = context;
-    __updateAttributes(initialAttrs);
+    this.context = context;
+    updateAttributes(initialAttrs);
   }
 
   public function hydrate(context:Context) {
-    if (__childList.length > 0) return;
+    if (childList.length > 0) return;
 
     for (n in node.childNodes) {
       var isSvg = isSvg || n.nodeName == 'svg';
       var type = isSvg ? NodeType.getSvg(n.nodeName) : NodeType.get(n.nodeName);
       var nn = new NodeWire(n, {}, context, isSvg);
-      if (!__types.exists(type)) {
-        __types.set(type, new WireRegistry());
+      if (!types.exists(type)) {
+        types.set(type, new WireRegistry());
       }
-      __types.get(type).put(null, nn);
-      __childList.push(nn);
+      types.get(type).put(null, nn);
+      childList.push(nn);
       nn.hydrate(context);
     }
   }
 
-  override function __getNodes():Array<Node> {
+  public function __getNodes():Array<Node> {
     return [ node ];
   }
 
-  override function __update(
+  public function __getChildList():Array<Wire<Dynamic>> {
+    return childList;
+  }
+  
+  public function __setChildList(childList:Array<Wire<Dynamic>>):Void {
+    this.childList = childList;
+  }
+
+  public function __getWireTypeRegistry():Map<WireType<Dynamic>, WireRegistry> {
+    return types;
+  }
+
+  public function __setWireTypeRegistry(types:Map<WireType<Dynamic>, WireRegistry>):Void {
+    this.types = types;
+  }
+
+  public function __setup(parent:Wire<Dynamic>, context:Context):Void {
+    this.context = context;
+  }
+  
+  public function __update(
     attrs:Attrs,
     children:Array<VNode>,
     later:Signal<Any>
   ) {
     var previousCount = node.childNodes.length;
-    var cursor = __getCursor();
-    __updateAttributes(attrs);
-    var nextNodes = __updateChildren(children, later);
-    __setChildren(nextNodes, cursor, previousCount);
+    var cursor = getCursor();
+    updateAttributes(attrs);
+    var nextNodes = this.diffChildren(context, children, later);
+    cursor.sync(nextNodes, previousCount);
   }
 
-  override function __updateAttributes(attrs:Attrs) {
-    var previous:Attrs = __attrs;
+  function updateAttributes(attrs:Attrs) {
+    var previous:Attrs = this.attrs;
     if (previous == null) previous = cast {};
 
     #if js
@@ -63,8 +87,12 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
       syncNodeProperty(node, 'checked', previous);
     #end
 
-    __attrs = attrs;
+    this.attrs = attrs;
     previous.diffObject(attrs, applyAttribute);
+  }
+
+  public function __dispose() {
+    this.context = null;
   }
 
   #if js
@@ -75,7 +103,7 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
     }
   #end
   
-  override function __getCursor():Cursor {
+  function getCursor():Cursor {
     return new Cursor(node, node.firstChild);
   }
 
@@ -134,6 +162,5 @@ class NodeWire<Attrs:{}> extends BaseWire<Attrs> {
     }
 
   #end
-
 
 }

@@ -14,8 +14,20 @@ class TextWire implements Wire<String> {
     return [ node ];
   }
 
-  public function __getCursor():Cursor {
+  public function __getChildList():Array<Wire<Dynamic>> {
     return null;
+  }
+  
+  public function __setChildList(childList:Array<Wire<Dynamic>>):Void {
+    // noop
+  }
+
+  public function __getWireTypeRegistry():Map<WireType<Dynamic>, WireRegistry> {
+    return null;
+  }
+
+  public function __setWireTypeRegistry(types:Map<WireType<Dynamic>, WireRegistry>):Void {
+    // noop
   }
 
   public function __setup(parent:Wire<Dynamic>, context:Context) {

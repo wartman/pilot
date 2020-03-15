@@ -77,6 +77,8 @@ class CssGenerator {
   function generateValue(value:Value):String {
     return switch value.value {
       case VAtom(value): value;
+      case VUnOp(op, right):
+        return '${op}${generateValue(right)}';
       case VBinOp(op, left, right):
         return '${generateValue(left)} ${op} ${generateValue(right)}';
       case VCode(v):

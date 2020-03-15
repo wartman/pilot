@@ -5,6 +5,12 @@ typedef CssExpr = {
   pos:DslPosition
 }
 
+enum abstract UnOp(String) from String to String {
+  var UnOpSubt = '-';
+
+  public static final all:Array<String> = [ UnOpSubt ];
+}
+
 enum abstract BinOp(String) from String to String {
   var OpAdd = '+';
   var OpSubt = '-';
@@ -39,6 +45,7 @@ enum ValueDef {
   VString(data:String);
   VColor(data:String);
   VCall(name:String, args:Array<Value>);
+  VUnOp(op:UnOp, right:Value);
   VBinOp(op:BinOp, left:Value, right:Value);
   VCompound(values:Array<Value>);
   VList(left:Value, right:Value);

@@ -39,4 +39,25 @@ class Cursor {
     return current;
   }
 
+  public function sync(
+    nextNodes:Array<Node>, 
+    previousCount:Int
+  ) {
+    var insertedCount = 0;
+    var currentCount = 0;
+
+    for (node in nextNodes) {
+      currentCount++;
+      if (getCurrent() == node) {
+        step();
+      } else if (insert(node)) {
+        insertedCount++;
+      }
+    }
+
+    var deleteCount = previousCount + insertedCount - currentCount;
+
+    for (_ in 0...deleteCount) if (!remove()) break;
+  }
+
 }

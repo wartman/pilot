@@ -9,8 +9,12 @@ using pilot.DiffingTools;
 
 @:allow(pilot.Plugin)
 @:autoBuild(pilot.Component.build())
-class Component extends BaseWire<Dynamic> {
+class Component implements Wire<Dynamic> {
   
+  var __attrs:Dynamic;
+  var __types:Map<WireType<Dynamic>, WireRegistry> = [];
+  var __childList:Array<Wire<Dynamic>> = [];
+  var __context:Context;
   var __alive:Bool = false;
   var __parent:Wire<Dynamic>;
   var __initialized:Bool = false;
@@ -50,14 +54,30 @@ class Component extends BaseWire<Dynamic> {
       var cursor = __getCursor();
       var previousCount = __nodes.length;
       __update(__pendingAttributes, [], later);
-      __setChildren(__nodes, cursor, previousCount);
+      cursor.sync(__nodes, previousCount);
       __pendingAttributes = __attrs;
       __updating = false;
       later.enqueue(null);
     });
   }
 
-  override function __update(
+  public function __setup(parent:Wire<Dynamic>, context:Context) {
+    __alive = true;
+    __parent = parent;
+    __context = context;
+  }
+
+  public function __dispose() {
+    for (c in __childList) c.__dispose();
+    __childList = null;
+    __alive = false;
+    __parent = null;
+    __types = null;
+    __onDisposal.dispatch(this);
+    __context = null;
+  }
+
+  public function __update(
     attrs:Dynamic,
     children:Array<VNode>,
     later:Signal<Any>
@@ -76,9 +96,13 @@ class Component extends BaseWire<Dynamic> {
     if (__shouldRender(attrs)) {
       // Note: Components do not update the Dom directly unless you call
       //       `Component#__requestUpdate`.
-      __nodes = __updateChildren(__getRendered(), later);
+      __nodes = this.diffChildren(__context, __getRendered(), later);
       later.addOnce(_ -> __onEffect.dispatch(this));
     }
+  }
+  
+  function __updateAttributes(attrs:Dynamic) {
+    throw 'not implemented';
   }
 
   function __getRendered():Array<VNode> {
@@ -89,29 +113,29 @@ class Component extends BaseWire<Dynamic> {
     }
   }
 
-  override function __setup(parent:Wire<Dynamic>, context:Context) {
-    __alive = true;
-    __parent = parent;
-    __context = context;
-  }
-
-  override function __getNodes():Array<Node> {
+  public function __getNodes():Array<Node> {
     return __nodes;
   }
 
-  override function __getCursor():Cursor {
+  function __getCursor():Cursor {
     var first = __nodes[0];
     return new Cursor(first.parentNode, first);
   }
 
-  override function __dispose() {
-    for (c in __childList) c.__dispose();
-    __childList = null;
-    __alive = false;
-    __parent = null;
-    __types = null;
-    __onDisposal.dispatch(this);
-    super.__dispose();
+  public function __getChildList():Array<Wire<Dynamic>> {
+    return __childList;
+  }
+  
+  public function __setChildList(childList:Array<Wire<Dynamic>>):Void {
+    __childList = childList;
+  }
+
+  public function __getWireTypeRegistry():Map<WireType<Dynamic>, WireRegistry> {
+    return __types;
+  }
+
+  public function __setWireTypeRegistry(types:Map<WireType<Dynamic>, WireRegistry>):Void {
+    __types = types;
   }
 
   function __shouldRender(attrs:Dynamic):Bool {
