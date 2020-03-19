@@ -3,7 +3,7 @@ package pilot;
 final class Provider<T> extends Component {
 
   @:attribute var id:String;
-  @:attribute var value:Any;
+  @:attribute var value:T;
   @:attribute var children:Children;
 
   override function render() return html(<>{children}</>);

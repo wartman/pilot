@@ -170,6 +170,7 @@ class Component {
     return pilot.Style.create(e, options);
   }
 
+  // Todo: this build function should be refactored and cleaned up.
   public static function build() {
     var cls = Context.getLocalClass().get();
     var clsTp:TypePath = { pack: cls.pack, name: cls.name };
@@ -209,10 +210,6 @@ class Component {
         var isState = false;
         var guardName = '__guard_${name}';
         var guard:Expr = macro __a != __b;
-        var isPlugin = switch t.toString() {
-          case 'Any' | 'Dynamic': false;
-          default: Context.unify(t.toType(), Context.getType('pilot.Plugin'));
-        }
 
         for (param in params) switch param {
           case macro state: isState = true;
@@ -239,10 +236,6 @@ class Component {
           default:
             Context.error('Invalid attribute option', param.pos);
         }
-
-        if (isPlugin && isState) {
-          Context.error('Plugins cannot be stateful', f.pos);
-        }
         
         f.kind = isState 
           ? FProp('get', 'set', t, null)
@@ -267,34 +260,17 @@ class Component {
           meta: [ { name: ':optional', pos: f.pos } ],
           pos: (macro null).pos
         });
-      
-        if (isPlugin) {
-          startup.push(macro if (this.$name != null) this.$name.__connect(this));
-          dispose.push(macro if (this.$name != null) this.$name.__disconnect(this));
-        }
 
         // TODO:
         // Guards should happen in `__update` for all attributes, and we should ONLY render if 
         // attributes change?
 
-        if (isPlugin) {
-          attributeUpdates.push(macro @:pos(f.pos) {
-            if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
-              case [ a, b ] if (!this.$guardName(a, b)):
-              case [ _, b ]:
-                __attrs.$name.__disconnect(this);
-                __attrs.$name = b;
-                __attrs.$name.__connect(this);
-            }
-          });
-        } else {
-          attributeUpdates.push(macro @:pos(f.pos) {
-            if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
-              case [ a, b ] if (!this.$guardName(a, b)):
-              case [ _, b ]: __attrs.$name = b;
-            }
-          });
-        }
+        attributeUpdates.push(macro @:pos(f.pos) {
+          if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
+            case [ a, b ] if (!this.$guardName(a, b)):
+            case [ _, b ]: __attrs.$name = b;
+          }
+        });
 
         add((macro class {
 
@@ -400,12 +376,28 @@ class Component {
     var initEffects = effect.length > 0
       ? macro __onEffect.add(_ -> { $b{effect}; })
       : macro null;
+      
+    // Note: We do this somewhat inelegant thing here as we need
+    // to give the `__create` function any type params the Component
+    // might expect. There might be a better way of doing this!
+    add([ {
+      name: '__create',
+      pos: (macro null).pos,
+      access: [ APublic, AStatic ],
+      kind: FFun({
+        params: cls.params.length > 0
+          ? [ for (p in cls.params) { name: p.name } ]
+          : [],
+        expr: macro return new $clsTp(props, context),
+        args: [
+          { name: 'props', type: macro:$propType },
+          { name: 'context', type: macro:pilot.Context }
+        ],
+        ret: null
+      })
+    } ]);
 
     add((macro class {
-
-      public static function __create(props:$propType, context:pilot.Context) {
-        return new $clsTp(props, context);
-      } 
       
       public function new(__props:$propType, __context:pilot.Context) {
         this.__context = __context;

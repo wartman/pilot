@@ -102,6 +102,19 @@ class ComponentTest implements TestCase {
     cb.later();
   }
 
+  @test('Component type params')
+  public function testParams() {
+    Pilot.html(<>
+      <ComponentWithTypeParam
+        build={data -> <p>{data}</p>}
+        data="foo"
+      />
+    </>)
+      .render()
+      .toString()
+      .equals('<div><p>foo</p></div>');
+  }
+
 }
 
 class ComponentTester extends Component {
@@ -149,5 +162,14 @@ class GuardedRender extends Component {
       <div>{value + renderCount}</div>
     );
   }
+
+}
+
+class ComponentWithTypeParam<T> extends Component {
+
+  @:attribute var data:T;
+  @:attribute var build:(data:T)->VNode;
+
+  override function render() return html(<>{build(data)}</>);
 
 }
