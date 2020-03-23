@@ -50,6 +50,7 @@ class Component implements Wire<Dynamic> {
 
     __updating = true;
     __context.enqueueRender(() -> {
+      if (!__alive) return;
       var later = Signal.createVoidSignal();
       var cursor = __getCursor();
       var previousCount = __nodes.length;
@@ -113,6 +114,14 @@ class Component implements Wire<Dynamic> {
     }
   }
 
+  // Note: This system does not work. If any child component self-updates,
+  //       this `__nodes` array will not change. If the child component
+  //       has more nodes than before the Differ will not remove all the
+  //       nodes we need to (or will remove too many). This basically means that 
+  //       Pilot doesn't work. Instead, we need to attach metadata to the
+  //       NODE, not the wire -- just like all other frameworks. In other
+  //       words, we need to do what Coconut does, which means this whole
+  //       thing is a waste of time.
   public function __getNodes():Array<Node> {
     return __nodes;
   }

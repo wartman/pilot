@@ -38,9 +38,10 @@ class DiffingTools {
     children:Array<VNode>,
     later:Signal<Any>
   ):Array<Node> {
+    var childList = parent.__getChildList();
+    var nodes:Array<Node> = [];
     var newChildList:Array<Wire<Dynamic>> = [];
     var newTypes:Map<WireType<Dynamic>, WireRegistry> = [];
-    var nodes:Array<Node> = [];
     var resolve = resolveChildNode.bind(parent);
 
     function add(key:Key, type:WireType<Dynamic>, wire:Wire<Dynamic>) {
@@ -108,8 +109,6 @@ class DiffingTools {
     }
 
     process(children);
-
-    var childList = parent.__getChildList();
 
     if (childList != null && childList.length > 0) {
       for (wire in childList) {
