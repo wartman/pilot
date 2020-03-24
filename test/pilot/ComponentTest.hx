@@ -98,10 +98,6 @@ class ComponentTest implements TestCase {
     });
   }
 
-  inline function wait(cb:()->Void) {
-    cb.later();
-  }
-
   @test('Component type params')
   public function testParams() {
     Pilot.html(<>
@@ -113,6 +109,29 @@ class ComponentTest implements TestCase {
       .render()
       .toString()
       .equals('<div><p>foo</p></div>');
+  }
+
+  @test('Components correctly list the number of their child nodes when children update')
+  @async
+  public function testComponentChildren(done) {
+    var node = Document.root.createElement('div');
+    var root = new Root(node);
+    var parent = new HasChildComponent({}, root.getContext());
+    root.update(Pilot.html(<>{parent}</>));
+    parent.__getNodes().length.equals(1);
+    parent.child.setNumChildren(3);
+    wait(() -> {
+      parent.__getNodes().length.equals(3);
+      parent.child.setNumChildren(1);
+      wait(() -> {
+        parent.__getNodes().length.equals(1);
+        done();
+      });
+    });
+  }
+
+  inline function wait(cb:()->Void) {
+    cb.later();
   }
 
 }
@@ -171,5 +190,33 @@ class ComponentWithTypeParam<T> extends Component {
   @:attribute var build:(data:T)->VNode;
 
   override function render() return html(<>{build(data)}</>);
+
+}
+
+class HasChildComponent extends Component {
+
+  public var child:ChildComponent;
+
+  override function render() {
+    child = new ChildComponent({ numChildren: 1 }, __context);
+    return html(<>
+      {child}
+    </>);
+  }
+
+}
+
+class ChildComponent extends Component {
+
+  @:attribute var numChildren:Int;
+
+  @:update
+  public function setNumChildren(num:Int) {
+    return { numChildren: num };
+  }
+
+  override function render() return html(<>
+    @for (i in 0...numChildren) <p>{i}</p>
+  </>);
 
 }

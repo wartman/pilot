@@ -18,7 +18,7 @@ class Component implements Wire<Dynamic> {
   var __alive:Bool = false;
   var __parent:Wire<Dynamic>;
   var __initialized:Bool = false;
-  var __nodes:Array<Node> = [];
+  // var __nodes:Array<Node> = [];
   var __updating:Bool = false;
   var __pendingAttributes:{};
   final __onInit:Signal<Component> = new Signal();
@@ -53,9 +53,9 @@ class Component implements Wire<Dynamic> {
       if (!__alive) return;
       var later = Signal.createVoidSignal();
       var cursor = __getCursor();
-      var previousCount = __nodes.length;
+      var previousCount = __getNodes().length;
       __update(__pendingAttributes, [], later);
-      cursor.sync(__nodes, previousCount);
+      cursor.sync(__getNodes(), previousCount);
       __pendingAttributes = __attrs;
       __updating = false;
       later.enqueue(null);
@@ -97,7 +97,7 @@ class Component implements Wire<Dynamic> {
     if (__shouldRender(attrs)) {
       // Note: Components do not update the Dom directly unless you call
       //       `Component#__requestUpdate`.
-      __nodes = this.diffChildren(__context, __getRendered(), later);
+      this.diffChildren(__context, __getRendered(), later);
       later.addOnce(_ -> __onEffect.dispatch(this));
     }
   }
@@ -114,20 +114,16 @@ class Component implements Wire<Dynamic> {
     }
   }
 
-  // Note: This system does not work. If any child component self-updates,
-  //       this `__nodes` array will not change. If the child component
-  //       has more nodes than before the Differ will not remove all the
-  //       nodes we need to (or will remove too many). This basically means that 
-  //       Pilot doesn't work. Instead, we need to attach metadata to the
-  //       NODE, not the wire -- just like all other frameworks. In other
-  //       words, we need to do what Coconut does, which means this whole
-  //       thing is a waste of time.
   public function __getNodes():Array<Node> {
-    return __nodes;
+    var nodes:Array<Node> = [];
+    for (c in __childList) {
+      nodes = nodes.concat(c.__getNodes());
+    }
+    return nodes;
   }
 
   function __getCursor():Cursor {
-    var first = __nodes[0];
+    var first = __getNodes()[0];
     return new Cursor(first.parentNode, first);
   }
 
