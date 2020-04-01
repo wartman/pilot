@@ -18,7 +18,6 @@ class Component implements Wire<Dynamic> {
   var __alive:Bool = false;
   var __parent:Wire<Dynamic>;
   var __initialized:Bool = false;
-  // var __nodes:Array<Node> = [];
   var __updating:Bool = false;
   var __pendingAttributes:{};
   final __onInit:Signal<Component> = new Signal();
@@ -183,9 +182,9 @@ class Component {
     var newFields:Array<Field> = [];
     var props:Array<Field> = [];
     var updateProps:Array<Field> = [];
-    var startup:Array<Expr> = [];
     var dispose:Array<Expr> = [];
-    var effect:Array<Expr> = [];
+    var startup:Array<{ priority:Int, expr:Expr }> = [];
+    var effect:Array<{ priority:Int, expr:Expr }> = [];
     var guards:Array<Expr> = [];
     var attributeUpdates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
@@ -304,7 +303,17 @@ class Component {
       
       case FFun(_) if (f.meta.exists(m -> initMeta.has(m.name))):
         var name = f.name;
-        startup.push(macro @:pos(f.pos) this.$name());
+        var priority = 10;
+        var params = f.meta.find(m -> initMeta.has(m.name)).params;
+
+        for (p in params) switch p {
+          case macro priority = ${ { expr: EConst(CInt(v)), pos: pos } }:
+            priority = Std.parseInt(v);
+          default: 
+            Context.error('Invalid init option', p.pos);
+        }
+
+        startup.push({ priority: priority, expr: macro @:pos(f.pos) this.$name() });
 
       case FFun(_) if (f.meta.exists(m -> disposeMeta.has(m.name))):
         var name = f.name;
@@ -314,18 +323,23 @@ class Component {
         var name = f.name;
         var params = f.meta.find(m -> effectMeta.has(m.name)).params;
         var guarded:Expr;
+        var priority = 10;
 
         for (p in params) switch p {
           case macro guard = ${e}:
             guarded = macro @:pos(p.pos) if (${e}) this.$name();
+          case macro priority = ${ { expr: EConst(CInt(v)), pos: _ } }:
+            priority = Std.parseInt(v);
           default: 
             Context.error('Invalid effect option', p.pos);
         }
 
-        if (guarded != null) 
-          effect.push(guarded) 
+        var e = if (guarded != null) 
+          guarded
         else 
-          effect.push(macro @:pos(f.pos) this.$name());
+          macro @:pos(f.pos) this.$name();
+
+        effect.push({ priority: priority, expr: e });
 
       case FFun(func) if (f.meta.exists(m -> guardMeta.has(m.name))):
         var name = f.name;
@@ -375,11 +389,25 @@ class Component {
       }
       guardCheck = macro if (${guardCheck}) return true else return false;
     }
-    var initInits = startup.length > 0
-      ? macro __onInit.add(_ -> { $b{startup}; })
+
+    startup.sort((a, b) -> {
+      return if (a.priority < b.priority) -1
+      else if (a.priority > b.priority) 1
+      else 0;
+    });
+    effect.sort((a, b) -> {
+      return if (a.priority < b.priority) -1
+      else if (a.priority > b.priority) 1
+      else 0;
+    });
+    var startupExprs = startup.map(v -> v.expr);
+    var effectExprs = effect.map(v -> v.expr);
+    
+    var initInits = startupExprs.length > 0
+      ? macro __onInit.add(_ -> { $b{startupExprs}; })
       : macro null;
-    var initEffects = effect.length > 0
-      ? macro __onEffect.add(_ -> { $b{effect}; })
+    var initEffects = effectExprs.length > 0
+      ? macro __onEffect.add(_ -> { $b{effectExprs}; })
       : macro null;
       
     // Note: We do this somewhat inelegant thing here as we need

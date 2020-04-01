@@ -94,6 +94,7 @@ class ComponentTest implements TestCase {
     
     wait(() -> {
       comp.effectCount.equals(2);
+      comp.priorityEffects.equals('first|second|last');
       done();
     });
   }
@@ -158,6 +159,7 @@ class GuardedRender extends Component {
 
   public var renderCount:Int = 0;
   public var effectCount:Int = 0;
+  public var priorityEffects:String;
 
   @:attribute(
     state = true, 
@@ -170,9 +172,24 @@ class GuardedRender extends Component {
     return !(blockRender || attrs.blockRender);
   }
 
-  @:effect
+  @:effect( priority = 1 )
   public function testEffect() {
     effectCount++;
+  }
+
+  @:effect( priority = 2 )
+  public function shouldComeFirst() {
+    priorityEffects = 'first';
+  }
+
+  @:effect( priority = 3 )
+  public function shouldComeNext() {
+    priorityEffects += '|second';
+  }
+
+  @:effect( priority = 4 )
+  public function shouldComeLast() {
+    priorityEffects += '|last';
   }
 
   override function render() {
