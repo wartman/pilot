@@ -1,5 +1,12 @@
 package pilot;
 
+// // Todo: integrate this with the pilot.Engine.
+// // See also notes/css
+// interface StyleManager {
+//   public function exists(id:String):Bool;
+//   public function define(id:String, factory:()->String):Style;
+// }
+
 #if (js && !nodejs)
 
 import js.html.CSSStyleSheet;

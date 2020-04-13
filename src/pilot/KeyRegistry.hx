@@ -1,13 +1,13 @@
 package pilot;
 
-class KeyRegistry implements Registry<Key, Wire<Dynamic>> {
+class KeyRegistry<Node:{}> implements Registry<Key, Wire<Node, Dynamic>> {
   
-  var strings:Map<String, Wire<Dynamic>>;
-  var objects:Map<{}, Wire<Dynamic>>;
+  var strings:Map<String, Wire<Node, Dynamic>>;
+  var objects:Map<{}, Wire<Node, Dynamic>>;
 
   public function new() {}
 
-  public function put(?key:Key, value:Wire<Dynamic>):Void {
+  public function put(?key:Key, value:Wire<Node, Dynamic>):Void {
     if (key == null) {
       throw 'Key cannot be null';
     } if (key.isString()) {
@@ -19,9 +19,9 @@ class KeyRegistry implements Registry<Key, Wire<Dynamic>> {
     }
   }
 
-  public function pull(?key:Key):Wire<Dynamic> {
+  public function pull(?key:Key):Wire<Node, Dynamic> {
     if (key == null) return null;
-    var map:Map<Dynamic, Wire<Dynamic>> = if (key.isString()) strings else objects;
+    var map:Map<Dynamic, Wire<Node, Dynamic>> = if (key.isString()) strings else objects;
     if (map == null) return null;
     var out = map.get(key);
     map.remove(key);
@@ -29,9 +29,14 @@ class KeyRegistry implements Registry<Key, Wire<Dynamic>> {
   }
 
   public function exists(key:Key):Bool {
-    var map:Map<Dynamic, Wire<Dynamic>> = if (key.isString()) strings else objects;
+    var map:Map<Dynamic, Wire<Node, Dynamic>> = if (key.isString()) strings else objects;
     if (map == null) return false;
     return map.exists(key);
+  }
+
+  public function each(cb:(value:Wire<Node, Dynamic>)->Void) {
+    if (strings != null) for (v in strings) cb(v);
+    if (objects != null) for (v in objects) cb(v);
   }
 
 }

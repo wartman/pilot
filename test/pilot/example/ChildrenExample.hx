@@ -8,6 +8,8 @@ class ChildrenExample extends Component {
 
   override function render() return html(
     <ExampleContainer title="Mutable Children">
+    <button onClick={_ -> addItem('thing!')}>+</button>
+    <button onClick={_ -> removeItem()}>-</button>
       <ChildList items={items} />
       <button onClick={_ -> addItem('thing!')}>+</button>
       <button onClick={_ -> removeItem()}>-</button>

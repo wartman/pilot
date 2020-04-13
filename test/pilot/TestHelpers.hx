@@ -1,19 +1,24 @@
 package pilot;
 
-import pilot.dom.*;
-
 class TestHelpers {
 
+  public static function createContext() {
+    #if (js && !nodejs)
+      return new Context(new pilot.platform.dom.DomEngine());
+    #else
+      return new Context(new pilot.platform.server.ServerEngine());
+    #end
+  }
+
   public static function render(vn:VNode) {
-    var root = new Root(Document.root.createElement('div'));
+    var context = createContext();
+    var root = new Root(context.engine.createNode('div'), context);
     root.update(vn);
     return root;
   }
 
   public static function later(cb:()->Void) {
-    var signal = Signal.createVoidSignal();
-    signal.addOnce(_ -> cb());
-    signal.enqueue(null);
+    Helpers.later(cb);
   }
 
 }

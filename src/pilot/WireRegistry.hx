@@ -1,13 +1,13 @@
 package pilot;
 
-class WireRegistry implements Registry<Key, Wire<Dynamic>> {
+class WireRegistry<Node:{}> implements Registry<Key, Wire<Node, Dynamic>> {
 
-  var keyed:KeyRegistry;
-  var unkeyed:Array<Wire<Dynamic>>;
+  var keyed:KeyRegistry<Node>;
+  var unkeyed:Array<Wire<Node, Dynamic>>;
 
   public function new() {}
 
-  public function put(?key:Key, value:Wire<Dynamic>):Void {
+  public function put(?key:Key, value:Wire<Node, Dynamic>):Void {
     if (key == null) {
       if (unkeyed == null) unkeyed = [];
       unkeyed.push(value);
@@ -17,7 +17,7 @@ class WireRegistry implements Registry<Key, Wire<Dynamic>> {
     }
   }
 
-  public function pull(?key:Key):Wire<Dynamic> {
+  public function pull(?key:Key):Wire<Node, Dynamic> {
     if (key == null) {
       return if (unkeyed != null) unkeyed.shift() else null;
     } else {
@@ -27,6 +27,11 @@ class WireRegistry implements Registry<Key, Wire<Dynamic>> {
 
   public function exists(key:Key):Bool {
     return if (keyed == null) false else keyed.exists(key);
+  }
+
+  public inline function each(cb:(wire:Wire<Node, Dynamic>)->Void) {
+    if (keyed != null) keyed.each(cb);
+    if (unkeyed != null) for (k in unkeyed) cb(k);
   }
 
 }

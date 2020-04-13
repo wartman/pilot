@@ -7,9 +7,9 @@
     "contributors": [
         "wartman"
     ],
-    "releasenote": "Added signals and a plugin API, removed `Attribute Macros`, simpler Style API",
+    "releasenote": "Major refactor",
     "classPath": "src",
-    "version": "0.2.1",
+    "version": "0.3.0",
     "url": "https://github.com/wartman/pilot",
     "dependencies": {}
 }

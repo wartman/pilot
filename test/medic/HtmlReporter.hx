@@ -4,12 +4,12 @@ import pilot.Root;
 import pilot.Component;
 import medic.ui.*;
 
-class HtmlReporter implements Reporter {
+class HtmlReporter<Node:{}> implements Reporter {
 
-  final root:Root;
+  final root:Root<Node>;
   final infos:Array<TestInfo> = [];
 
-  public function new(root:Root) {
+  public function new(root:Root<Node>) {
     this.root = root;
     render();
   }

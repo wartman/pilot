@@ -2,29 +2,22 @@ package pilot;
 
 #if !macro
 
-import pilot.dom.Node;
-
-using Reflect;
-using pilot.DiffingTools;
-
-@:allow(pilot.Plugin)
+// Todo: currently, the way we check `__shouldRender` is really
+//       inconsitant and a bit hard to follow. Reconsider when
+//       it is called.
 @:autoBuild(pilot.Component.build())
-class Component implements Wire<Dynamic> {
+class Component implements Wire<Dynamic, Dynamic> {
   
-  var __attrs:Dynamic;
-  var __types:Map<WireType<Dynamic>, WireRegistry> = [];
-  var __childList:Array<Wire<Dynamic>> = [];
-  var __context:Context;
   var __alive:Bool = false;
-  var __parent:Wire<Dynamic>;
-  var __initialized:Bool = false;
+  var __inserted:Bool = false;
+  var __dirty:Bool = false;
   var __updating:Bool = false;
-  var __pendingAttributes:{};
-  final __onInit:Signal<Component> = new Signal();
-  final __onEffect:Signal<Component> = new Signal();
-  final __onDisposal:Signal<Component> = new Signal();
+  var __cache:WireCache<Dynamic>;
+  var __context:Context<Dynamic>;
+  var __parent:Component;
+  var __pendingChildren:Array<Component> = [];
 
-  function render():VNode {
+  public function render():VNode {
     return null;
   }
 
@@ -32,139 +25,172 @@ class Component implements Wire<Dynamic> {
 
   macro function css(e, ?options);
 
-  public function __requestUpdate(nextAttrs:Dynamic) {
-    if (!__alive || __context == null) {
-      throw 'Cannot update a component that has not been inserted';
-    }
-
-    if (__pendingAttributes == null) {
-      __pendingAttributes = nextAttrs;
-    } else {
-      for (field in nextAttrs.fields()) {
-        __pendingAttributes.setField(field, nextAttrs.field(field));
-      }
-    }
-
-    if (__updating) return;
-
-    __updating = true;
-    __context.enqueueRender(() -> {
-      if (!__alive) return;
-      var later = Signal.createVoidSignal();
-      var cursor = __getCursor();
-      var previousCount = __getNodes().length;
-      __update(__pendingAttributes, [], later);
-      cursor.sync(__getNodes(), previousCount);
-      __pendingAttributes = __attrs;
-      __updating = false;
-      later.enqueue(null);
-    });
-  }
-
-  public function __setup(parent:Wire<Dynamic>, context:Context) {
-    __alive = true;
-    __parent = parent;
-    __context = context;
-  }
-
-  public function __dispose() {
-    for (c in __childList) c.__dispose();
-    __childList = null;
-    __alive = false;
-    __parent = null;
-    __types = null;
-    __onDisposal.dispatch(this);
-    __context = null;
+  public function __getNodes():Array<Dynamic> {
+    var nodes:Array<Dynamic> = [];
+    __cache.each(node -> nodes.push(node));
+    return nodes;
   }
 
   public function __update(
     attrs:Dynamic,
-    children:Array<VNode>,
-    later:Signal<Any>
+    ?_:Array<VNode>,
+    context:Context<Dynamic>,
+    parent:Component
   ) {
     if (!__alive) {
-      throw 'Cannot update a component that has not been inserted';
+      __init();
+      __alive = true;
     }
-
-    __updateAttributes(attrs);
-
-    if (!__initialized) {
-      __initialized = true;
-      __onInit.dispatch(this);
-    }
-
-    if (__shouldRender(attrs)) {
-      // Note: Components do not update the Dom directly unless you call
-      //       `Component#__requestUpdate`.
-      this.diffChildren(__context, __getRendered(), later);
-      later.addOnce(_ -> __onEffect.dispatch(this));
+    __parent = parent;
+    __context = context;
+    if (__cache == null || __shouldRender(attrs)) {
+      __updateAttributes(attrs);
+      __render();
     }
   }
   
-  function __updateAttributes(attrs:Dynamic) {
-    throw 'not implemented';
-  }
-
-  function __getRendered():Array<VNode> {
-    return switch render().flatten() {
-      case null | VFragment([]): [ VNode.VNative(TextType, '', []) ];
-      case VFragment(children): children;
-      case vn: [ vn ];
+  public function __destroy() {
+    __alive = false;
+    __pendingChildren = null;
+    if (__cache != null) for (c in __cache.children) {
+      c.__destroy();
     }
   }
 
-  public function __getNodes():Array<Node> {
-    var nodes:Array<Node> = [];
-    for (c in __childList) {
-      nodes = nodes.concat(c.__getNodes());
+  public function __updateAttributes(_:Dynamic) {
+    throw 'assert';
+  }
+
+  function __render() {
+    if (!__alive) {
+      throw 'Cannot render components that have been destroyed';
     }
-    return nodes;
+
+    __dirty = false;
+
+    __pendingChildren = [];
+
+    var before = __cache;
+    var first:Dynamic = null;
+    var previousCount = 0;
+
+    if (before != null) {
+      before.each(node -> {
+        if (first == null) first = node;
+        previousCount++;
+      });
+    }
+
+    __cache = __context.engine.differ.diff(
+      switch render() {
+        case null | VFragment([]): [ __context.engine.placeholder(this) ];
+        case VFragment(children): children;
+        case node: [ node ];
+      },
+      this,
+      __context,
+      (type, key) -> {
+        if (before == null) return None;
+        if (!before.types.exists(type)) return None;
+        return switch before.types.get(type) {
+          case null: None;
+          case t: switch t.pull(key) {
+            case null: None;
+            case v: Some(v);
+          }
+        }
+      }
+    );
+
+    if (before != null) {
+      for (t in before.types) t.each(wire -> wire.__destroy());
+    }
+
+    if (first != null) __context.engine.differ.setChildren(
+      previousCount,
+      __context.engine.traverseSiblings(first),
+      __cache
+    );
+
+    // todo: this should be passed to the differ and called later
+    //       in a batch AFTER all diffing is completed.
+    this.__effect();
   }
 
-  function __getCursor():Cursor {
-    var first = __getNodes()[0];
-    return new Cursor(first.parentNode, first);
+  function __requestUpdate() {
+    if (__dirty) return;
+
+    if (__parent == null) {
+      __updating = true;
+      Helpers.later(() -> {
+        __render();
+        __updating = false;
+      });
+    } else {
+      __dirty = true;
+      __parent.__enqueuePendingChild(this);
+    }
   }
 
-  public function __getChildList():Array<Wire<Dynamic>> {
-    return __childList;
-  }
-  
-  public function __setChildList(childList:Array<Wire<Dynamic>>):Void {
-    __childList = childList;
+  function __enqueuePendingChild(child:Component) {
+    if (__pendingChildren.indexOf(child) < 0) {
+      __pendingChildren.push(child);
+    }
+    if (__parent != null) {
+      __parent.__enqueuePendingChild(this);
+    } else if (!__updating) {
+      __updating = true;
+      Helpers.later(() -> {
+        __dequeuePendingChildren();
+        __updating = false;
+      });
+    }
   }
 
-  public function __getWireTypeRegistry():Map<WireType<Dynamic>, WireRegistry> {
-    return __types;
+  function __dequeuePendingChildren() {
+    if (__pendingChildren.length == 0) return;
+    var children = __pendingChildren.copy();
+    __pendingChildren = [];
+    for (child in children) {
+      if (child.__alive) {
+        if (child.__dirty) {
+          child.__render();
+        }
+        child.__dequeuePendingChildren();
+      }
+    }
   }
 
-  public function __setWireTypeRegistry(types:Map<WireType<Dynamic>, WireRegistry>):Void {
-    __types = types;
-  }
-
-  function __shouldRender(attrs:Dynamic):Bool {
+  function __shouldRender(_:Dynamic):Bool {
     return true;
+  }
+
+  function __effect() {
+    // noop
+  }
+
+  function __init() {
+    if (__inserted) {
+      throw 'Cannot reuse a Component that has already been inserted';
+    }
+    __inserted = true;
   }
 
 }
 
-#else 
+#else
 
-import haxe.macro.Expr;
 import haxe.macro.Context;
-
-using Lambda;
-using haxe.macro.ComplexTypeTools;
+import haxe.macro.Expr;
+import pilot.builder.ClassBuilder;
+import pilot.builder.AttributeBuilder;
+import pilot.builder.HookBuilder;
 
 class Component {
 
-  static final initMeta = [ ':init', ':initialize' ];
-  static final disposeMeta = [ ':dispose' ];
-  static final effectMeta = [ ':effect' ];
-  static final guardMeta = [ ':guard' ];
-  static final attrsMeta = [ ':attr', ':attribute' ];
-  static final updateMeta = [ ':update' ];
-  static final coreComponent = ':coreComponent';
+  static final ATTRS = '__attrs';
+  static final INCOMING_ATTRS = '__incomingAttrs';
+  static final OPTIONAL_META =  { name: ':optional', pos: (macro null).pos };
 
   static function html(_, e, ?options) {
     return pilot.Html.create(e, options);
@@ -174,213 +200,171 @@ class Component {
     return pilot.Style.create(e, options);
   }
 
-  // Todo: this build function should be refactored and cleaned up.
   public static function build() {
+    var fields = Context.getBuildFields();
     var cls = Context.getLocalClass().get();
     var clsTp:TypePath = { pack: cls.pack, name: cls.name };
-    var fields = Context.getBuildFields();
-    var newFields:Array<Field> = [];
     var props:Array<Field> = [];
     var updateProps:Array<Field> = [];
-    var dispose:Array<Expr> = [];
-    var startup:Array<{ priority:Int, expr:Expr }> = [];
-    var effect:Array<{ priority:Int, expr:Expr }> = [];
-    var guards:Array<Expr> = [];
+    var updates:Array<Expr> = [];
     var attributeUpdates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
+    var builder = new ClassBuilder(fields, cls);
+    var guards:Array<Expr> = [];
+    var initHooks:Array<Hook> = [];
+    var effectHooks:Array<Hook> = [];
+    var disposeHooks:Array<Hook> = [];
 
-    function add(fields:Array<Field>) {
-      newFields = newFields.concat(fields);
+    function addProp(name:String, type:ComplexType, isOptional:Bool) {
+      props.push({
+        name: name,
+        kind: FVar(type, null),
+        access: [ APublic ],
+        meta: isOptional ? [ OPTIONAL_META ] : [],
+        pos: (macro null).pos
+      });
+      updateProps.push({
+        name: name,
+        kind: FVar(type, null),
+        access: [ APublic ],
+        meta: [ OPTIONAL_META ],
+        pos: (macro null).pos
+      });
+      attributeUpdates.push(macro {
+        if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) switch [ $i{ATTRS}.$name, Reflect.field($i{INCOMING_ATTRS}, $v{name}) ] {
+          case [ a, b ] if (a == b):
+          case [ _, b ]: 
+            // __changed++;
+            $i{ATTRS}.$name = b;
+        }
+      });
     }
 
-    // Don't implement core components: these are designed
-    // to provide extra functionality.
-    if (cls.meta.has(coreComponent)) {
-      return fields;
-    }
-    
-    for (f in fields) switch (f.kind) {
-      case FVar(t, e) if (f.meta.exists(m -> attrsMeta.has(m.name))):
-
-        if (f.meta.filter(m -> attrsMeta.has(m.name)).length > 1) {
-          Context.error('More than one `@:attribute` is not allowed per var', f.pos);
-        }
-
-        var name = f.name;
-        var isOptional = e != null || f.meta.exists(m -> m.name == ':optional');
-        var params = f.meta.find(m -> attrsMeta.has(m.name)).params;
-        var getName = 'get_${name}';
-        var setName = 'set_${name}';
-        var isState = false;
-        var guardName = '__guard_${name}';
-        var guard:Expr = macro __a != __b;
-
-        for (param in params) switch param {
-          case macro state: isState = true;
-          case macro state = ${e}: switch e {
-            case macro false: isState = false;
-            case macro true: isState = true;
-            default: 
-              Context.error('Attribute option `state` must be Bool', param.pos);
+    // todo: we can make the AttributeBuilder nicer
+    builder.addFieldBuilder(new AttributeBuilder(
+      expr -> initializers.push(expr),
+      addProp,
+      name -> macro if (__shouldRender({ $name: value })) __requestUpdate(),
+      {
+        makePublic: false,
+        propsName: ATTRS,
+        initArg: INCOMING_ATTRS,
+        updatesArg: INCOMING_ATTRS
+      }
+    ));
+    builder.addFieldBuilder({
+      name: ':update',
+      similarNames: [ 'update', ':udate', ':updat' ],
+      multiple: false,
+      hook: After,
+      options: [],
+      build: (options:{}, builder, field) -> switch field.kind {
+        case FFun(func):
+          if (func.ret != null) {
+            Context.error('@:update functions should not define their return type manually', field.pos);
           }
-          case macro inject = ${injectExpr}:
-            isOptional = true;
-            e = e != null
-              ? macro @:pos(f.pos) __context.get(${injectExpr}, $e)
-              : macro @:pos(f.pos) __context.get(${injectExpr});
-          case macro optional: isOptional = true;
-          case macro guard = ${e}:
-            guard = macro @:pos(e.pos) ${guard} && ${e}(__a, __b);
-          case macro optional = ${e}: switch e {
-            case macro true: isOptional = true;
-            case macro false: isOptional = false;
-            default:
-              Context.error('Attribute option `optional` must be Bool', param.pos);
-          }
-          default:
-            Context.error('Invalid attribute option', param.pos);
-        }
-        
-        f.kind = isState 
-          ? FProp('get', 'set', t, null)
-          : FProp('get', 'never', t, null);
-
-        if (e != null) {
-          initializers.push({
-            field: name,
-            expr: macro __props.$name != null ? __props.$name : $e
-          });
-        } else {
-          initializers.push({
-            field: name,
-            expr: macro __props.$name
-          });
-        }
-
-        updateProps.push({
-          name: name,
-          kind: FVar(t, null),
-          access: [ APublic ],
-          meta: [ { name: ':optional', pos: f.pos } ],
-          pos: (macro null).pos
-        });
-
-        // TODO:
-        // Guards should happen in `__update` for all attributes, and we should ONLY render if 
-        // attributes change?
-
-        attributeUpdates.push(macro @:pos(f.pos) {
-          if (Reflect.hasField(__props, $v{name})) switch [ __attrs.$name, Reflect.field(__props, $v{name}) ] {
-            case [ a, b ] if (!this.$guardName(a, b)):
-            case [ _, b ]: __attrs.$name = b;
-          }
-        });
-
-        add((macro class {
-
-          function $getName() return __attrs.$name;
-          
-          inline function $guardName(__a, __b) return ${guard};
-
-        }).fields);
-
-        if (isState) {
-          add((macro class {
-            function $setName(__v) {
-              if (this.$guardName(__v, __attrs.$name)) __requestUpdate({ $name: __v });
-              return __v;
+          var updatePropsRet = TAnonymous(updateProps);
+          var e = func.expr;
+          func.ret = macro:Void;
+          func.expr = macro {
+            inline function closure():$updatePropsRet ${e};
+            var incoming = closure();
+            if (__shouldRender(incoming)) {
+              __updateAttributes(incoming);
+              __requestUpdate();
             }
-          }).fields);
-        }
+          }
+        default:
+          Context.error('@:update must be used on a method', field.pos);
+      }
+    });
+    builder.addFieldBuilder({
+      name: ':guard',
+      similarNames: [
+        'guard', ':gurad', ':gruad'
+      ],
+      multiple: false,
+      hook: After,
+      options: [],
+      build: (options:{}, builder, field) -> switch field.kind {
+        case FFun(func):
+          var name = field.name;
+          if (func.args.length == 0) {
+            guards.push(macro @:pos(field.pos) this.$name());
+          } else if (func.args.length == 1) {
+            guards.push(macro @:pos(field.pos) this.$name($i{INCOMING_ATTRS}));
+          } else {
+            Context.error('`@:guard` methods must have one or no arguments', field.pos);
+          }
+        default:
+          Context.error('@:guard must be used on a method', field.pos);
+      }
+    });
+    builder.addFieldBuilder(new HookBuilder(
+      ':init',
+      [ 'init', ':initialize' ],
+      hook -> initHooks.push(hook)
+    ));
+    builder.addFieldBuilder(new HookBuilder(
+      ':effect',
+      [ 'effect', ':efect', ':effct' ],
+      hook -> effectHooks.push(hook)
+    ));
+    builder.addFieldBuilder(new HookBuilder(
+      ':dispose',
+      [ 'dispose', ':dispse', ':dispos' ],
+      hook -> disposeHooks.push(hook)
+    ));
 
-        props.push({
-          name: name,
-          kind: FVar(t, null),
-          access: [ APublic ],
-          meta: isOptional ? [ { name: ':optional', pos: f.pos } ] : [],
-          pos: f.pos
-        });
-      
-      case FFun(_) if (f.meta.exists(m -> initMeta.has(m.name))):
-        var name = f.name;
-        var priority = 10;
-        var params = f.meta.find(m -> initMeta.has(m.name)).params;
-
-        for (p in params) switch p {
-          case macro priority = ${ { expr: EConst(CInt(v)), pos: pos } }:
-            priority = Std.parseInt(v);
-          default: 
-            Context.error('Invalid init option', p.pos);
-        }
-
-        startup.push({ priority: priority, expr: macro @:pos(f.pos) this.$name() });
-
-      case FFun(_) if (f.meta.exists(m -> disposeMeta.has(m.name))):
-        var name = f.name;
-        dispose.push(macro @:pos(f.pos) this.$name());
-
-      case FFun(_) if (f.meta.exists(m -> effectMeta.has(m.name))):
-        var name = f.name;
-        var params = f.meta.find(m -> effectMeta.has(m.name)).params;
-        var guarded:Expr;
-        var priority = 10;
-
-        for (p in params) switch p {
-          case macro guard = ${e}:
-            guarded = macro @:pos(p.pos) if (${e}) this.$name();
-          case macro priority = ${ { expr: EConst(CInt(v)), pos: _ } }:
-            priority = Std.parseInt(v);
-          default: 
-            Context.error('Invalid effect option', p.pos);
-        }
-
-        var e = if (guarded != null) 
-          guarded
-        else 
-          macro @:pos(f.pos) this.$name();
-
-        effect.push({ priority: priority, expr: e });
-
-      case FFun(func) if (f.meta.exists(m -> guardMeta.has(m.name))):
-        var name = f.name;
-        var params = f.meta.find(m -> guardMeta.has(m.name)).params;
-        var check:Expr;
-
-        if (params.length != 0) {
-          Context.error('`@:guard` does not have any options', f.pos);
-        }
-
-        if (func.args.length == 0) {
-          guards.push(macro @:pos(f.pos) this.$name());
-        } else if (func.args.length == 1) {
-          guards.push(macro @:pos(f.pos) this.$name(attrs));
-        } else {
-          Context.error('`@:guard` methods must have one or no arguments', f.pos);
-        }
-
-      default:
-    }
-
-    var updateRet = TAnonymous(updateProps);
-
-    for (f in fields) switch f.kind {
-
-      case FFun(func) if (f.meta.exists(m -> updateMeta.has(m.name))):
-        if (func.ret != null) {
-          Context.error('`@:update` functions should not define their return type manually', f.pos);
-        }
-        var e = func.expr;
-        func.ret = macro:Void;
-        func.expr = macro {
-          var closure:()->$updateRet = () -> ${e};
-          __requestUpdate(closure());
-        }
-
-      default: // noop
-
-    }
+    builder.run();
 
     var propType = TAnonymous(props);
+    var createParams:Array<TypeParamDecl> = [
+      { name: 'Node', constraints: [ macro:{} ] }
+    ].concat(cls.params.length > 0
+      ? [ for (p in cls.params) { name: p.name, constraints: [] } ]
+      : []
+    );
+
+    builder.add([
+
+      {
+        name: '__create',
+        pos: (macro null).pos,
+        access: [ APublic, AStatic ],
+        kind: FFun({
+          params: createParams,
+          // Todo: figure out how we can NOT have to use `cast` here
+          expr: macro return cast new $clsTp(props, context),
+          args: [
+            { name: 'props', type: macro:$propType },
+            { name: 'context', type: macro:pilot.Context<Node> }
+          ],
+          ret: macro:pilot.Wire<Node, $propType>
+        })
+      },
+      
+      {
+        name: 'node',
+        access: [ AStatic, APublic ],
+        pos: cls.pos,
+        kind: FFun({
+          ret: macro:pilot.VNode,
+          params: createParams,
+          args: [
+            { name: 'attrs', type: macro:$propType },
+            { name: 'key', type: macro:Null<pilot.Key>, opt: true }
+          ],
+          expr: macro return pilot.VNode.VComponent(
+            $p{ cls.pack.concat([ cls.name ]) },
+            attrs,
+            key
+          )
+        })
+      }
+
+    ]);
+
     var guardCheck = macro return true;
     if (guards.length > 0) {
       guardCheck = guards[0];
@@ -390,74 +374,53 @@ class Component {
       guardCheck = macro if (${guardCheck}) return true else return false;
     }
 
-    startup.sort((a, b) -> {
-      return if (a.priority < b.priority) -1
-      else if (a.priority > b.priority) 1
-      else 0;
-    });
-    effect.sort((a, b) -> {
-      return if (a.priority < b.priority) -1
-      else if (a.priority > b.priority) 1
-      else 0;
-    });
-    var startupExprs = startup.map(v -> v.expr);
-    var effectExprs = effect.map(v -> v.expr);
-    
-    var initInits = startupExprs.length > 0
-      ? macro __onInit.add(_ -> { $b{startupExprs}; })
-      : macro null;
-    var initEffects = effectExprs.length > 0
-      ? macro __onEffect.add(_ -> { $b{effectExprs}; })
-      : macro null;
-      
-    // Note: We do this somewhat inelegant thing here as we need
-    // to give the `__create` function any type params the Component
-    // might expect. There might be a better way of doing this!
-    add([ {
-      name: '__create',
-      pos: (macro null).pos,
-      access: [ APublic, AStatic ],
-      kind: FFun({
-        params: cls.params.length > 0
-          ? [ for (p in cls.params) { name: p.name } ]
-          : [],
-        expr: macro return new $clsTp(props, context),
-        args: [
-          { name: 'props', type: macro:$propType },
-          { name: 'context', type: macro:pilot.Context }
-        ],
-        ret: null
-      })
-    } ]);
+    function prepareHooks(hooks:Array<Hook>):Array<Expr> {
+      hooks.sort((a, b) -> {
+        return if (a.priority < b.priority) -1
+        else if (a.priority > b.priority) 1
+        else 0;
+      });
+      return hooks.map(h -> h.expr);
+    }
 
-    add((macro class {
-      
-      public function new(__props:$propType, __context:pilot.Context) {
-        this.__context = __context;
-        __attrs = ${ {
+    builder.add((macro class {
+
+      var $ATTRS:$propType;
+
+      public function new($INCOMING_ATTRS:$propType, context:pilot.Context<Dynamic>) {
+        this.__context = context;
+        this.$ATTRS = ${ {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
-        ${initInits};
-        ${initEffects};
+        // todo: init stuff
       }
 
-      override function __updateAttributes(__props:Dynamic) {
+      override function __updateAttributes($INCOMING_ATTRS:Dynamic) {
         $b{attributeUpdates};
       }
 
-      override function __shouldRender(attrs:Dynamic) {
-        ${guardCheck}
+      override function __shouldRender($INCOMING_ATTRS:Dynamic) {
+        return ${guardCheck};
       }
 
-      override function __dispose() {
-        $b{dispose};
-        super.__dispose();
+      override function __init() {
+        super.__init();
+        $b{prepareHooks(initHooks)}
+      }
+
+      override function __effect() {
+        $b{prepareHooks(effectHooks)}
+      }
+
+      override function __destroy() {
+        $b{prepareHooks(disposeHooks)}
+        super.__destroy();
       }
 
     }).fields);
-    
-    return fields.concat(newFields);
+
+    return builder.export();
   }
 
 }

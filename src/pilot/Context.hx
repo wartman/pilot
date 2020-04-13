@@ -1,15 +1,14 @@
 package pilot;
 
-import haxe.ds.Map;
-
-class Context {
-
-  final data:Map<String, Dynamic>;
-  final parent:Context;
-  final renderQueue:Array<()->Void> = [];
-
-  public function new(?initialData, ?parent) {
-    data = if (initialData != null) initialData else [];
+class Context<Node:{}> {
+  
+  public final engine:Engine<Node>;
+  // public final styles:StyleManager;
+  final data:Map<String, Dynamic> = [];
+  final parent:Context<Node>;
+  
+  public function new(engine, ?parent) {
+    this.engine = engine;
     this.parent = parent;
   }
 
@@ -30,29 +29,8 @@ class Context {
     data.remove(name);
   }
 
-  public function getChild() {
-    return new Context([], this);
+  public function getChild<Node:{}>(?engine:Engine<Node>):Context<Node> {
+    return new Context(engine == null ? cast this.engine : engine, cast this);
   }
 
-  public function enqueueRender(update:()->Void) {
-    if (parent != null) {
-      // Ensure only the root context enqueues rendering.
-      parent.enqueueRender(update);
-      return;
-    }
-    if (renderQueue.push(update) == 1) {
-      scheduleRenderQueueProcessing();
-    }
-  }
-
-  // this probably isn't working right -- look into a real debounce function.
-  function scheduleRenderQueueProcessing() {
-    var later = new Signal<Any>();
-    later.addOnce(_ -> {
-      var update;
-      while ((update = renderQueue.pop()) != null) update();
-    });
-    later.enqueue(null);
-  }
-  
 }

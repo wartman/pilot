@@ -1,50 +1,32 @@
 package pilot;
 
-import pilot.dom.*;
-
-class TextWire implements Wire<String> {
+class TextWire<Node:{}> implements Wire<Node, { content: String }> {
   
-  final node:Text;
+  final node:Node;
+  var previousAttrs:{ content:String } = { content: '' };
 
-  public function new(content) {
-    node = Document.root.createTextNode(content);
+  public function new(node:Node) {
+    this.node = node;
   }
 
   public function __getNodes():Array<Node> {
     return [ node ];
   }
 
-  public function __getChildList():Array<Wire<Dynamic>> {
-    return null;
-  }
-  
-  public function __setChildList(childList:Array<Wire<Dynamic>>):Void {
-    // noop
-  }
-
-  public function __getWireTypeRegistry():Map<WireType<Dynamic>, WireRegistry> {
-    return null;
-  }
-
-  public function __setWireTypeRegistry(types:Map<WireType<Dynamic>, WireRegistry>):Void {
-    // noop
-  }
-
-  public function __setup(parent:Wire<Dynamic>, context:Context) {
-    // noop
-  }
-
-  public function __dispose():Void {
-    // noop
-  }
-  
   public function __update(
-    attrs:String, 
-    children:Array<VNode>,
-    later:Signal<Any>
+    attrs:{ content: String },
+    ?children:Array<VNode>, 
+    context:Context<Node>, 
+    parent:Component
   ):Void {
-    if (attrs == node.textContent) return;
-    node.textContent = attrs;
+    if (attrs.content != previousAttrs.content) {
+      context.engine.updateTextNode(node, attrs.content);
+    }
+    previousAttrs = attrs;
+  }
+
+  public function __destroy():Void {
+    // noop
   }
 
 }

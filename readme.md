@@ -18,11 +18,10 @@ class App extends Component {
   @:attribute(state) var shouldShowExample:Bool = false;
 
   override function render() return html(<div>
-    @if (shouldShowExample) {
+    @if (shouldShowExample)
       <Example foo="Some Foo" />
-    } else {
+    else
       <>Nothing to show here!</>
-    }
     <button onClick={_ -> shouldShowExample = !shouldShowExample}>
       Toggle
     </button>
@@ -91,7 +90,7 @@ Lifecycle
 
 Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@:dispose` or `@:guard`).
 
-`@:init` (or `@:initialize` if you're feeling verbose) will be run _once_ when the Component is constructed.
+`@:init` will be run _once_ when the Component is constructed.
 
 `@:effect` will be run _every time_ the Component has been rendered and is mounted in the DOM. This is where you'll want to handle things like checking if the user clicked off the component's node (use `getRealNode()` to access the mounted DOM node). You can determine if effects should run with the `guard` option, which might look something like this: `@:effect(guard = someAttribute != null)`.
 
@@ -102,7 +101,7 @@ Methods with `@:guard` meta will be checked before every render -- if ANY `@:gua
 Special Attributes
 ------------------
 
-There are three special attributes (for now) you can use: `@ref`, `@key` and `@dangrouslySetInnerHTML`:
+There are three special attributes (for now) you can use: `@ref`, `@key` and `@dangrouslySetInnerHtml`:
 
 ```haxe
 Pilot.html(
@@ -113,7 +112,7 @@ Pilot.html(
       trace(node);
     }}
     @key="A unique key!"
-    @dangrouslySetInnerHTML="
+    @dangrouslySetInnerHtml="
       <p>This will replace the innerHTML of this element.</p>
       <p>
         It won't get escaped or validated or anything, so you should
@@ -181,6 +180,28 @@ If you want to turn off inline control flow entirely, you can set:
 ```
 
 in your HXML, or by using `html(<>...</>, { noInlineControlFlow: true })`.
+
+Without Using Markup
+--------------------
+You can create Pilot apps without using the `Pilot.html` markup macro fairly easily. All pilot Components have a static `node` method that returns a `VComponent`, and the `pilot.Html` class has simple `h` and `text` helper methods to create `VNodes`.
+
+```haxe
+
+import pilot.Html;
+
+Pilot.mount(
+  js.Browser.document.getElementById('root'),
+  Html.h('div', {}, [
+    MyComponent.node({
+      name: 'foo',
+      children: [
+        Html.text('Bar')
+      ]
+    })
+  ])
+);
+
+```
 
 CSS Generation Options
 ----------------------

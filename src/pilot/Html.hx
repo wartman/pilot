@@ -21,5 +21,22 @@ class Html {
 
     return pilot.dsl.Markup.parse(e, noInlineControlFlow);
   }
+  
+  #if !macro
+
+    inline public static function h<Node:{}>(
+      tag:String,
+      attrs:{}, 
+      ?children:Array<VNode>,
+      ?key:Key
+    ):VNode {
+      return VNative(NodeType.get(tag), attrs, children, key);
+    }
+
+    inline public static function text<Node:{}>(content:String, ?key:Key):VNode {
+      return VNative(TextType, { content: content }, [], key);
+    }
+
+  #end
 
 }

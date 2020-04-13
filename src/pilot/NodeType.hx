@@ -1,44 +1,39 @@
 package pilot;
 
-import pilot.dom.*;
+import haxe.ds.Map;
 
-class NodeType<Attrs:{}> {
+class NodeType<Node:{}, Attrs:{}> {
+  
+  static final tags:Map<String, NodeType<Dynamic, Dynamic>> = [];
 
-  inline public static final SVG_NS = 'http://www.w3.org/2000/svg';
-  static final tags:Map<String, NodeType<Dynamic>> = [];
-
-  static public function get(name:String):NodeType<Dynamic> {
-    if (!tags.exists(name)) {
-      tags.set(name, new NodeType(name));
+  public static function get<Node:{}, Attrs:{}>(tag:String):NodeType<Node, Attrs> {
+    if (!tags.exists(tag)) {
+      tags.set(tag, new NodeType(tag));
     } 
-    return tags.get(name);
+    return cast tags.get(tag);
   }
 
-  static public function getSvg(name:String):NodeType<Dynamic> {
+  static public function getSvg<Node:{}, Attrs:{}>(name:String):NodeType<Node, Attrs> {
     if (!tags.exists(name)) {
       tags.set(name, new NodeType(name, true));
     } 
-    return tags.get(name);
+    return cast tags.get(name);
   }
-
-  final name:String;
+  
+  final tag:String;
   final isSvg:Bool;
 
-  public function new(name, isSvg = false) {
-    this.name = name;
+  public function new(tag, isSvg = false) {
+    this.tag = tag;
     this.isSvg = isSvg;
   }
 
-  public function __create(attrs:Attrs, context:Context):Wire<Attrs> {
-    var doc = Document.root;
-    return new NodeWire(
-      isSvg 
-        ? doc.createElementNS(SVG_NS, name) 
-        : doc.createElement(name),
-      attrs,
-      context,
-      isSvg
-    );
+  public function __create(props:Attrs, context:Context<Node>):Wire<Node, Attrs> {
+    var node = isSvg 
+      ? context.engine.createSvgNode(tag)
+      : context.engine.createNode(tag);
+    var wire = new NodeWire(node, context);
+    return wire;
   }
 
 }

@@ -47,7 +47,7 @@ class MarkupGenerator {
 
         var ref = extractAttribute('@ref', attrs);
         var key = extractAttribute('@key', attrs);
-        var dangerouslySetInnerHTML = extractAttribute('@dangerouslySetInnerHTML', attrs);
+        var dangerouslySetInnerHtml = extractAttribute('@dangerouslySetInnerHtml', attrs);
         var fields = generateAttrs(attrs);
         var type = generateNodeType(name, pos);
 
@@ -59,11 +59,11 @@ class MarkupGenerator {
           generateNode(c)
         ].filter(e -> e != null);
 
-        switch dangerouslySetInnerHTML {
+        switch dangerouslySetInnerHtml {
           case macro null:
           default:
             if (children.length > 0) {
-              Context.error('You should not use @dangerouslySetInnerHTML with a VNode with children', dangerouslySetInnerHTML.pos);
+              Context.error('You should not use @dangerouslySetInnerHtml with a VNode with children', dangerouslySetInnerHtml.pos);
             }
         }
 
@@ -74,8 +74,8 @@ class MarkupGenerator {
           ${attrs}, 
           [ $a{children} ],
           ${key},
-          ${dangerouslySetInnerHTML},
-          ${ref}
+          ${ref},
+          ${dangerouslySetInnerHtml}
         );
         
       case MNode(name, attrs, children, true):
@@ -109,7 +109,7 @@ class MarkupGenerator {
           macro @:pos(pos) new $tp($attrs);
         } else {
           if (!Context.unify(type, Context.getType('pilot.Component'))) {
-            Context.error('Components must implement pilot.Component', pos);
+            Context.error('Components must extend pilot.Component', pos);
           }
           macro @:pos(pos) VComponent(
             $p{tp.pack.concat([ tp.name ])},
@@ -123,7 +123,7 @@ class MarkupGenerator {
         macro @:pos(pos) (${e}:pilot.VNodeValue);
 
       case MText(value):
-        macro @:pos(pos) VNative(${generateNodeType(TEXT_NODE, pos)}, $v{value}, []);
+        macro @:pos(pos) VNative(${generateNodeType(TEXT_NODE, pos)}, { content: $v{value} }, []);
 
       case MFragment(children):
         var exprs:Array<Expr> = [ for (c in children) generateNode(c) ];

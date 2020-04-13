@@ -1,7 +1,5 @@
 package pilot;
 
-import pilot.dom.*;
-
 using Medic;
 using pilot.TestHelpers;
 
@@ -90,7 +88,7 @@ class MarkupTest implements TestCase {
 
   @test('innerHTML')
   public function testDangerousHTML() {
-    Pilot.html(<div @dangerouslySetInnerHTML="<p>foo</p>"></div>)
+    Pilot.html(<div @dangerouslySetInnerHtml="<p>foo</p>"></div>)
       .render()
       .toString()
       .equals('<div><div><p>foo</p></div></div>');
@@ -98,7 +96,8 @@ class MarkupTest implements TestCase {
 
   @test('Keys preserve order')
   public function testKeys() {
-    var root = new Root(Document.root.createElement('div'));
+    var context = TestHelpers.createContext();
+    var root = new Root(context.engine.createNode('div'), context);
     var tester = (values:Array<{ content:String }>) -> Pilot.html(<ul>
       @for (value in values) <li @key={value}>{value.content}</li>
       <li>Last</li>
@@ -127,7 +126,8 @@ class MarkupTest implements TestCase {
 
   @test('Components render their children without loosing order')
   public function testOrder() {
-    var root = new Root(Document.root.createElement('div'));
+    var context = TestHelpers.createContext();
+    var root = new Root(context.engine.createNode('div'), context);
     var tester = (items:Array<Array<String>>) -> Pilot.html(<>
       @for (item in items) <OrderTestComponent items={item} />
       <div>Last</div> 

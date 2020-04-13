@@ -1,5 +1,6 @@
 import medic.Runner;
 import medic.HtmlReporter;
+import pilot.Context;
 import pilot.Root;
 import pilot.ComponentExample;
 
@@ -33,14 +34,15 @@ class Run {
         }
       ', { global: true });
 
-      var exampleRoot = Pilot.document.getElementById('example-root'); 
+      var exampleRoot = js.Browser.document.getElementById('example-root');
       Pilot.mount(
         exampleRoot,
         Pilot.html(<ComponentExample />)
       );
 
-      var root = Pilot.document.getElementById('root');
-      var reporter = new HtmlReporter(new Root(root));
+      var root:js.html.Node = js.Browser.document.getElementById('root');
+      var context = new Context(new pilot.platform.dom.DomEngine());
+      var reporter = new HtmlReporter(new Root(root, context));
       var runner = new Runner(reporter);
 
     #else
@@ -54,8 +56,8 @@ class Run {
     
     runner.add(new pilot.ComponentTest());
     runner.add(new pilot.ProviderTest());
+    runner.add(new pilot.HtmlTest());
     runner.add(new pilot.MarkupTest());
-    runner.add(new pilot.SignalTest());
 
     runner.run();
 

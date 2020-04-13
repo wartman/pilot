@@ -1,17 +1,15 @@
 package pilot;
 
-import pilot.dom.*;
-
 enum VNode {
-  VNative<Attrs>(
+  VNative<Attrs:{}>(
     type:WireType<Attrs>,
     attrs:Attrs,
     children:Array<VNode>,
     ?key:Key,
-    ?dangerouslySetInnerHTML:String,
-    ?ref:(node:Node)->Void
+    ?ref:(node:Any)->Void,
+    ?dangerouslySetInnerHtml:String
   );
-  VComponent<Attrs>(
+  VComponent<Attrs:{}>(
     type:WireType<Attrs>,
     attrs:Attrs,
     ?key:Key

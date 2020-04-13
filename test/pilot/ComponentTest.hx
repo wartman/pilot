@@ -1,7 +1,5 @@
 package pilot;
 
-import pilot.dom.*;
-
 using Medic;
 using pilot.TestHelpers;
 
@@ -12,16 +10,15 @@ class ComponentTest implements TestCase {
   @test('Component instance can be passed as a value')
   @async
   public function testInstance(done) {
-    var node = Document.root.createElement('div');
-    var root = new Root(node);
-    var comp = new ComponentTester({ text: 'foo', isState: false }, root.getContext());
+    var context = TestHelpers.createContext();
+    var node = context.engine.createNode('div');
+    var root = new Root(node, context);
+    var comp = new ComponentTester({ text: 'foo', isState: false }, context);
     root.update(Pilot.html(<>{comp}</>));
-    node.innerHTML.equals('<div><span>Text:foo</span><span>Opt:</span><span>Def:def</span></div>');
+    root.toString().equals('<div><div><span>Text:foo</span><span>Opt:</span><span>Def:def</span></div></div>');
     comp.isState = true;
-
-    // Patch will happen async.
     wait(() -> {
-      node.innerHTML.equals('<div><span>Text:foo</span><span>Opt:</span><span>Def:def</span><span>State:true</span></div>');
+      root.toString().equals('<div><div><span>Text:foo</span><span>Opt:</span><span>Def:def</span><span>State:true</span></div></div>');
       done();
     });
   }
@@ -29,48 +26,49 @@ class ComponentTest implements TestCase {
   @test('Simple guards')
   @async(2000)
   public function testGuards(done) {
-    var node = Document.root.createElement('div');
-    var root = new Root(node);
+    var context = TestHelpers.createContext();
+    var node = context.engine.createNode('div');
+    var root = new Root(node, context);
     var comp = new GuardedRender({
       value: 'foo'
-    }, root.getContext());
+    }, context);
 
     root.update(Pilot.html(<>{comp}</>));
 
     comp.renderCount.equals(1);
-    node.innerHTML.equals('<div>foo1</div>');
+    root.toString().equals('<div><div>foo1</div></div>');
 
     comp.value = 'bar';
     wait(() -> {
       comp.renderCount.equals(2);
-      node.innerHTML.equals('<div>bar2</div>');
+      root.toString().equals('<div><div>bar2</div></div>');
 
       comp.value = 'skip';
       wait(() -> {
         comp.renderCount.equals(2);
-        node.innerHTML.equals('<div>bar2</div>');
+        root.toString().equals('<div><div>bar2</div></div>');
 
         comp.value = 'bar';
         wait(() -> {
           comp.renderCount.equals(2);
-          node.innerHTML.equals('<div>bar2</div>');
+          root.toString().equals('<div><div>bar2</div></div>');
           
           comp.blockRender = true;
           comp.value = 'ignored';
           wait(() -> {
             comp.renderCount.equals(2);
-            node.innerHTML.equals('<div>bar2</div>');
+            root.toString().equals('<div><div>bar2</div></div>');
 
             
             comp.blockRender = false;
             wait(() -> {
               comp.renderCount.equals(3);
-              node.innerHTML.equals('<div>ignored3</div>');
+              root.toString().equals('<div><div>ignored3</div></div>');
               
               comp.value = 'foo';
               wait(() -> {
                 comp.renderCount.equals(4);
-                node.innerHTML.equals('<div>foo4</div>');
+                root.toString().equals('<div><div>foo4</div></div>');
                 done();
               });
             });
@@ -83,11 +81,12 @@ class ComponentTest implements TestCase {
   @test('simple effects')
   @async
   public function testEffect(done) {
-    var node = Document.root.createElement('div');
-    var root = new Root(node);
+    var context = TestHelpers.createContext();
+    var node = context.engine.createNode('div');
+    var root = new Root(node, context);
     var comp = new GuardedRender({
       value: 'foo'
-    }, root.getContext());
+    }, context);
 
     root.update(Pilot.html(<>{comp}</>));
     root.update(Pilot.html(<>{comp}</>));
@@ -115,9 +114,10 @@ class ComponentTest implements TestCase {
   @test('Components correctly list the number of their child nodes when children update')
   @async
   public function testComponentChildren(done) {
-    var node = Document.root.createElement('div');
-    var root = new Root(node);
-    var parent = new HasChildComponent({}, root.getContext());
+    var context = TestHelpers.createContext();
+    var node = context.engine.createNode('div');
+    var root = new Root(node, context);
+    var parent = new HasChildComponent({}, context);
     root.update(Pilot.html(<>{parent}</>));
     parent.__getNodes().length.equals(1);
     parent.child.setNumChildren(3);
@@ -140,7 +140,7 @@ class ComponentTest implements TestCase {
 class ComponentTester extends Component {
 
   @:attribute var text:String;
-  @:attribute @:optional var opt:String;
+  @:attribute( optional ) var opt:String;
   @:attribute var def:String = 'def';
   @:attribute(state) public var isState:Bool;
 
@@ -163,7 +163,7 @@ class GuardedRender extends Component {
 
   @:attribute(
     state = true, 
-    guard = (incoming, current) -> incoming != 'skip'
+    guard = value != 'skip'
   ) public var value:String;
   @:attribute(state) public var blockRender:Bool = false;
 
