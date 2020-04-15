@@ -9,7 +9,7 @@ class Helpers {
   public static function later(exec:()->Void) {
     #if js
     if (hasRaf)
-      js.Browser.window.requestAnimationFrame(_ -> exec());
+      js.Syntax.code('window.requestAnimationFrame({0})', _ -> exec());
     else
     #end
       haxe.Timer.delay(() -> exec(), 10);

@@ -9,7 +9,6 @@ class Component implements Wire<Dynamic, Dynamic> {
   var __alive:Bool = false;
   var __inserted:Bool = false;
   var __dirty:Bool = false;
-  var __updating:Bool = false;
   var __cache:WireCache<Dynamic>;
   var __context:Context<Dynamic>;
   var __parent:Component;
@@ -133,11 +132,9 @@ class Component implements Wire<Dynamic, Dynamic> {
     if (__dirty) return;
 
     if (__parent == null) {
-      __updating = true;
       Helpers.later(() -> {
         var effectQueue:Array<()->Void> = [];
         __render(effectQueue);
-        __updating = false;
         Helpers.commitComponentEffects(effectQueue);
       });
     } else {
@@ -157,7 +154,6 @@ class Component implements Wire<Dynamic, Dynamic> {
         var effectQueue:Array<()->Void> = [];
         __dequeuePendingChildren(effectQueue);
         Helpers.commitComponentEffects(effectQueue);
-        __updating = false;
       });
     }
   }
