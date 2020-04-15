@@ -48,7 +48,7 @@ class Component implements Wire<Dynamic, Dynamic> {
     ?_:Array<VNode>,
     context:Context<Dynamic>,
     parent:Component,
-		effectQueue:Array<()->Void>
+    effectQueue:Array<()->Void>
   ) {
     if (!__alive) {
       __init();

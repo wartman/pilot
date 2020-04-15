@@ -7,7 +7,7 @@ abstract Root<Node>(NodeWire<Node, Dynamic>) {
     this = new NodeWire(node, context);
   }
 
-  public inline function update(vNode:VNode) {
+  public function update(vNode:VNode) {
     var effectQueue:Array<()->Void> = [];
     this.__update({}, [ vNode ], this.context, null, effectQueue);
     Helpers.commitComponentEffects(effectQueue);

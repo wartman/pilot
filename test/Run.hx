@@ -3,6 +3,11 @@ import medic.HtmlReporter;
 import pilot.Context;
 import pilot.Root;
 import pilot.ComponentExample;
+#if (js && !nodejs)
+  import pilot.platform.dom.Dom;
+#else
+  import pilot.platform.server.Server;
+#end
 
 class Run {
 
@@ -35,10 +40,7 @@ class Run {
       ', { global: true });
 
       var exampleRoot = js.Browser.document.getElementById('example-root');
-      Pilot.mount(
-        exampleRoot,
-        Pilot.html(<ComponentExample />)
-      );
+      Dom.mount(exampleRoot, ComponentExample.node({}));
 
       var root:js.html.Node = js.Browser.document.getElementById('root');
       var context = new Context(new pilot.platform.dom.DomEngine());

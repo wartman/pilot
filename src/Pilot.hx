@@ -8,30 +8,12 @@ class Pilot {
     return pilot.Style.create(expr, options);
   }
 
-  #if (js && !nodejs)
-    public static function mount(
-      node:js.html.Node,
-      vNode:pilot.VNode
-    ):pilot.Root<js.html.Node> {
-      var root = new pilot.Root(
-        node, 
-        new pilot.Context(new pilot.platform.dom.DomEngine())
-      );
-      root.update(vNode);
-      return root;
-    }
-  #else
-    public static function mount(
-      node:pilot.platform.server.Node, 
-      vNode:pilot.VNode
-    ):pilot.Root<pilot.platform.server.Node> {
-      var root = new pilot.Root(
-        node, 
-        new pilot.Context(new pilot.platform.server.ServerEngine())
-      );
-      root.update(vNode);
-      return root;
-    }
-  #end
+  public static function mount(node, vNode) {
+    #if (js && !nodejs)
+      return pilot.platform.dom.Dom.mount(node, vNode);
+    #else
+      return pilot.platform.server.Server.mount(node, vNode);
+    #end
+  }
 
 }

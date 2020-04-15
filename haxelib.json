@@ -7,9 +7,9 @@
     "contributors": [
         "wartman"
     ],
-    "releasenote": "Major refactor",
+    "releasenote": "Better platform api",
     "classPath": "src",
-    "version": "0.3.0",
+    "version": "0.3.1",
     "url": "https://github.com/wartman/pilot",
     "dependencies": {}
 }
