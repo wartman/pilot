@@ -56,8 +56,8 @@ class Component implements Wire<Dynamic, Dynamic> {
     }
     __parent = parent;
     __context = context;
+    __updateAttributes(attrs);
     if (__cache == null || __shouldRender(attrs)) {
-      __updateAttributes(attrs);
       __render(effectQueue);
     }
   }
