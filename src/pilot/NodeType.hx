@@ -2,18 +2,18 @@ package pilot;
 
 import haxe.ds.Map;
 
-class NodeType<Node:{}, Attrs:{}> {
+class NodeType<Node, Attrs:{}> {
   
   static final tags:Map<String, NodeType<Dynamic, Dynamic>> = [];
 
-  public static function get<Node:{}, Attrs:{}>(tag:String):NodeType<Node, Attrs> {
+  public static function get<Node, Attrs:{}>(tag:String):NodeType<Node, Attrs> {
     if (!tags.exists(tag)) {
       tags.set(tag, new NodeType(tag));
     } 
     return cast tags.get(tag);
   }
 
-  static public function getSvg<Node:{}, Attrs:{}>(name:String):NodeType<Node, Attrs> {
+  static public function getSvg<Node, Attrs:{}>(name:String):NodeType<Node, Attrs> {
     if (!tags.exists(name)) {
       tags.set(name, new NodeType(name, true));
     } 

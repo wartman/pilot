@@ -1,6 +1,6 @@
 package pilot;
 
-class Context<Node:{}> {
+class Context<Node> {
   
   public final engine:Engine<Node>;
   // public final styles:StyleManager;
@@ -29,7 +29,7 @@ class Context<Node:{}> {
     data.remove(name);
   }
 
-  public function getChild<Node:{}>(?engine:Engine<Node>):Context<Node> {
+  public function getChild<Node>(?engine:Engine<Node>):Context<Node> {
     return new Context(engine == null ? cast this.engine : engine, cast this);
   }
 

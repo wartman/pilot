@@ -1,6 +1,6 @@
 package pilot;
 
-class NodeWire<Node:{}, Attrs:{}> implements Wire<Node, Attrs> {
+class NodeWire<Node, Attrs:{}> implements Wire<Node, Attrs> {
   
   final node:Node;
   var lastAttrs:Attrs;
@@ -22,7 +22,8 @@ class NodeWire<Node:{}, Attrs:{}> implements Wire<Node, Attrs> {
     attrs:Attrs,
     ?children:Array<VNode>, 
     context:Context<Node>, 
-    parent:Component
+    parent:Component,
+		effectQueue:Array<()->Void>
   ):Void {
     var before = cache;
     var previousCount = 0;
@@ -42,6 +43,7 @@ class NodeWire<Node:{}, Attrs:{}> implements Wire<Node, Attrs> {
       children,
       parent,
       context,
+      effectQueue,
       (type, key) -> {
         if (before == null) return None;
         if (!before.types.exists(type)) return None;

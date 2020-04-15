@@ -1,6 +1,6 @@
 package pilot;
 
-class WireRegistry<Node:{}> implements Registry<Key, Wire<Node, Dynamic>> {
+class WireRegistry<Node> implements Registry<Key, Wire<Node, Dynamic>> {
 
   var keyed:KeyRegistry<Node>;
   var unkeyed:Array<Wire<Node, Dynamic>>;

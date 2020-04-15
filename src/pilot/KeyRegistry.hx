@@ -1,6 +1,6 @@
 package pilot;
 
-class KeyRegistry<Node:{}> implements Registry<Key, Wire<Node, Dynamic>> {
+class KeyRegistry<Node> implements Registry<Key, Wire<Node, Dynamic>> {
   
   var strings:Map<String, Wire<Node, Dynamic>>;
   var objects:Map<{}, Wire<Node, Dynamic>>;

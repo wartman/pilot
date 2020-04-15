@@ -1,6 +1,6 @@
 package pilot;
 
-interface Engine<Node:{}> {
+interface Engine<Node> {
   public final differ:Differ<Node>;
   public function createNode(tag:String):Node;
   public function createSvgNode(tag:String):Node;

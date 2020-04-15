@@ -24,7 +24,7 @@ class Html {
   
   #if !macro
 
-    inline public static function h<Node:{}>(
+    inline public static function h<Node>(
       tag:String,
       attrs:{}, 
       ?children:Array<VNode>,
@@ -33,7 +33,7 @@ class Html {
       return VNative(NodeType.get(tag), attrs, children, key);
     }
 
-    inline public static function text<Node:{}>(content:String, ?key:Key):VNode {
+    inline public static function text<Node>(content:String, ?key:Key):VNode {
       return VNative(TextType, { content: content }, [], key);
     }
 

@@ -8,10 +8,16 @@ final class Provider<T> extends Component {
 
   override function render() return html(<>{children}</>);
 
-  override function __update(attrs:Dynamic, ?_:Array<VNode>, context:Context<Dynamic>, parent:Component) {
+  override function __update(
+    attrs:Dynamic, 
+    ?_:Array<VNode>, 
+    context:Context<Dynamic>, 
+    parent:Component,
+    effectQueue:Array<()->Void>
+  ) {
     __context = context.getChild();
     __context.set(id, value);
-    super.__update(attrs, _, __context, parent);
+    super.__update(attrs, _, __context, parent, effectQueue);
   }
 
 }

@@ -13,8 +13,9 @@ class HookBuilder {
   public var similarNames:Array<String>;
   public var hook:FieldBuilderHook = After;
   public var multiple:Bool = false;
-  public var options = [
-    { name: 'priority', optional: true }
+  public var options:Array<BuilderOption> = [
+    { name: 'priority', optional: true },
+    { name: 'guard', optional: true, handleValue: expr -> expr }
   ];
   
   final register:(hook:Hook)->Void;
@@ -25,7 +26,7 @@ class HookBuilder {
     this.register = register;
   }
 
-  public function build(options:{ ?priority:Int }, builder:ClassBuilder, f:Field) {
+  public function build(options:{ ?priority:Int, ?guard:Expr }, builder:ClassBuilder, f:Field) {
     var priority:Int = options.priority != null ? options.priority : 10;
     switch f.kind {
       case FFun(func):
@@ -34,7 +35,9 @@ class HookBuilder {
         }
         var name = f.name;
         register({
-          expr: macro this.$name(), 
+          expr: options.guard != null
+            ? macro if (${options.guard}) this.$name()
+            : macro this.$name(), 
           priority: priority
         });
       default:

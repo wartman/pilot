@@ -1,6 +1,6 @@
 package pilot;
 
-class TextWire<Node:{}> implements Wire<Node, { content: String }> {
+class TextWire<Node> implements Wire<Node, { content: String }> {
   
   final node:Node;
   var previousAttrs:{ content:String } = { content: '' };
@@ -17,7 +17,8 @@ class TextWire<Node:{}> implements Wire<Node, { content: String }> {
     attrs:{ content: String },
     ?children:Array<VNode>, 
     context:Context<Node>, 
-    parent:Component
+    parent:Component,
+		effectQueue:Array<()->Void>
   ):Void {
     if (attrs.content != previousAttrs.content) {
       context.engine.updateTextNode(node, attrs.content);

@@ -3,7 +3,7 @@ package pilot;
 import haxe.DynamicAccess;
 import haxe.ds.Option;
 
-class Differ<Node:{}> {
+class Differ<Node> {
   
   static final EMPTY = {};
 
@@ -17,6 +17,7 @@ class Differ<Node:{}> {
     nodes:Array<VNode>,
     parent:Component,
     context:Context<Node>,
+    effectQueue:Array<()->Void>,
     previous:(type:WireType<Dynamic>, key:Null<Key>)->Option<Wire<Node, Dynamic>>
   ):WireCache<Node> {
     var newCache:WireCache<Node> = {
@@ -39,7 +40,7 @@ class Differ<Node:{}> {
         inline function handleSpecial(wire:Wire<Node, Dynamic>, ref:(node:Any)->Void, innerHtml:String) {
           switch wire.__getNodes() {
             case [ node ]:
-              if (ref != null) ref(node);
+              if (ref != null) effectQueue.push(() -> ref(node));
               if (innerHtml != null) context.engine.dangerouslySetInnerHtml(node, innerHtml);
             default: // noop
           }
@@ -49,21 +50,21 @@ class Differ<Node:{}> {
           case VNative(type, attrs, children, key, ref, dangerouslySetInnerHtml): switch previous(type, key) {
             case None:
               var wire = type.__create(attrs, context);
-              wire.__update(attrs, children, context, parent);
+              wire.__update(attrs, children, context, parent, effectQueue);
               handleSpecial(wire, ref, dangerouslySetInnerHtml);
               add(key, type, wire);
             case Some(wire):
-              wire.__update(attrs, children, context, parent);
+              wire.__update(attrs, children, context, parent, effectQueue);
               handleSpecial(wire, null, dangerouslySetInnerHtml);
               add(key, type, wire);
           }
           case VComponent(type, attrs, key): switch previous(type, key) {
             case None:
               var wire = type.__create(attrs, context);
-              wire.__update(attrs, context, parent);
+              wire.__update(attrs, context, parent, effectQueue);
               add(key, type, wire);
             case Some(wire):
-              wire.__update(attrs, context, parent);
+              wire.__update(attrs, context, parent, effectQueue);
               add(key, type, wire);
           }
           case VFragment(children):
