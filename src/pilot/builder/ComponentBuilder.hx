@@ -74,7 +74,7 @@ class ComponentBuilder {
       multiple: false,
       hook: After,
       options: [],
-      build: (options:{}, builder, field) -> switch field.kind {
+      build: function (options:{}, builder, field) switch field.kind {
         case FFun(func):
           if (func.ret != null) {
             Context.error('@:update functions should not define their return type manually', field.pos);
@@ -102,7 +102,7 @@ class ComponentBuilder {
       multiple: false,
       hook: After,
       options: [],
-      build: (options:{}, builder, field) -> switch field.kind {
+      build: function (options:{}, builder, field) switch field.kind {
         case FFun(func):
           var name = field.name;
           if (func.args.length == 0) {
