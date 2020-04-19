@@ -110,8 +110,8 @@ class Component implements Wire<Dynamic, Dynamic> {
     );
 
     if (before != null) {
+      var first = before.first();
       for (t in before.types) t.each(wire -> wire.__destroy());
-      var first = __getNodes()[0];
       if (first != null) __context.engine.differ.setChildren(
         previousCount,
         __context.engine.traverseSiblings(first),

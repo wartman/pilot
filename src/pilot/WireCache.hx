@@ -14,4 +14,11 @@ class WireCache<Node> {
     }
   }
 
+  public function first():Node {
+    for (child in children) {
+      for (node in child.__getNodes()) return node;
+    }
+    return null;
+  }
+
 }
