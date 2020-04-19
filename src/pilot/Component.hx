@@ -83,15 +83,9 @@ class Component implements Wire<Dynamic, Dynamic> {
     __pendingChildren = [];
 
     var before = __cache;
-    var first:Dynamic = null;
     var previousCount = 0;
 
-    if (before != null) {
-      before.each(node -> {
-        if (first == null) first = node;
-        previousCount++;
-      });
-    }
+    if (before != null) before.each(_ -> previousCount++);
     
     __cache = __context.engine.differ.diff(
       switch render() {
@@ -117,14 +111,14 @@ class Component implements Wire<Dynamic, Dynamic> {
 
     if (before != null) {
       for (t in before.types) t.each(wire -> wire.__destroy());
+      var first = __getNodes()[0];
+      if (first != null) __context.engine.differ.setChildren(
+        previousCount,
+        __context.engine.traverseSiblings(first),
+        __cache
+      );
     }
-
-    if (first != null) __context.engine.differ.setChildren(
-      previousCount,
-      __context.engine.traverseSiblings(first),
-      __cache
-    );
-
+        
     effectQueue.push(this.__effect);
   }
 
