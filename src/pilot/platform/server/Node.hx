@@ -112,6 +112,11 @@ class Node {
       return textContent == null ? '' : textContent.htmlEscape();
     }
 
+    if (tag == '#comment') {
+      var content = textContent == null ? '' : textContent.htmlEscape();
+      return '<!-- ${content} -->'; 
+    }
+
     var name = tag.toLowerCase();
     var out = '<${name}';
     var attrs = [ for (attr in attributes) '${attr.key}="${Std.string(attr.value).htmlEscape()}"' ];

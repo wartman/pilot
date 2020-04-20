@@ -21,7 +21,8 @@ class NodeWire<Node, Attrs:{}> implements Wire<Node, Attrs> {
     attrs:Attrs,
     ?children:Array<VNode>,
     parent:Component,
-    context:Context<Node>
+    context:Context<Node>,
+    effectQueue:Array<()->Void>
   ):Void {
     this.context = context;
     // todo: this should wire up events ONLY.
@@ -34,7 +35,8 @@ class NodeWire<Node, Attrs:{}> implements Wire<Node, Attrs> {
       cursor,
       children,
       parent,
-      this.context
+      this.context,
+      effectQueue
     );
   }
 

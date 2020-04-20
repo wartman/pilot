@@ -5,8 +5,10 @@ interface Engine<Node> {
   public function createNode(tag:String):Node;
   public function createSvgNode(tag:String):Node;
   public function createTextNode(content:String):Node;
+  public function createCommentNode(content:String):Node;
   public function updateNodeAttr(node:Node, name:String, oldValue:Dynamic, newValue:Dynamic):Void;
   public function updateTextNode(node:Node, content:String):Void;
+  public function getTextNodeContent(node:Node):String;
   public function nodeToString(node:Node):String;
   public function dangerouslySetInnerHtml(node:Node, html:String):Void;
   public function traverseSiblings(first:Node):Cursor<Node>;

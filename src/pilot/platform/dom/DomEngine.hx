@@ -58,10 +58,21 @@ class DomEngine implements Engine<Node> {
     return Browser.document.createTextNode(content);
   }
 
+  public function createCommentNode(content:String):Node {
+    return Browser.document.createComment(content);
+  }
+
   public function updateTextNode(node:Node, content:String):Void {
     switch Std.downcast(node, Text) {
       case null: throw 'assert';
       case text: text.textContent = content;
+    }
+  }
+
+  public function getTextNodeContent(node:Node):String {
+    return switch Std.downcast(node, Text) {
+      case null: '';
+      case text: text.textContent;
     }
   }
 
@@ -93,7 +104,7 @@ class DomEngine implements Engine<Node> {
   }
 
   public function placeholder(target:Component):VNode {
-    return VNative(cast TextType, { content: '' }, []);
+    return VNative(PlaceholderType, {}, []);
   }
 
 }

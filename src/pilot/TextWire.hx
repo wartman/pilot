@@ -12,16 +12,28 @@ class TextWire<Node> implements Wire<Node, { content: String }> {
   public function __getNodes():Array<Node> {
     return [ node ];
   }
-
   
   public function __hydrate(
-    cursor:Cursor<Node>,
+    _:Cursor<Node>,
     attrs:{ content: String },
-    ?children:Array<VNode>,
+    ?_:Array<VNode>,
     parent:Component,
-    context:Context<Node>
+    context:Context<Node>,
+    effectQueue:Array<()->Void>
   ):Void {
-    // noop
+    previousAttrs = attrs;
+    var engine = context.engine;
+    var content = engine.getTextNodeContent(node);
+
+    // We won't get text nodes chopped up correctly from the server side,
+    // so we need to do that manually here.
+    if (attrs.content != content) {
+      engine.updateTextNode(node, attrs.content);
+      var newContent = content.substr(attrs.content.length);
+      var c = engine.traverseSiblings(node);
+      c.step();
+      c.insert(engine.createTextNode(newContent));
+    }
   }
 
   public function __update(

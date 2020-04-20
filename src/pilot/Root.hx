@@ -23,13 +23,16 @@ abstract Root<Node>(NodeWire<Node, Dynamic>) {
     *exactly*. If they don't, odd things will happen (and probably break).
   **/
   public function hydrate(vNode:VNode) {
+    var effectQueue:Array<()->Void> = [];
     this.__hydrate(
       this.context.engine.traverseChildren(this.node),
       {},
       [ vNode ],
       null,
-      this.context
+      this.context,
+      effectQueue
     );
+    Helpers.commitComponentEffects(effectQueue);
   }
 
   /**

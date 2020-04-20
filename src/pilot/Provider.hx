@@ -25,11 +25,12 @@ final class Provider<T> extends Component {
     attrs:Dynamic, 
     ?_:Array<VNode>,
     parent:Component,
-    context:Context<Dynamic>
+    context:Context<Dynamic>,
+    effectQueue:Array<()->Void>
   ) {
     __context = context.getChild();
     __context.set(id, value);
-    super.__hydrate(cursor, attrs, _, parent, __context);
+    super.__hydrate(cursor, attrs, _, parent, __context, effectQueue);
   }
   
 }

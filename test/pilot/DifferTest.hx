@@ -42,4 +42,23 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><div class="bar">foo</div></div>');
   }
 
+  @test('Hydration works with text')
+  public function testHydrateText() {
+    var ctx = TestHelpers.createContext();
+    var template = (foo:String) -> Html.h('div', {}, [
+      Html.text('before '),
+      Html.text(foo),
+      Html.text(' after')
+    ]);
+    var target = ctx.engine.createNode('div');
+    
+    var init = new Root(target, ctx);
+    init.replace(Html.create(<div @dangerouslySetInnerHtml="before foo after" />));
+    init.toString().equals('<div><div>before foo after</div></div>');
+
+    var root = new Root(target, ctx);
+    root.hydrate(template('foo'));
+    root.toString().equals('<div><div>before foo after</div></div>');
+  }
+
 }

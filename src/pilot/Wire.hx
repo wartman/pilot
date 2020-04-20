@@ -14,7 +14,8 @@ interface Wire<Node, Attrs:{}> {
     attrs:Attrs,
     ?children:Array<VNode>,
     parent:Component,
-    context:Context<Node>
+    context:Context<Node>,
+    effectQueue:Array<()->Void>
   ):Void;
   public function __destroy():Void;
 }

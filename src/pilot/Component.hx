@@ -72,7 +72,8 @@ class Component implements Wire<Dynamic, Dynamic> {
     attrs:Dynamic,
     ?children:Array<VNode>,
     parent:Component,
-    context:Context<Dynamic>
+    context:Context<Dynamic>,
+    effectQueue:Array<()->Void>
   ) {
     if (!__alive) {
       __init();
@@ -85,8 +86,10 @@ class Component implements Wire<Dynamic, Dynamic> {
       cursor,
       __processRender(),
       this,
-      __context
+      __context,
+      effectQueue
     );
+    effectQueue.push(this.__effect);
   }
   
   public function __destroy() {

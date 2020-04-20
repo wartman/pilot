@@ -42,8 +42,18 @@ class ServerEngine implements Engine<Node> {
     return n;
   }
 
+  public function createCommentNode(content:String):Node {
+    var n = new Node('#comment');
+    n.textContent = content;
+    return n;
+  }
+
   public function updateTextNode(node:Node, content:String):Void {
     node.textContent = content;
+  }
+
+  public function getTextNodeContent(node:Node):String {
+    return node.textContent;
   }
 
   public function nodeToString(node:Node):String {
@@ -63,7 +73,7 @@ class ServerEngine implements Engine<Node> {
   }
 
   public function placeholder(target:Component):VNode {
-    return VNative(cast TextType, { content: '' }, []);
+    return VNative(PlaceholderType, {}, []);
   }
 
 }

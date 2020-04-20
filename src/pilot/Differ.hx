@@ -82,7 +82,8 @@ class Differ<Node> {
     cursor:Cursor<Node>,
     nodes:Array<VNode>,
     parent:Component,
-    context:Context<Node>
+    context:Context<Node>,
+    effectQueue:Array<()->Void>
   ):WireCache<Node> {
     var cache:WireCache<Node> = {
       types: [],
@@ -97,30 +98,25 @@ class Differ<Node> {
     }
 
     function process(nodes:Array<VNode>) {
-      for (n in nodes) {
+      if (nodes != null) for (n in nodes) if (n != null) {
         switch n {
           case VNative(type, attrs, children, key, ref, dangerouslySetInnerHtml):
             var current = cursor.current();
             var wire = type.__hydrate(current, attrs, context);
             if (dangerouslySetInnerHtml == null) {
-              wire.__hydrate(
-                context.engine.traverseChildren(current),
-                attrs,
-                children,
-                parent,
-                context
-              );
+              var c = context.engine.traverseChildren(current);
+              wire.__hydrate(c, attrs, children, parent, context, effectQueue);
             }
+            cursor.step();
             add(type, wire, key);
-            if (ref != null) ref(current);
+            if (ref != null) effectQueue.push(() -> ref(current));
           case VComponent(type, attrs, key):
             var wire = type.__create(attrs, context);
-            wire.__hydrate(cursor, attrs, parent, context);
+            wire.__hydrate(cursor, attrs, parent, context, effectQueue);
             add(type, wire, key);
           case VFragment(children):
             process(children);
         }
-        if (!cursor.step()) break;
       }
     }
     
