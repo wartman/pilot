@@ -10,6 +10,7 @@ class Component implements Wire<Dynamic, Dynamic> {
   var __inserted:Bool = false;
   var __dirty:Bool = false;
   var __cache:WireCache<Dynamic>;
+  var __lastNodes:Array<Dynamic>;
   var __context:Context<Dynamic>;
   var __parent:Component;
   var __pendingChildren:Array<Component> = [];
@@ -37,9 +38,14 @@ class Component implements Wire<Dynamic, Dynamic> {
   #end
 
   public function __getNodes():Array<Dynamic> {
-    var nodes:Array<Dynamic> = [];
-    __cache.each(node -> nodes.push(node));
-    return nodes;
+    if (__lastNodes == null) {
+      var nodes:Array<Dynamic> = [];
+      for (wire in __cache.children) {
+        nodes = nodes.concat(wire.__getNodes());
+      }
+      __lastNodes = nodes;
+    }
+    return __lastNodes;
   }
 
   public function __update(
@@ -79,14 +85,11 @@ class Component implements Wire<Dynamic, Dynamic> {
     }
 
     __dirty = false;
-
     __pendingChildren = [];
 
     var before = __cache;
-    var previousCount = 0;
-
-    if (before != null) before.each(_ -> previousCount++);
     
+    __lastNodes = null;
     __cache = __context.engine.differ.diff(
       switch render() {
         case null | VFragment([]): [ __context.engine.placeholder(this) ];
@@ -110,7 +113,12 @@ class Component implements Wire<Dynamic, Dynamic> {
     );
 
     if (before != null) {
-      var first = before.first();
+      var previousCount = 0;
+      var first = null;
+      for (wire in before.children) for (node in wire.__getNodes()) {
+        if (first == null) first = node;
+        previousCount++;
+      }
       for (t in before.types) t.each(wire -> wire.__destroy());
       if (first != null) __context.engine.differ.setChildren(
         previousCount,
@@ -118,7 +126,7 @@ class Component implements Wire<Dynamic, Dynamic> {
         __cache
       );
     }
-        
+    
     effectQueue.push(this.__effect);
   }
 
@@ -153,6 +161,7 @@ class Component implements Wire<Dynamic, Dynamic> {
   }
 
   function __dequeuePendingChildren(effectQueue:Array<()->Void>) {
+    __lastNodes = null;
     if (__pendingChildren.length == 0) return;
     var children = __pendingChildren.copy();
     __pendingChildren = [];

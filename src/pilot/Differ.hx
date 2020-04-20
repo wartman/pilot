@@ -85,11 +85,11 @@ class Differ<Node> {
   ) {
     var insertedCount = 0;
     var currentCount = 0;
-    next.each(r -> {
+    for (wire in next.children) for (node in wire.__getNodes()) {
       currentCount++;
-      if (r == cursor.current()) cursor.step();
-      else if (cursor.insert(r)) insertedCount++;
-    });
+      if (node == cursor.current()) cursor.step();
+      else if (cursor.insert(node)) insertedCount++;
+    }
     var deleteCount = previousCount + insertedCount - currentCount;
     for (i in 0...deleteCount) {
       if (!cursor.delete()) break;

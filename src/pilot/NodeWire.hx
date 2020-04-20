@@ -28,10 +28,6 @@ class NodeWire<Node, Attrs:{}> implements Wire<Node, Attrs> {
     var before = cache;
     var previousCount = 0;
 
-    if (before != null) {
-      before.each(_ -> previousCount++);
-    }
-
     context.engine.differ.diffObject(
       lastAttrs,
       attrs,
@@ -58,6 +54,9 @@ class NodeWire<Node, Attrs:{}> implements Wire<Node, Attrs> {
     );
 
     if (before != null) {
+      for (wire in before.children) {
+        previousCount += wire.__getNodes().length;
+      }
       for (t in before.types) t.each(wire -> wire.__destroy());
     }
 
