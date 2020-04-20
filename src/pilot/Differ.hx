@@ -78,6 +78,57 @@ class Differ<Node> {
     return newCache;
   }
 
+  public function hydrate(
+    cursor:Cursor<Node>,
+    nodes:Array<VNode>,
+    parent:Component,
+    context:Context<Node>
+  ):WireCache<Node> {
+    var cache:WireCache<Node> = {
+      types: [],
+      children: []
+    };
+
+    inline function add(type:WireType<Dynamic>, wire:Wire<Node, Dynamic>, ?key:Key) {
+      if (!cache.types.exists(type)) {
+        cache.types.set(type, new WireRegistry());
+      }
+      cache.types.get(type).put(key, wire);
+    }
+
+    function process(nodes:Array<VNode>) {
+      for (n in nodes) {
+        switch n {
+          case VNative(type, attrs, children, key, ref, dangerouslySetInnerHtml):
+            var current = cursor.current();
+            var wire = type.__hydrate(current, attrs, context);
+            if (dangerouslySetInnerHtml == null) {
+              wire.__hydrate(
+                context.engine.traverseChildren(current),
+                attrs,
+                children,
+                parent,
+                context
+              );
+            }
+            add(type, wire, key);
+            if (ref != null) ref(current);
+          case VComponent(type, attrs, key):
+            var wire = type.__create(attrs, context);
+            wire.__hydrate(cursor, attrs, parent, context);
+            add(type, wire, key);
+          case VFragment(children):
+            process(children);
+        }
+        if (!cursor.step()) break;
+      }
+    }
+    
+    process(nodes);
+    
+    return cache;
+  }
+
   public function setChildren(
     previousCount:Int,
     cursor:Cursor<Node>,

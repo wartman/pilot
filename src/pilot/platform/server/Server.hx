@@ -8,7 +8,7 @@ class Server {
 
   public static function mount(node:Node, vNode:VNode):Root<Node> {
     var root = new Root(node, createContext());
-    root.update(vNode);
+    root.replace(vNode);
     return root;
   }
 

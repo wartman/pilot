@@ -66,6 +66,28 @@ class Component implements Wire<Dynamic, Dynamic> {
       __render(effectQueue);
     }
   }
+
+  public function __hydrate(
+    cursor:Cursor<Dynamic>,
+    attrs:Dynamic,
+    ?children:Array<VNode>,
+    parent:Component,
+    context:Context<Dynamic>
+  ) {
+    if (!__alive) {
+      __init();
+      __alive = true;
+    }
+    __parent = parent;
+    __context = context;
+    __updateAttributes(attrs);
+    __cache = __context.engine.differ.hydrate(
+      cursor,
+      __processRender(),
+      this,
+      __context
+    );
+  }
   
   public function __destroy() {
     __alive = false;
@@ -91,11 +113,7 @@ class Component implements Wire<Dynamic, Dynamic> {
     
     __lastNodes = null;
     __cache = __context.engine.differ.diff(
-      switch render() {
-        case null | VFragment([]): [ __context.engine.placeholder(this) ];
-        case VFragment(children): children;
-        case node: [ node ];
-      },
+      __processRender(),
       this,
       __context,
       effectQueue,
@@ -128,6 +146,14 @@ class Component implements Wire<Dynamic, Dynamic> {
     }
     
     effectQueue.push(this.__effect);
+  }
+
+  inline function __processRender() {
+    return switch render() {
+      case null | VFragment([]): [ __context.engine.placeholder(this) ];
+      case VFragment(children): children;
+      case node: [ node ];
+    }
   }
 
   function __requestUpdate() {

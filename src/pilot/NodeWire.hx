@@ -16,7 +16,27 @@ class NodeWire<Node, Attrs:{}> implements Wire<Node, Attrs> {
     return [ node ];
   }
 
-  // todo: need the `hydrate` method.
+  public function __hydrate(
+    cursor:Cursor<Node>,
+    attrs:Attrs,
+    ?children:Array<VNode>,
+    parent:Component,
+    context:Context<Node>
+  ):Void {
+    this.context = context;
+    // todo: this should wire up events ONLY.
+    this.context.engine.differ.diffObject(
+      {},
+      attrs,
+      context.engine.updateNodeAttr.bind(node)
+    );
+    this.cache = this.context.engine.differ.hydrate(
+      cursor,
+      children,
+      parent,
+      this.context
+    );
+  }
 
   public function __update(
     attrs:Attrs,

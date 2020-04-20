@@ -2,7 +2,7 @@ package pilot;
 
 enum VNode {
   VNative<Attrs:{}>(
-    type:WireType<Attrs>,
+    type:NativeWireType<Attrs>,
     attrs:Attrs,
     children:Array<VNode>,
     ?key:Key,

@@ -20,4 +20,16 @@ final class Provider<T> extends Component {
     super.__update(attrs, _, __context, parent, effectQueue);
   }
 
+  override function __hydrate(
+    cursor:Cursor<Dynamic>, 
+    attrs:Dynamic, 
+    ?_:Array<VNode>,
+    parent:Component,
+    context:Context<Dynamic>
+  ) {
+    __context = context.getChild();
+    __context.set(id, value);
+    super.__hydrate(cursor, attrs, _, parent, __context);
+  }
+  
 }

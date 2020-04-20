@@ -9,5 +9,12 @@ interface Wire<Node, Attrs:{}> {
     parent:Component,
     effectQueue:Array<()->Void>
   ):Void;
+  public function __hydrate(
+    cursor:Cursor<Node>,
+    attrs:Attrs,
+    ?children:Array<VNode>,
+    parent:Component,
+    context:Context<Node>
+  ):Void;
   public function __destroy():Void;
 }

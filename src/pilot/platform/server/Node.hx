@@ -16,8 +16,8 @@ class Node {
     'track', 'wbr',
   ];
 
-  final tag:String;
   final attributes:Array<Attribute> = [];
+  public final tag:String;
   public var textContent:String;
   public var parentNode:Node;
   public var childNodes:Array<Node> = [];

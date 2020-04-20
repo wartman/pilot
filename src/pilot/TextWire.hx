@@ -13,6 +13,17 @@ class TextWire<Node> implements Wire<Node, { content: String }> {
     return [ node ];
   }
 
+  
+  public function __hydrate(
+    cursor:Cursor<Node>,
+    attrs:{ content: String },
+    ?children:Array<VNode>,
+    parent:Component,
+    context:Context<Node>
+  ):Void {
+    // noop
+  }
+
   public function __update(
     attrs:{ content: String },
     ?children:Array<VNode>, 
