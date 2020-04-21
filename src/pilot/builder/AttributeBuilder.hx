@@ -17,6 +17,7 @@ class AttributeBuilder {
     { name: 'optional', optional: true },
     { name: 'state', optional: true },
     { name: 'guard', optional: true, handleValue: expr -> expr },
+    { name: 'effect', optional: true, handleValue: expr -> expr },
     { name: 'inject', optional: true, handleValue: expr -> expr }
   ];
   
@@ -27,7 +28,7 @@ class AttributeBuilder {
     updatesArg:String
   };
   final addInitializer:(field:ObjectField)->Void;
-  final addProp:(name:String, type:ComplexType, isOptional:Bool)->Void;
+  final addProp:(name:String, type:ComplexType, isOptional:Bool, effect:Expr)->Void;
   final triggerUpdate:(attr:String)->Expr;
 
   public function new(addInitializer, addProp, triggerUpdate, settings) {
@@ -41,6 +42,7 @@ class AttributeBuilder {
     ?optional:Bool, 
     ?state:Bool,
     ?guard:Expr,
+    ?effect:Expr,
     ?inject:Expr
   }, builder:ClassBuilder, f:Field) {
     var initArg = settings.initArg;
@@ -53,6 +55,7 @@ class AttributeBuilder {
         var setName = 'set_${name}';
         var guardName = '__guard_${name}';
         var isOptional = e != null || options.optional == true;
+        var effect:Expr = options.effect;
         var guard:Expr = options.guard != null 
           ? macro value != current && ${options.guard} 
           : macro value != current;
@@ -62,6 +65,9 @@ class AttributeBuilder {
           e = e != null
             ? macro @:pos(f.pos) __context.get(${options.inject}, $e)
             : macro @:pos(f.pos) __context.get(${options.inject});
+          effect = effect != null
+            ? macro @:pos(f.pos) __context.get(${options.inject}, ${effect})
+            : macro @:pos(f.pos) __context.get(${options.inject}, value);
         }
 
         if (t == null) {
@@ -88,7 +94,7 @@ class AttributeBuilder {
           });
         }
 
-        addProp(name, t, isOptional);
+        addProp(name, t, isOptional, effect);
         
         builder.add((macro class {
 
@@ -101,7 +107,7 @@ class AttributeBuilder {
         if (options.state) builder.add((macro class {
           function $setName(value) {
             if (this.$guardName(value, this.$propsName.$name)) {
-              this.$propsName.$name = value;
+              __updateAttributes({ $name: value });
               ${triggerUpdate(name)};
             }
             return value;

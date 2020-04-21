@@ -1,9 +1,13 @@
 package pilot;
 
+// I'm not 100% convinced this is the right way to do this, but it works?
 final class Provider<T> extends Component {
 
   @:attribute var id:String;
-  @:attribute var value:T;
+  @:attribute( effect = {
+    __context.set(id, value);
+    value;
+  } ) var value:T;
   @:attribute var children:Children;
 
   override function render():VNode return VFragment(children);
@@ -16,7 +20,6 @@ final class Provider<T> extends Component {
     effectQueue:Array<()->Void>
   ) {
     __context = context.getChild();
-    __context.set(id, value);
     super.__update(attrs, _, __context, parent, effectQueue);
   }
 
@@ -29,7 +32,6 @@ final class Provider<T> extends Component {
     effectQueue:Array<()->Void>
   ) {
     __context = context.getChild();
-    __context.set(id, value);
     super.__hydrate(cursor, attrs, _, parent, __context, effectQueue);
   }
   

@@ -31,7 +31,7 @@ class ComponentBuilder {
     var effectHooks:Array<Hook> = [];
     var disposeHooks:Array<Hook> = [];
 
-    function addProp(name:String, type:ComplexType, isOptional:Bool) {
+    function addProp(name:String, type:ComplexType, isOptional:Bool, effect:Expr) {
       props.push({
         name: name,
         kind: FVar(type, null),
@@ -46,14 +46,24 @@ class ComponentBuilder {
         meta: [ OPTIONAL_META ],
         pos: (macro null).pos
       });
-      attributeUpdates.push(macro {
-        if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) switch [ $i{ATTRS}.$name, Reflect.field($i{INCOMING_ATTRS}, $v{name}) ] {
-          case [ a, b ] if (a == b):
-          case [ _, b ]: 
-            // __changed++;
-            $i{ATTRS}.$name = b;
-        }
-      });
+      if (effect == null) {
+        attributeUpdates.push(macro {
+          if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) switch [ $i{ATTRS}.$name, Reflect.field($i{INCOMING_ATTRS}, $v{name}) ] {
+            case [ a, b ] if (a == b):
+            case [ _, b ]: $i{ATTRS}.$name = b;
+          }
+        });
+      } else {
+        attributeUpdates.push(macro {
+          {
+            var value = if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) switch [ $i{ATTRS}.$name, Reflect.field($i{INCOMING_ATTRS}, $v{name}) ] {
+              case [ a, b ] if (a == b): a;
+              case [ _, b ]: b;
+            } else $i{ATTRS}.$name;
+            $i{ATTRS}.$name = ${effect};
+          }
+        });
+      }
     }
 
     // todo: we can make the AttributeBuilder nicer

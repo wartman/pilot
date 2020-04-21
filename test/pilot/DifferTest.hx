@@ -1,7 +1,5 @@
 package pilot;
 
-import haxe.ds.Option;
-
 using Medic;
 
 class DifferTest implements TestCase {
@@ -60,5 +58,58 @@ class DifferTest implements TestCase {
     root.hydrate(template('foo'));
     root.toString().equals('<div><div>before foo after</div></div>');
   }
+
+  @test('Hydration works with Components')
+  public function testHydratedComponent() {
+    var ctx = TestHelpers.createContext();
+    var engine = ctx.engine;
+    var target = engine.createNode('div');
+
+    var p = engine.createNode('p');
+    p.appendChild(engine.createTextNode('foo'));
+    target.appendChild(p);
+
+    engine.nodeToString(target).equals('<div><p>foo</p></div>');
+    
+    var root = new Root(target, ctx);
+    root.hydrate(TestConsumer.node({ test: 'foo' }));
+    root.toString().equals('<div><p>foo</p></div>');
+
+    root.update(TestConsumer.node({ test: 'changed' }));
+    root.toString().equals('<div><p>changed</p></div>');
+  }
+
+  @test('Hydration works with Providers')
+  public function testHydratedProvider() {
+    var ctx = TestHelpers.createContext();
+    var engine = ctx.engine;
+    var target = engine.createNode('div');
+    var template = (foo:String) -> Provider.node({
+      id: 'test',
+      value: foo,
+      children: [ TestConsumer.node({}) ]
+    });
+
+    var p = engine.createNode('p');
+    p.appendChild(engine.createTextNode('foo'));
+    target.appendChild(p);
+
+    engine.nodeToString(target).equals('<div><p>foo</p></div>');
+    
+    var root = new Root(target, ctx);
+    root.hydrate(template('foo'));
+    root.toString().equals('<div><p>foo</p></div>');
+
+    root.update(template('changed'));
+    root.toString().equals('<div><p>changed</p></div>');
+  }
+
+}
+
+class TestConsumer extends Component {
+
+  @:attribute( inject = 'test' ) var test:String;
+
+  override function render() return html(<p>{test}</p>);
 
 }

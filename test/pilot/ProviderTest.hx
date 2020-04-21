@@ -16,6 +16,22 @@ class ProviderTest implements TestCase {
       .toString()
       .equals('<div><p>foo</p></div>');
   }
+
+  
+  @test('Updates take effect') 
+  public function testUpdate() {
+    var ctx = TestHelpers.createContext();
+    var root = new Root(ctx.engine.createNode('div'), ctx);
+    var template = foo -> Pilot.html(<Provider id="foo" value={foo}>
+      <TestProviderConsumer />
+    </Provider>);
+
+    root.replace(template('foo'));
+    root.toString().equals('<div><p>foo</p></div>');
+    root.update(template('bar'));
+    root.toString().equals('<div><p>bar</p></div>');
+  }
+  
   
 }
 
