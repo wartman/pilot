@@ -51,7 +51,7 @@ class DifferTest implements TestCase {
     var target = ctx.engine.createNode('div');
     
     var init = new Root(target, ctx);
-    init.replace(Html.create(<div @dangerouslySetInnerHtml="before foo after" />));
+    init.replace(Html.create(<div>before foo after</div>));
     init.toString().equals('<div><div>before foo after</div></div>');
 
     var root = new Root(target, ctx);
