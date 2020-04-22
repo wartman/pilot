@@ -1,13 +1,11 @@
 package pilot;
 
-// I'm not 100% convinced this is the right way to do this, but it works?
 final class Provider<T> extends Component {
 
   @:attribute var id:String;
-  @:attribute( effect = {
-    __context.set(id, value);
-    value;
-  } ) var value:T;
+  @:attribute( 
+    effect = __context.set(id, value) 
+  ) var value:T;
   @:attribute var children:Children;
 
   override function render():VNode return VFragment(children);

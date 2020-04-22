@@ -4,7 +4,6 @@ package pilot.builder;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import pilot.builder.ClassBuilder;
-import pilot.builder.AttributeBuilder;
 import pilot.builder.HookBuilder;
 
 // Todo: currently, the way we check `__shouldRender` is really
@@ -27,11 +26,12 @@ class ComponentBuilder {
     var initializers:Array<ObjectField> = [];
     var builder = new ClassBuilder(fields, cls);
     var guards:Array<Expr> = [];
+    var attrEffects:Array<Expr> = [];
     var initHooks:Array<Hook> = [];
     var effectHooks:Array<Hook> = [];
     var disposeHooks:Array<Hook> = [];
 
-    function addProp(name:String, type:ComplexType, isOptional:Bool, effect:Expr) {
+    function addProp(name:String, type:ComplexType, isOptional:Bool) {
       props.push({
         name: name,
         kind: FVar(type, null),
@@ -46,38 +46,121 @@ class ComponentBuilder {
         meta: [ OPTIONAL_META ],
         pos: (macro null).pos
       });
-      if (effect == null) {
-        attributeUpdates.push(macro {
-          if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) switch [ $i{ATTRS}.$name, Reflect.field($i{INCOMING_ATTRS}, $v{name}) ] {
-            case [ a, b ] if (a == b):
-            case [ _, b ]: $i{ATTRS}.$name = b;
-          }
-        });
-      } else {
-        attributeUpdates.push(macro {
-          {
-            var value = if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) switch [ $i{ATTRS}.$name, Reflect.field($i{INCOMING_ATTRS}, $v{name}) ] {
-              case [ a, b ] if (a == b): a;
-              case [ _, b ]: b;
-            } else $i{ATTRS}.$name;
-            $i{ATTRS}.$name = ${effect};
-          }
-        });
-      }
     }
 
-    // todo: we can make the AttributeBuilder nicer
-    builder.addFieldBuilder(new AttributeBuilder(
-      expr -> initializers.push(expr),
-      addProp,
-      name -> macro if (__shouldRender({ $name: value })) __requestUpdate(),
-      {
-        makePublic: false,
-        propsName: ATTRS,
-        initArg: INCOMING_ATTRS,
-        updatesArg: INCOMING_ATTRS
+    builder.addFieldBuilder({
+      name: ':attribute',
+      hook: Normal,
+      similarNames: [
+        'attribute', ':attr'
+      ],
+      multiple: false,
+      options: [
+        { name: 'optional', optional: true },
+        { name: 'state', optional: true },
+        { name: 'guard', optional: true, handleValue: expr -> expr },
+        { name: 'effect', optional: true, handleValue: expr -> expr },
+        { name: 'inject', optional: true, handleValue: expr -> expr }
+      ],
+      build: function (options:{
+        ?optional:Bool, 
+        ?state:Bool,
+        ?guard:Expr,
+        ?effect:Expr,
+        ?inject:Expr
+      }, builder, f) switch f.kind {
+        case FVar(t, e):
+          if (t == null) {
+            Context.error('Types cannot be inferred for @:attribute vars', f.pos);
+          }
+
+          var name = f.name;
+          var getName = 'get_${name}';
+          var setName = 'set_${name}';
+          var guardName = '__guard_${name}';
+          var isOptional = e != null || options.optional == true;
+          var init = e == null
+            ? macro $i{INCOMING_ATTRS}.$name
+            : macro $i{INCOMING_ATTRS}.$name == null ? ${e} : $i{INCOMING_ATTRS}.$name;
+          var effect:Expr = options.effect;
+          var update = macro @:pos(f.pos) value;
+          var guard:Expr = options.guard != null 
+            ? macro @:pos(f.pos) value != current && ${options.guard} 
+            : macro @:pos(f.pos) value != current;
+
+          if (options.inject != null) {
+            isOptional = true;
+            init = macro @:pos(f.pos) __context.get(${options.inject}, ${init});
+            update = macro @:pos(f.pos) {
+              value = __context.get(${options.inject}, value);
+              value;
+            }
+          }
+
+          if (effect != null) {
+            attrEffects.push(macro {
+              var value = $i{ATTRS}.$name;
+              ${effect};
+            });
+          }
+          
+          f.kind = FProp('get', options.state ? 'set' : 'never', t, null);
+
+          builder.add((macro class {
+
+            function $getName() return $i{ATTRS}.$name;
+  
+            function $guardName(value, current):Bool return ${guard};
+  
+          }).fields);
+
+          if (options.state) builder.add((macro class {
+            function $setName(value) {
+              if (this.$guardName(value, $i{ATTRS}.$name)) {
+                var value = ${update};
+                __updateAttributes({ $name: value });
+                if (__shouldRender({ $name: value })) __requestUpdate();
+              }
+              return value;
+            }
+          }).fields);
+
+          addProp(name, t, isOptional);
+          initializers.push({
+            field: name,
+            expr: init
+          });
+
+          if (options.inject != null) {
+            attributeUpdates.push(macro {
+              if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) {
+                var value = Reflect.field($i{INCOMING_ATTRS}, $v{name});
+                $i{ATTRS}.$name = ${update};
+              } else {
+                var value = $i{ATTRS}.$name;
+                $i{ATTRS}.$name = ${update};
+              }
+            });
+          } else {
+            attributeUpdates.push(macro {
+              if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) {
+                switch [ 
+                  $i{ATTRS}.$name, 
+                  Reflect.field($i{INCOMING_ATTRS}, $v{name}) 
+                ] {
+                  case [ a, b ] if (a == b):
+                    // noop
+                  case [ current, value ]:
+                    $i{ATTRS}.$name = ${update};
+                }
+              }
+            });
+          }
+
+        default:
+          Context.error('@:attribute can only be used on vars', f.pos);
       }
-    ));
+    });
     builder.addFieldBuilder({
       name: ':update',
       similarNames: [ 'update', ':udate', ':updat' ],
@@ -219,11 +302,12 @@ class ComponentBuilder {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()
         } };
-        // todo: init stuff
+        $b{attrEffects};
       }
 
       override function __updateAttributes($INCOMING_ATTRS:Dynamic) {
         $b{attributeUpdates};
+        $b{attrEffects};
       }
 
       override function __shouldRender($INCOMING_ATTRS:Dynamic) {
