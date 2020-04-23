@@ -104,7 +104,7 @@ class DomEngine implements Engine<Node> {
   }
 
   public function placeholder(target:Component):VNode {
-    return VNative(PlaceholderType, {}, []);
+    return VNative(TextType, { content: '' }, [], null, null, null, true);
   }
 
 }

@@ -296,8 +296,8 @@ class ComponentBuilder {
 
       var $ATTRS:$propType;
 
-      public function new($INCOMING_ATTRS:$propType, context:pilot.Context<Dynamic>) {
-        this.__context = context;
+      public function new($INCOMING_ATTRS:$propType, __context:pilot.Context<Dynamic>) {
+        this.__context = __context;
         this.$ATTRS = ${ {
           expr: EObjectDecl(initializers),
           pos: Context.currentPos()

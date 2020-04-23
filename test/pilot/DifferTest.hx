@@ -79,6 +79,69 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><p>changed</p></div>');
   }
 
+  @test('Hydration works with nested Components')
+  public function testHydratedNestedComponent() {
+    var ctx = TestHelpers.createContext();
+    var engine = ctx.engine;
+    var target = engine.createNode('div');
+    var tpl = (foo) -> HasChildrenComponent.node({
+      children: [
+        HasChildrenComponent.node({
+          children: [
+            TestConsumer.node({ test: foo }),
+            Html.text('bar')
+          ]
+        })
+      ]
+    });
+
+    var p = engine.createNode('p');
+    p.appendChild(engine.createTextNode('foo'));
+    target.appendChild(p);
+    target.appendChild(engine.createTextNode('bar'));
+
+    engine.nodeToString(target).equals('<div><p>foo</p>bar</div>');
+    
+    var root = new Root(target, ctx);
+    
+    root.hydrate(tpl('foo'));
+    root.toString().equals('<div><p>foo</p>bar</div>');
+
+    root.update(tpl('changed'));
+    root.toString().equals('<div><p>changed</p>bar</div>');
+  }
+
+  @test('Hydration works with placeholders')
+  public function testPlaceholders() {
+    var ctx = TestHelpers.createContext();
+    var engine = ctx.engine;
+    var target = engine.createNode('div');
+
+    var p = engine.createNode('p');
+    p.appendChild(engine.createTextNode('1'));
+    target.appendChild(p);
+
+    engine.nodeToString(target).equals('<div><p>1</p></div>');
+
+    var root = new Root(target, ctx);
+    root.hydrate(Pilot.html(<>
+      <MightBePlaceholderComponent show={false} value={1} />
+      <MightBePlaceholderComponent show={true} value={2} />
+      <MightBePlaceholderComponent show={false} value={3} />
+      <MightBePlaceholderComponent show={false} value={4} />
+    </>));
+
+    root.toString().equals('<div><p>2</p></div>');
+
+    root.update(Pilot.html(<>
+      <MightBePlaceholderComponent show={false} value={1} />
+      <MightBePlaceholderComponent show={false} value={2} />
+      <MightBePlaceholderComponent show={false} value={3} />
+      <MightBePlaceholderComponent show={true} value={4} />
+    </>));
+    root.toString().equals('<div><p>4</p></div>');
+  }
+
   @test('Hydration works with Providers')
   public function testHydratedProvider() {
     var ctx = TestHelpers.createContext();
@@ -111,5 +174,25 @@ class TestConsumer extends Component {
   @:attribute( inject = 'test' ) var test:String;
 
   override function render() return html(<p>{test}</p>);
+
+}
+
+class HasChildrenComponent extends Component {
+
+  @:attribute var children:Children;
+
+  override function render() return html(<>{children}</>);
+
+}
+
+class MightBePlaceholderComponent extends Component {
+
+  @:attribute var show:Bool;
+  @:attribute var value:Int;
+
+  override function render() {
+    if (show) return html(<p>{value}</p>);
+    return null;
+  }
 
 }

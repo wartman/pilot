@@ -95,19 +95,24 @@ class Differ<Node> {
         cache.types.set(type, new WireRegistry());
       }
       cache.types.get(type).put(key, wire);
+      cache.children.push(wire);
     }
 
     function process(nodes:Array<VNode>) {
       if (nodes != null) for (n in nodes) if (n != null) {
         switch n {
-          case VNative(type, attrs, children, key, ref, dangerouslySetInnerHtml):
+          case VNative(type, attrs, children, key, ref, dangerouslySetInnerHtml, isPlaceholder):
             var current = cursor.current();
+            if (isPlaceholder) {
+              current = engine.createTextNode('');
+              cursor.insert(current);
+            }
             var wire = type.__hydrate(current, attrs, context);
             if (dangerouslySetInnerHtml == null) {
               var c = context.engine.traverseChildren(current);
               wire.__hydrate(c, attrs, children, parent, context, effectQueue);
             }
-            cursor.step();
+            if (!isPlaceholder) cursor.step();
             add(type, wire, key);
             if (ref != null) effectQueue.push(() -> ref(current));
           case VComponent(type, attrs, key):

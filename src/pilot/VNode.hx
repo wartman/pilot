@@ -7,7 +7,8 @@ enum VNode {
     children:Array<VNode>,
     ?key:Key,
     ?ref:(node:Any)->Void,
-    ?dangerouslySetInnerHtml:String
+    ?dangerouslySetInnerHtml:String,
+    ?isPlaceholder:Bool
   );
   VComponent<Attrs:{}>(
     type:WireType<Attrs>,

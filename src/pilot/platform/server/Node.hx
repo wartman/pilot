@@ -114,7 +114,7 @@ class Node {
 
     if (tag == '#comment') {
       var content = textContent == null ? '' : textContent.htmlEscape();
-      return '<!-- ${content} -->'; 
+      return '<!--${content}-->'; 
     }
 
     var name = tag.toLowerCase();
