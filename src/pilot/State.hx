@@ -20,8 +20,7 @@ class State implements Wire<Dynamic, Dynamic> {
     parent:Component,
     effectQueue:Array<()->Void>
   ) {
-    __setContext(context);
-    __component.__update(attrs, _, __context, parent, effectQueue);
+    __component.__update(attrs, _, __setContext(context), parent, effectQueue);
   }
 
   public function __hydrate(
@@ -32,8 +31,7 @@ class State implements Wire<Dynamic, Dynamic> {
     context:Context<Dynamic>,
     effectQueue:Array<()->Void>
   ) {
-    __setContext(context);
-    __component.__hydrate(cursor, attrs, _, parent, __context, effectQueue);
+    __component.__hydrate(cursor, attrs, _, parent, __setContext(context), effectQueue);
   }
 
   public function __destroy() {

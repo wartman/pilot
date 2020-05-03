@@ -51,7 +51,10 @@ class StateBuilder {
         { name: 'optional', optional: true },
         { name: 'consume', optional: true },
       ],
-      build: (options:{ ?optional:Bool, ?consume:Bool }, builder, f) -> switch f.kind {
+      build: function (options:{
+        ?optional:Bool, 
+        ?consume:Bool 
+      }, builder, f) switch f.kind {
         case FVar(t, e):
           if (t == null) {
             Context.error('Types cannot be inferred for @:attribute vars', f.pos);

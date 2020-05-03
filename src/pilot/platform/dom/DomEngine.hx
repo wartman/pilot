@@ -41,9 +41,15 @@ class DomEngine implements Engine<Node> {
         js.Syntax.code('{0}[{1}] = {2}', el, key, newValue);
       default: 
         if (key.charAt(0) == 'o' && key.charAt(1) == 'n') {
-          var ev = key.substr(2).toLowerCase();
-          el.removeEventListener(ev, oldValue);
-          if (newValue != null) el.addEventListener(ev, newValue);
+          var name = key.toLowerCase();
+          if (newValue == null) {
+            Reflect.setField(el, name, null);
+          } else {
+            Reflect.setField(el, name, newValue);
+          }
+          // var ev = key.substr(2).toLowerCase();
+          // el.removeEventListener(ev, oldValue);
+          // if (newValue != null) el.addEventListener(ev, newValue);
         } else if (newValue == null || (Std.is(newValue, Bool) && newValue == false)) {
           el.removeAttribute(key);
         } else if (Std.is(newValue, Bool) && newValue == true) {
