@@ -1,5 +1,6 @@
 package pilot;
 
+@:deprecated('Replace with pilot.State')
 final class Provider<T> extends Component {
 
   @:attribute var id:String;

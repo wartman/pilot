@@ -30,4 +30,10 @@ abstract VNodeValue(VNode) from VNode to VNode {
     }, untyped component.__attrs); // HMMM
   }
 
+  @:from inline public static function ofStateInstance(state:State):VNodeValue {
+    return VComponent({
+      __create: (_, _) -> cast state
+    }, untyped state.__attrs); // HMMM
+  }
+
 }

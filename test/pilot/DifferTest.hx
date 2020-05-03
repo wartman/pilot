@@ -118,10 +118,10 @@ class DifferTest implements TestCase {
     var target = engine.createNode('div');
 
     var p = engine.createNode('p');
-    p.appendChild(engine.createTextNode('1'));
+    p.appendChild(engine.createTextNode('2'));
     target.appendChild(p);
 
-    engine.nodeToString(target).equals('<div><p>1</p></div>');
+    engine.nodeToString(target).equals('<div><p>2</p></div>');
 
     var root = new Root(target, ctx);
     root.hydrate(Pilot.html(<>

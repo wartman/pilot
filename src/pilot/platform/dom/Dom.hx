@@ -4,7 +4,7 @@ import js.html.Node;
 
 class Dom {
   
-  public static function createContext() {
+  inline public static function createContext() {
     return new Context(new DomEngine());
   }
 
@@ -14,6 +14,10 @@ class Dom {
     return root;
   }
 
-  // todo: hydrate?
+  public static function hydrate(node:Node, vNode:VNode):Root<Node> {
+    var root = new Root(node, createContext());
+    root.hydrate(vNode);
+    return root;
+  }
 
 }

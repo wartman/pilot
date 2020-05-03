@@ -103,22 +103,33 @@ class Differ<Node> {
         switch n {
           case VNative(type, attrs, children, key, ref, dangerouslySetInnerHtml, isPlaceholder):
             var current = cursor.current();
-            if (isPlaceholder) {
-              current = engine.createTextNode('');
-              cursor.insert(current);
+            if (current == null || isPlaceholder) {
+              // Note: this assumes that placeholders are *not* real nodes
+              //       when we're hydrating. This seems reasonable enough,
+              //       but it might be a bad idea to rely on.
+              var wire = type.__create(attrs, context);
+              switch wire.__getNodes() {
+                case [ node ]: cursor.insert(node);
+                default: throw 'assert';
+              }
+              wire.__update(attrs, children, context, parent, effectQueue);
+              add(type, wire, key);
+            } else {
+              var wire = type.__hydrate(current, attrs, context);
+              if (dangerouslySetInnerHtml == null) {
+                var c = context.engine.traverseChildren(current);
+                wire.__hydrate(c, attrs, children, parent, context, effectQueue);
+              }
+              cursor.step();
+              add(type, wire, key);
             }
-            var wire = type.__hydrate(current, attrs, context);
-            if (dangerouslySetInnerHtml == null) {
-              var c = context.engine.traverseChildren(current);
-              wire.__hydrate(c, attrs, children, parent, context, effectQueue);
-            }
-            if (!isPlaceholder) cursor.step();
-            add(type, wire, key);
             if (ref != null) effectQueue.push(() -> ref(current));
+
           case VComponent(type, attrs, key):
             var wire = type.__create(attrs, context);
             wire.__hydrate(cursor, attrs, parent, context, effectQueue);
             add(type, wire, key);
+
           case VFragment(children):
             process(children);
         }

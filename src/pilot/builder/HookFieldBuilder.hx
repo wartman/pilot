@@ -7,7 +7,7 @@ import pilot.builder.ClassBuilder;
 
 typedef Hook = { expr:Expr, priority:Int }; 
 
-class HookBuilder {
+class HookFieldBuilder {
   
   public var name:String;
   public var similarNames:Array<String>;

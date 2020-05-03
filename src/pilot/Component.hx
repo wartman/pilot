@@ -82,6 +82,7 @@ class Component implements Wire<Dynamic, Dynamic> {
     __parent = parent;
     __context = context;
     __updateAttributes(attrs);
+    __reset(); // Just in case
     __cache = __context.engine.differ.hydrate(
       cursor,
       __processRender(),
@@ -105,32 +106,17 @@ class Component implements Wire<Dynamic, Dynamic> {
   }
 
   function __render(effectQueue:Array<()->Void>) {
-    if (!__alive) {
-      throw 'Cannot render components that have been destroyed';
-    }
-
-    __dirty = false;
-    __pendingChildren = [];
-
     var before = __cache;
-    
-    __lastNodes = null;
+
+    __assertAlive();
+    __reset();
+
     __cache = __context.engine.differ.diff(
       __processRender(),
       this,
       __context,
       effectQueue,
-      (type, key) -> {
-        if (before == null) return None;
-        if (!before.types.exists(type)) return None;
-        return switch before.types.get(type) {
-          case null: None;
-          case t: switch t.pull(key) {
-            case null: None;
-            case v: Some(v);
-          }
-        }
-      }
+      Helpers.createPreviousResolver(before)
     );
 
     if (before != null) {
@@ -190,10 +176,12 @@ class Component implements Wire<Dynamic, Dynamic> {
   }
 
   function __dequeuePendingChildren(effectQueue:Array<()->Void>) {
-    __lastNodes = null;
     if (__pendingChildren.length == 0) return;
     var children = __pendingChildren.copy();
-    __pendingChildren = [];
+    
+    __assertAlive();
+    __reset();
+
     for (child in children) {
       if (child.__alive) {
         if (child.__dirty) {
@@ -203,6 +191,18 @@ class Component implements Wire<Dynamic, Dynamic> {
         }
       }
     }
+  }
+
+  inline function __assertAlive() {
+    if (!__alive) {
+      throw 'Cannot render components that have been destroyed';
+    }
+  }
+
+  inline function __reset() {
+    __dirty = false;
+    __pendingChildren = [];
+    __lastNodes = null;
   }
 
   function __shouldRender(_:Dynamic):Bool {

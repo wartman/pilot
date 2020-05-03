@@ -4,7 +4,9 @@ package pilot.builder;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import pilot.builder.ClassBuilder;
-import pilot.builder.HookBuilder;
+import pilot.builder.HookFieldBuilder;
+
+using haxe.macro.Tools;
 
 // Todo: currently, the way we check `__shouldRender` is really
 //       inconsitant and a bit hard to follow. Reconsider when
@@ -19,12 +21,12 @@ class ComponentBuilder {
     var fields = Context.getBuildFields();
     var cls = Context.getLocalClass().get();
     var clsTp:TypePath = { pack: cls.pack, name: cls.name };
+    var builder = new ClassBuilder(fields, cls);
     var props:Array<Field> = [];
     var updateProps:Array<Field> = [];
     var updates:Array<Expr> = [];
     var attributeUpdates:Array<Expr> = [];
     var initializers:Array<ObjectField> = [];
-    var builder = new ClassBuilder(fields, cls);
     var guards:Array<Expr> = [];
     var attrEffects:Array<Expr> = [];
     var initHooks:Array<Hook> = [];
@@ -48,6 +50,7 @@ class ComponentBuilder {
       });
     }
 
+    // TODO: `inject` should be only used to inject pilot.State
     builder.addFieldBuilder({
       name: ':attribute',
       hook: Normal,
@@ -60,14 +63,16 @@ class ComponentBuilder {
         { name: 'state', optional: true },
         { name: 'guard', optional: true, handleValue: expr -> expr },
         { name: 'effect', optional: true, handleValue: expr -> expr },
-        { name: 'inject', optional: true, handleValue: expr -> expr }
+        { name: 'inject', optional: true, handleValue: expr -> expr },
+        { name: 'consume', optional: true }
       ],
       build: function (options:{
         ?optional:Bool, 
         ?state:Bool,
         ?guard:Expr,
         ?effect:Expr,
-        ?inject:Expr
+        ?inject:Expr,
+        ?consume:Bool
       }, builder, f) switch f.kind {
         case FVar(t, e):
           if (t == null) {
@@ -93,6 +98,24 @@ class ComponentBuilder {
             init = macro @:pos(f.pos) __context.get(${options.inject}, ${init});
             update = macro @:pos(f.pos) {
               value = __context.get(${options.inject}, value);
+              value;
+            }
+          }
+
+          if (options.consume) {
+            if (!Context.unify(t.toType(), Context.getType('pilot.State'))) {
+              Context.error('Attributes using consume MUST unify with pilot.State', f.pos);
+            }
+            isOptional = true;
+            // todo: probably a cleaner way to get the path
+            var path = t.toString();
+            if (path.indexOf('<') >= 0) {
+              path = path.substr(0, path.indexOf('<'));
+            }
+            var id = macro $p{path.split('.')}.__stateId;
+            init = macro @:pos(f.pos) __context.get(${id}, ${init});
+            update = macro @:pos(f.pos) {
+              value = __context.get(${id}, value);
               value;
             }
           }
@@ -131,7 +154,7 @@ class ComponentBuilder {
             expr: init
           });
 
-          if (options.inject != null) {
+          if (options.inject != null || options.consume != null) {
             attributeUpdates.push(macro {
               if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) {
                 var value = Reflect.field($i{INCOMING_ATTRS}, $v{name});
@@ -209,21 +232,24 @@ class ComponentBuilder {
           Context.error('@:guard must be used on a method', field.pos);
       }
     });
-    builder.addFieldBuilder(new HookBuilder(
+    builder.addFieldBuilder(new HookFieldBuilder(
       ':init',
       [ 'init', ':initialize' ],
       hook -> initHooks.push(hook)
     ));
-    builder.addFieldBuilder(new HookBuilder(
+    builder.addFieldBuilder(new HookFieldBuilder(
       ':effect',
       [ 'effect', ':efect', ':effct' ],
       hook -> effectHooks.push(hook)
     ));
-    builder.addFieldBuilder(new HookBuilder(
+    builder.addFieldBuilder(new HookFieldBuilder(
       ':dispose',
       [ 'dispose', ':dispse', ':dispos' ],
       hook -> disposeHooks.push(hook)
     ));
+    builder.addFieldBuilder(
+      new ComputedFieldBuilder(expr -> attributeUpdates.push(expr))
+    );
 
     builder.run();
 
@@ -244,7 +270,7 @@ class ComponentBuilder {
         kind: FFun({
           params: createParams,
           // Todo: figure out how we can NOT have to use `cast` here
-          expr: macro return cast new $clsTp(props, context),
+          expr: macro @:pos(cls.pos) return cast new $clsTp(props, context),
           args: [
             { name: 'props', type: macro:$propType },
             { name: 'context', type: macro:pilot.Context<Node> }
@@ -256,7 +282,7 @@ class ComponentBuilder {
       {
         name: 'node',
         access: [ AStatic, APublic ],
-        pos: cls.pos,
+        pos: (macro null).pos,
         kind: FFun({
           ret: macro:pilot.VNode,
           params: createParams,
@@ -264,7 +290,7 @@ class ComponentBuilder {
             { name: 'attrs', type: macro:$propType },
             { name: 'key', type: macro:Null<pilot.Key>, opt: true }
           ],
-          expr: macro return pilot.VNode.VComponent(
+          expr: macro @:pos(cls.pos) return pilot.VNode.VComponent(
             $p{ cls.pack.concat([ cls.name ]) },
             attrs,
             key
@@ -300,7 +326,7 @@ class ComponentBuilder {
         this.__context = __context;
         this.$ATTRS = ${ {
           expr: EObjectDecl(initializers),
-          pos: Context.currentPos()
+          pos: (macro null).pos
         } };
         $b{attrEffects};
       }

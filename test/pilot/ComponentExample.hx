@@ -8,6 +8,7 @@ class ComponentExample extends Component {
   override function render() return html(<Container>
     <Header title="Interactive Component Examples" />
     <ul>
+      <LocalStateExample />
       <StateExample />
       <InputExample />
       <ChildrenExample />

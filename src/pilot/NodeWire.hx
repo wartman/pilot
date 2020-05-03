@@ -25,11 +25,15 @@ class NodeWire<Node, Attrs:{}> implements Wire<Node, Attrs> {
     effectQueue:Array<()->Void>
   ):Void {
     this.context = context;
-    // todo: this should wire up events ONLY.
     this.context.engine.differ.diffObject(
       {},
       attrs,
-      context.engine.updateNodeAttr.bind(node)
+      (key, oldValue, newValue) -> {
+        // Only wire up events
+        if (key.charAt(0) == 'o' && key.charAt(1) == 'n') {
+          context.engine.updateNodeAttr(node, key, oldValue, newValue);
+        }
+      }
     );
     this.cache = this.context.engine.differ.hydrate(
       cursor,
@@ -62,17 +66,7 @@ class NodeWire<Node, Attrs:{}> implements Wire<Node, Attrs> {
       parent,
       context,
       effectQueue,
-      (type, key) -> {
-        if (before == null) return None;
-        if (!before.types.exists(type)) return None;
-        return switch before.types.get(type) {
-          case null: None;
-          case t: switch t.pull(key) {
-            case null: None;
-            case v: Some(v);
-          }
-        }
-      }
+      Helpers.createPreviousResolver(before)
     );
 
     if (before != null) {

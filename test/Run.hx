@@ -9,6 +9,9 @@ import pilot.ComponentExample;
   import pilot.platform.server.Server;
 #end
 
+// Todo: for some reason, I got very sloppy with my tests and
+//       most of the unit tests DON'T just test the class they're 
+//       supposed to. Clean this up?
 class Run {
 
   static function main() {
@@ -56,6 +59,7 @@ class Run {
     
     #end
     
+    runner.add(new pilot.StateTest());
     runner.add(new pilot.DifferTest());
     runner.add(new pilot.ComponentTest());
     runner.add(new pilot.ProviderTest());

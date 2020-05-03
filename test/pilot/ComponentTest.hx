@@ -7,6 +7,14 @@ class ComponentTest implements TestCase {
   
   public function new() {}
 
+  @test('Components can be used without markup')
+  public function componentNode() {
+    ContentComponent.node({ content: 'test' })
+      .render()
+      .toString()
+      .equals('<div><p>test</p></div>');
+  }
+
   @test('Component instance can be passed as a value')
   @async
   public function testInstance(done) {
@@ -131,9 +139,30 @@ class ComponentTest implements TestCase {
     });
   }
 
+  @test('Computed properties work')
+  public function testComputedProps() {
+    var context = TestHelpers.createContext();
+    var node = context.engine.createNode('div');
+    var root = new Root(node, context);
+    root.update(ComputedComponent.node({ text: 'foo' }));
+    root.toString().equals('<div>foofoo</div>');
+    root.update(ComputedComponent.node({ text: 'bar' }));
+    root.toString().equals('<div>barfoo</div>');
+  }
+
   inline function wait(cb:()->Void) {
     cb.later();
   }
+
+}
+
+class ContentComponent extends Component {
+
+  @:attribute var content:String;
+
+  override function render() return Html.h('p', {}, [ 
+    Html.text(content) 
+  ]);
 
 }
 
@@ -235,5 +264,14 @@ class ChildComponent extends Component {
   override function render() return html(<>
     @for (i in 0...numChildren) <p>{i}</p>
   </>);
+
+}
+
+class ComputedComponent extends Component {
+  
+  @:attribute var text:String;
+  @:computed var fooText:String = text + 'foo';
+
+  override function render() return html(<>{fooText}</>);
 
 }

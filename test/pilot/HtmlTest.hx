@@ -17,14 +17,6 @@ class HtmlTest implements TestCase {
       .equals('<div><div class="foo">bar</div></div>');
   }
 
-  @test('Components can be used without markup too')
-  public function componentNode() {
-    SimpleComponent.node({ content: 'test' })
-      .render()
-      .toString()
-      .equals('<div><p>test</p></div>');
-  }
-
 }
 
 class SimpleComponent extends Component {

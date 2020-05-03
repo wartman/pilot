@@ -108,8 +108,11 @@ class MarkupGenerator {
         if (Context.unify(type, Context.getType('pilot.VNode'))) {
           macro @:pos(pos) new $tp($attrs);
         } else {
-          if (!Context.unify(type, Context.getType('pilot.Component'))) {
-            Context.error('Components must extend pilot.Component', pos);
+          if (
+            !Context.unify(type, Context.getType('pilot.Component'))
+            && !Context.unify(type, Context.getType('pilot.State'))
+          ) {
+            Context.error('Components must extend pilot.Component or pilot.State', pos);
           }
           macro @:pos(pos) VComponent(
             $p{tp.pack.concat([ tp.name ])},

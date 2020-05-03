@@ -24,14 +24,19 @@ abstract Root<Node>(NodeWire<Node, Dynamic>) {
   **/
   public function hydrate(vNode:VNode) {
     var effectQueue:Array<()->Void> = [];
+    var cursor = this.context.engine.traverseChildren(this.node);
     this.__hydrate(
-      this.context.engine.traverseChildren(this.node),
+      cursor,
       {},
       [ vNode ],
       null,
       this.context,
       effectQueue
     );
+    // Cleanup any remaining nodes
+    while (cursor.current() != null) {
+      if (!cursor.delete()) break;
+    }
     Helpers.commitComponentEffects(effectQueue);
   }
 

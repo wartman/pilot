@@ -10,6 +10,10 @@ typedef MarkupParserOptions = {
 
 class MarkupParser extends Parser<Array<MarkupNode>> {
 
+  static final specialAttributes = [
+    'ref', 'key', 'dangerouslySetInnerHtml'
+  ];
+  
   final options:MarkupParserOptions;
 
   public function new(options, source, fileName, filePos) {
@@ -55,7 +59,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       var isSwitch = match('switch');
       var hasElse = false;
 
-      function readCode() {
+      function parseCodeBlockOrNode() {
         readWhile(() -> !checkAny([ '{', '<' ]));
         if (match('<')) {
           if (isSwitch) {
@@ -68,7 +72,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
         }
       }
 
-      readCode();
+      parseCodeBlockOrNode();
       whitespace();
 
       if (match('else')) {
@@ -77,7 +81,7 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
         }
       
         hasElse = true;
-        readCode();
+        parseCodeBlockOrNode();
       }
 
       var code = source.substring(start, position);
@@ -143,7 +147,16 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       }
 
       var attrStart = position;
-      var key:String = (match('@') ? '@' : '') + ident();
+      var key:String = if (match('@')) {
+        var check = ident();
+        if (specialAttributes.indexOf(check) < 0) {
+          error('@${check} is not a valid special attribute', attrStart, position);
+        }
+        '@' + check;
+      } else {
+        ident();
+      }
+      
       if (key.length <= 0) {
         throw errorAt('Expected an identifier', peek());
       }

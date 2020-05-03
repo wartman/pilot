@@ -1,5 +1,7 @@
 package pilot;
 
+import haxe.ds.Option;
+
 class Helpers {
 
   #if js
@@ -17,6 +19,22 @@ class Helpers {
 
   public static function commitComponentEffects(effects:Array<()->Void>) {
     for (cb in effects) cb();
+  }
+
+  public static function createPreviousResolver<Node>(before:Null<WireCache<Node>>):(type:WireType<Dynamic>, key:Null<Key>)->Option<Wire<Node, Dynamic>> {
+    if (before == null) {
+      return (_, _) -> None;
+    }
+    return (type, key) -> {
+      if (!before.types.exists(type)) return None;
+      return switch before.types.get(type) {
+        case null: None;
+        case t: switch t.pull(key) {
+          case null: None;
+          case v: Some(v);
+        }
+      }
+    }
   }
 
 }
