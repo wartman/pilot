@@ -36,6 +36,8 @@ class State implements Wire<Dynamic, Dynamic> {
 
   public function __destroy() {
     __component.__destroy();
+    __component = null;
+    __context = null;
   }
 
   function __setContext(context:Context<Dynamic>):Context<Dynamic> {

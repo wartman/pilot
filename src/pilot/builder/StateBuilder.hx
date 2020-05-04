@@ -3,6 +3,8 @@ package pilot.builder;
 
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import pilot.builder.ClassBuilder;
+import pilot.builder.HookFieldBuilder;
 
 using haxe.macro.Tools;
 
@@ -22,7 +24,19 @@ class StateBuilder {
     var props:Array<Field> = [];
     var updateProps:Array<Field> = [];
     var attributeUpdates:Array<Expr> = [];
+    var initHooks:Array<Hook> = [];
+    var disposeHooks:Array<Hook> = [];
     
+
+    function prepareHooks(hooks:Array<Hook>):Array<Expr> {
+      hooks.sort((a, b) -> {
+        return if (a.priority < b.priority) -1
+        else if (a.priority > b.priority) 1
+        else 0;
+      });
+      return hooks.map(h -> h.expr);
+    }
+
     function addProp(name:String, type:ComplexType, isOptional:Bool) {
       props.push({
         name: name,
@@ -157,6 +171,16 @@ class StateBuilder {
     builder.addFieldBuilder(
       new ComputedFieldBuilder(expr -> attributeUpdates.push(expr), true)
     );
+    builder.addFieldBuilder(new HookFieldBuilder(
+      ':init',
+      [ 'init', ':initialize' ],
+      hook -> initHooks.push(hook)
+    ));
+    builder.addFieldBuilder(new HookFieldBuilder(
+      ':dispose',
+      [ 'dispose', ':dispse', ':dispos' ],
+      hook -> disposeHooks.push(hook)
+    ));
 
     builder.run();
     
@@ -213,6 +237,7 @@ class StateBuilder {
         __component = new pilot.State.StateComponent({ 
           children: $i{INCOMING_ATTRS}.children 
         }, __setContext(__context));
+        $b{prepareHooks(initHooks)}
       }
 
       function update($INCOMING_ATTRS:$updatePropsType) {
@@ -222,6 +247,11 @@ class StateBuilder {
 
       override function __register() {
         __context.set(__stateId, this);
+      }
+
+      override function __destroy() {
+        $b{prepareHooks(disposeHooks)};
+        super.__destroy();
       }
 
     }).fields);
