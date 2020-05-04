@@ -16,9 +16,11 @@ class ComputedFieldBuilder {
   public var multiple:Bool = false;
   public var options:Array<BuilderOption> = [];
   var triggerInvalid:(expr:Expr)->Void;
+  final forcePublic:Bool;
 
-  public function new(triggerInvalid) {
+  public function new(triggerInvalid, forcePublic = false) {
     this.triggerInvalid = triggerInvalid;
+    this.forcePublic = forcePublic;
   }
 
   public function build(options:{}, builder:ClassBuilder, f:Field) {
@@ -36,6 +38,10 @@ class ComputedFieldBuilder {
         var computedName = '__computed_${name}';
 
         f.kind = FProp('get', 'never', t, null);
+
+        if (forcePublic && f.access.indexOf(APublic) < 0) {
+          f.access.push(APublic);
+        }
 
         triggerInvalid(macro @:pos(f.pos) this.$computedName = null);
 

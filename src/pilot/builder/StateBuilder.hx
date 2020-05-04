@@ -155,7 +155,7 @@ class StateBuilder {
       }
     });
     builder.addFieldBuilder(
-      new ComputedFieldBuilder(expr -> attributeUpdates.push(expr))
+      new ComputedFieldBuilder(expr -> attributeUpdates.push(expr), true)
     );
 
     builder.run();
