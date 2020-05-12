@@ -109,13 +109,14 @@ class ComponentBuilder {
             isOptional = true;
             // todo: probably a cleaner way to get the path
             var path = t.toString();
+            var required = options.optional ? macro false : macro true;
             if (path.indexOf('<') >= 0) {
               path = path.substr(0, path.indexOf('<'));
             }
             var id = macro $p{path.split('.')}.__stateId;
-            init = macro @:pos(f.pos) __context.get(${id}, ${init});
+            init = macro @:pos(f.pos) __context.get(${id}, ${init}, ${required});
             update = macro @:pos(f.pos) {
-              value = __context.get(${id}, value);
+              value = __context.get(${id}, value, ${required});
               value;
             }
           }

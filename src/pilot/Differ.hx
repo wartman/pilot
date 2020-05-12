@@ -106,7 +106,7 @@ class Differ<Node> {
             if (current == null || isPlaceholder) {
               // Note: this assumes that placeholders are *not* real nodes
               //       when we're hydrating. This seems reasonable enough,
-              //       but it might be a bad idea to rely on.
+              //       but it might be a bad idea to rely on it.
               var wire = type.__create(attrs, context);
               switch wire.__getNodes() {
                 case [ node ]: cursor.insert(node);

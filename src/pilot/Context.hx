@@ -12,13 +12,17 @@ class Context<Node> {
     this.parent = parent;
   }
 
-  public function get<T>(name:String, ?def:T):T {
-    return if (data.exists(name)) 
+  public function get<T>(name:String, ?def:T, required:Bool = false):T {
+    var res = if (data.exists(name)) 
       data.get(name)
     else if (parent != null)
       parent.get(name, def); 
     else 
       def;
+    if (required && res == null) {
+      throw 'Required vlaue ${name} does not exist in context';
+    }
+    return res;
   }
 
   inline public function set<T>(name:String, value:T) {
