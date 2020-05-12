@@ -150,19 +150,24 @@ class StateBuilder {
       similarNames: [ 'transition', ':update', ':transtion' ],
       multiple: false,
       hook: After,
-      options: [],
-      build: function (options:{}, builder, field) switch field.kind {
+      options: [
+        { name: 'silent', optional: true }
+      ],
+      build: function (options:{
+        ?silent:Bool
+      }, builder, field) switch field.kind {
         case FFun(func):
           if (func.ret != null) {
             Context.error('@:transition functions should not define their return type manually', field.pos);
           }
           var updatePropsRet = TAnonymous(updateProps);
           var e = func.expr;
+          var silent = options.silent == true ? macro true : macro false;
           func.ret = macro:Void;
           func.expr = macro {
             inline function closure():$updatePropsRet ${e};
             var incoming = closure();
-            update(incoming);
+            update(incoming, ${silent});
           }
         default:
           Context.error('@:transition must be used on a method', field.pos);
@@ -211,13 +216,32 @@ class StateBuilder {
         access: [ APublic, AStatic ],
         kind: FFun({
           params: createParams,
-          // Todo: figure out how we can NOT have to use `cast` here
-          expr: macro @:pos(cls.pos) return cast new $clsTp(props, context),
           args: [
             { name: 'props', type: macro:$initPropsType },
             { name: 'context', type: macro:pilot.Context<Node> }
           ],
+          // Todo: figure out how we can NOT have to use `cast` here
+          expr: macro @:pos(cls.pos) return cast new $clsTp(props, context),
           ret: macro:pilot.Wire<Node, $initPropsType>
+        })
+      },
+
+      {
+        name: 'provide',
+        pos: (macro null).pos,
+        access: [ APublic, AStatic ],
+        kind: FFun({
+          params: createParams,
+          args: [
+            { name: 'attrs', type: macro:$initPropsType },
+            { name: 'key', type: macro:Null<pilot.Key>, opt: true }
+          ],
+          expr: macro @:pos(cls.pos) return pilot.VNode.VComponent(
+            $p{ cls.pack.concat([ cls.name ]) },
+            attrs,
+            key
+          ),
+          ret: macro:pilot.VNode
         })
       }
 
@@ -240,9 +264,14 @@ class StateBuilder {
         $b{prepareHooks(initHooks)}
       }
 
-      function update($INCOMING_ATTRS:$updatePropsType) {
+      function update($INCOMING_ATTRS:$updatePropsType, silent:Bool = false) {
         $b{attributeUpdates};
-        @:privateAccess __component.__requestUpdate();
+        if (!silent) @:privateAccess __component.__requestUpdate();
+      }
+
+      override function __update(attrs:Dynamic, ?_, context, parent, effectQueue) {
+        update(attrs, true);
+        super.__update(attrs, _, context, parent, effectQueue);
       }
 
       override function __register() {

@@ -50,7 +50,7 @@ class ComponentBuilder {
       });
     }
 
-    // TODO: `inject` should be only used to inject pilot.State
+    // TODO: `inject` should be removed
     builder.addFieldBuilder({
       name: ':attribute',
       hook: Normal,
@@ -94,6 +94,7 @@ class ComponentBuilder {
             : macro @:pos(f.pos) value != current;
 
           if (options.inject != null) {
+            Context.warning('inject is depreciated -- switch to pilot.State and consume', f.pos);            
             isOptional = true;
             init = macro @:pos(f.pos) __context.get(${options.inject}, ${init});
             update = macro @:pos(f.pos) {
@@ -185,13 +186,18 @@ class ComponentBuilder {
           Context.error('@:attribute can only be used on vars', f.pos);
       }
     });
+
     builder.addFieldBuilder({
       name: ':update',
       similarNames: [ 'update', ':udate', ':updat' ],
       multiple: false,
       hook: After,
-      options: [],
-      build: function (options:{}, builder, field) switch field.kind {
+      options: [
+        { name: 'silent', optional: true }
+      ],
+      build: function (options:{
+        ?silent:Bool
+      }, builder, field) switch field.kind {
         case FFun(func):
           if (func.ret != null) {
             Context.error('@:update functions should not define their return type manually', field.pos);
@@ -199,18 +205,27 @@ class ComponentBuilder {
           var updatePropsRet = TAnonymous(updateProps);
           var e = func.expr;
           func.ret = macro:Void;
-          func.expr = macro {
-            inline function closure():$updatePropsRet ${e};
-            var incoming = closure();
-            __updateAttributes(incoming);
-            if (__shouldRender(incoming)) {
-              __requestUpdate();
+          if (options.silent == true) {
+            func.expr = macro {
+              inline function closure():$updatePropsRet ${e};
+              var incoming = closure();
+              __updateAttributes(incoming);
+            }
+          } else {
+            func.expr = macro {
+              inline function closure():$updatePropsRet ${e};
+              var incoming = closure();
+              __updateAttributes(incoming);
+              if (__shouldRender(incoming)) {
+                __requestUpdate();
+              }
             }
           }
         default:
           Context.error('@:update must be used on a method', field.pos);
       }
     });
+
     builder.addFieldBuilder({
       name: ':guard',
       similarNames: [

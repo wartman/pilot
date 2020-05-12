@@ -72,10 +72,10 @@ class DifferTest implements TestCase {
     engine.nodeToString(target).equals('<div><p>foo</p></div>');
     
     var root = new Root(target, ctx);
-    root.hydrate(TestConsumer.node({ test: 'foo' }));
+    root.hydrate(TestSimple.node({ test: 'foo' }));
     root.toString().equals('<div><p>foo</p></div>');
 
-    root.update(TestConsumer.node({ test: 'changed' }));
+    root.update(TestSimple.node({ test: 'changed' }));
     root.toString().equals('<div><p>changed</p></div>');
   }
 
@@ -88,7 +88,7 @@ class DifferTest implements TestCase {
       children: [
         HasChildrenComponent.node({
           children: [
-            TestConsumer.node({ test: foo }),
+            TestSimple.node({ test: foo }),
             Html.text('bar')
           ]
         })
@@ -142,13 +142,12 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><p>4</p></div>');
   }
 
-  @test('Hydration works with Providers')
-  public function testHydratedProvider() {
+  @test('Hydration works with States')
+  public function testHydratedState() {
     var ctx = TestHelpers.createContext();
     var engine = ctx.engine;
     var target = engine.createNode('div');
-    var template = (foo:String) -> Provider.node({
-      id: 'test',
+    var template = (foo:String) -> TestState.provide({
       value: foo,
       children: [ TestConsumer.node({}) ]
     });
@@ -169,11 +168,22 @@ class DifferTest implements TestCase {
 
 }
 
-class TestConsumer extends Component {
+class TestSimple extends Component {
 
-  @:attribute( inject = 'test' ) var test:String;
+  @:attribute var test:String;
 
   override function render() return html(<p>{test}</p>);
+}
+
+class TestState extends State {
+  @:attribute var value:String;
+}
+
+class TestConsumer extends Component {
+
+  @:attribute(consume) var test:TestState;
+
+  override function render() return html(<p>{test.value}</p>);
 
 }
 

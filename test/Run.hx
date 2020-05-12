@@ -62,7 +62,7 @@ class Run {
     runner.add(new pilot.StateTest());
     runner.add(new pilot.DifferTest());
     runner.add(new pilot.ComponentTest());
-    runner.add(new pilot.ProviderTest());
+    // runner.add(new pilot.ProviderTest());
     runner.add(new pilot.HtmlTest());
     runner.add(new pilot.MarkupTest());
 

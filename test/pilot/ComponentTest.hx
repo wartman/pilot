@@ -169,7 +169,7 @@ class ContentComponent extends Component {
 class ComponentTester extends Component {
 
   @:attribute var text:String;
-  @:attribute( optional ) var opt:String;
+  @:attribute(optional) var opt:String;
   @:attribute var def:String = 'def';
   @:attribute(state) public var isState:Bool;
 
