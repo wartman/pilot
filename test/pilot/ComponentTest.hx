@@ -230,7 +230,7 @@ class GuardedRender extends Component {
 
 }
 
-class ComponentWithTypeParam<T> extends Component {
+class ComponentWithTypeParam<T:String> extends Component {
 
   @:attribute var data:T;
   @:attribute var build:(data:T)->VNode;

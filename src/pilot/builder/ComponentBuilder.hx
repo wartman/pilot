@@ -269,11 +269,21 @@ class ComponentBuilder {
 
     builder.run();
 
+    function extractTypeParams(tp:haxe.macro.Type.TypeParameter) {
+      return switch tp.t {
+        case TInst(kind, _): switch kind.get().kind {
+          case KTypeParameter(constraints): constraints.map(t -> t.toComplexType());
+          default: [];
+        }
+        default: [];
+      }
+    }
+
     var propType = TAnonymous(props);
     var createParams:Array<TypeParamDecl> = [
       { name: 'Node', constraints: [ macro:{} ] }
     ].concat(cls.params.length > 0
-      ? [ for (p in cls.params) { name: p.name, constraints: [] } ]
+      ? [ for (p in cls.params) { name: p.name, constraints: extractTypeParams(p) } ]
       : []
     );
 
