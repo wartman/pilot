@@ -33,7 +33,7 @@ abstract Root<Node>(NodeWire<Node, Dynamic>) {
       this.context,
       effectQueue
     );
-    // Cleanup any remaining nodes
+    // Cleanup any remaining nodes.
     while (cursor.current() != null) {
       if (!cursor.delete()) break;
     }

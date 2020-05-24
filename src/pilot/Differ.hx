@@ -36,7 +36,7 @@ class Differ<Node> {
           newCache.children.push(wire);
         }
 
-        // todo: the `ref` signature is bad. We should not have to use `Any`.
+        // @todo: the `ref` signature is bad. We should not have to use `Any`.
         inline function handleSpecial(wire:Wire<Node, Dynamic>, ref:(node:Any)->Void, innerHtml:String) {
           switch wire.__getNodes() {
             case [ node ]:

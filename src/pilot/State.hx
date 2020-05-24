@@ -1,7 +1,7 @@
 package pilot;
 
-// Not sure if having a wrapped component is the best idea here -- 
-// it might lead to weird issues.
+// @todo: Decide if there is a better way of handling this
+//        that does not involve wrapping a child component.
 @:access(pilot.Component)
 @:autoBuild(pilot.builder.StateBuilder.build())
 class State implements Wire<Dynamic, Dynamic> {

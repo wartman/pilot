@@ -50,7 +50,6 @@ class ComponentBuilder {
       });
     }
 
-    // TODO: `inject` should be removed
     builder.addFieldBuilder({
       name: ':attribute',
       hook: Normal,
@@ -63,7 +62,6 @@ class ComponentBuilder {
         { name: 'state', optional: true },
         { name: 'guard', optional: true, handleValue: expr -> expr },
         { name: 'effect', optional: true, handleValue: expr -> expr },
-        { name: 'inject', optional: true, handleValue: expr -> expr },
         { name: 'consume', optional: true }
       ],
       build: function (options:{
@@ -71,7 +69,6 @@ class ComponentBuilder {
         ?state:Bool,
         ?guard:Expr,
         ?effect:Expr,
-        ?inject:Expr,
         ?consume:Bool
       }, builder, f) switch f.kind {
         case FVar(t, e):
@@ -92,16 +89,6 @@ class ComponentBuilder {
           var guard:Expr = options.guard != null 
             ? macro @:pos(f.pos) value != current && ${options.guard} 
             : macro @:pos(f.pos) value != current;
-
-          if (options.inject != null) {
-            Context.warning('inject is depreciated -- switch to pilot.State and consume', f.pos);            
-            isOptional = true;
-            init = macro @:pos(f.pos) __context.get(${options.inject}, ${init});
-            update = macro @:pos(f.pos) {
-              value = __context.get(${options.inject}, value);
-              value;
-            }
-          }
 
           if (options.consume) {
             if (!Context.unify(t.toType(), Context.getType('pilot.State'))) {
@@ -156,7 +143,7 @@ class ComponentBuilder {
             expr: init
           });
 
-          if (options.inject != null || options.consume != null) {
+          if (options.consume != null) {
             attributeUpdates.push(macro {
               if (Reflect.hasField($i{INCOMING_ATTRS}, $v{name})) {
                 var value = Reflect.field($i{INCOMING_ATTRS}, $v{name});
