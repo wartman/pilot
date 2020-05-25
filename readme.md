@@ -96,7 +96,58 @@ Components can have methods marked with lifecycle meta (`@:init`, `@:effect`, `@
 
 `@:dispose` will be run _once_, after the Component is removed from the DOM. This is where you should handle any cleanup your component needs.
 
-Methods with `@:guard` meta will be checked before every render -- if ANY `@:guard` methods return false the component will not be rendered.  
+Methods with `@:guard` meta will be checked before every render -- if ANY `@:guard` methods return false the component will not be rendered. 
+
+State
+-----
+
+`pilot.State` works a little like a mix of redux and the provider/consumer system in React.
+
+A `State` looks a lot like a typical component at first, although it does not allow you to define a `render` method:
+
+```haxe
+class MyState extends State {
+
+  @:attribute var foo:String;
+
+  @:transition
+  public function setFoo(foo:String) {
+    return { foo: foo };
+  }
+
+}
+```
+
+The main benefit of using States is that you can `consume` them from any component in your app, so long as there is a parent State in the VNode tree. For example:
+
+```haxe
+class UsesState extends Component {
+
+  // note that only `pilot.State`s can be consumed.
+  @:attribute(consume) var state:MyState;
+
+  override function render() return html(<>
+    <p>{state.foo}</p>
+    <button onClick={e -> state.setFoo('bar')}>Make Bar</button>
+  </>)
+
+}
+```
+
+You can then set your app up like this:
+
+```haxe
+Pilot.html(<>
+  <MyState foo="foo">
+    // Note that we don't need to pass anything to
+    // <UsesState>'s `state` attribute -- it will be injected
+    // automatically so long as there is a <MyState> parent.
+    <UsesState />
+  </MyState>
+</>)
+```
+
+This example is contrived, but this pattern becomes far more useful when you have deeply nested components that still need to access or change higher-level states.
 
 Special Attributes
 ------------------
