@@ -6,14 +6,14 @@ class StateTest implements TestCase {
 
   public function new() {}
 
-  @test('States can be constructed')
+  @:test('States can be constructed')
   public function testStateCreation() {
     var ctx = TestHelpers.createContext();
     var state = new SimpleState({ foo: 'foo', children: [] }, ctx);
     state.foo.equals('foo');
   }
 
-  @test('States can be consumed by child components')
+  @:test('States can be consumed by child components')
   public function testStateConsume() {
     var context = TestHelpers.createContext();
     var node = context.engine.createNode('div');
@@ -26,8 +26,8 @@ class StateTest implements TestCase {
     root.toString().equals('<div><p>foo</p></div>');
   }
 
-  @test('States update all child components when changed')
-  @async
+  @:test('States update all child components when changed')
+  @:test.async
   public function testStateUpdate(done) {
     var context = TestHelpers.createContext();
     var node = context.engine.createNode('div');

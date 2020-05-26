@@ -7,7 +7,7 @@ class ComponentTest implements TestCase {
   
   public function new() {}
 
-  @test('Components can be used without markup')
+  @:test('Components can be used without markup')
   public function componentNode() {
     ContentComponent.node({ content: 'test' })
       .render()
@@ -15,8 +15,8 @@ class ComponentTest implements TestCase {
       .equals('<div><p>test</p></div>');
   }
 
-  @test('Component instance can be passed as a value')
-  @async
+  @:test('Component instance can be passed as a value')
+  @:test.async
   public function testInstance(done) {
     var context = TestHelpers.createContext();
     var node = context.engine.createNode('div');
@@ -31,8 +31,8 @@ class ComponentTest implements TestCase {
     });
   }
   
-  @test('Simple guards')
-  @async(2000)
+  @:test('Simple guards')
+  @:test.async(2000)
   public function testGuards(done) {
     var context = TestHelpers.createContext();
     var node = context.engine.createNode('div');
@@ -86,8 +86,8 @@ class ComponentTest implements TestCase {
     });
   }
 
-  @test('simple effects')
-  @async
+  @:test('simple effects')
+  @:test.async
   public function testEffect(done) {
     var context = TestHelpers.createContext();
     var node = context.engine.createNode('div');
@@ -106,7 +106,7 @@ class ComponentTest implements TestCase {
     });
   }
 
-  @test('Component type params')
+  @:test('Component type params')
   public function testParams() {
     Pilot.html(<>
       <ComponentWithTypeParam
@@ -119,8 +119,8 @@ class ComponentTest implements TestCase {
       .equals('<div><p>foo</p></div>');
   }
 
-  @test('Components correctly list the number of their child nodes when children update')
-  @async
+  @:test('Components correctly list the number of their child nodes when children update')
+  @:test.async
   public function testComponentChildren(done) {
     var context = TestHelpers.createContext();
     var node = context.engine.createNode('div');
@@ -139,7 +139,7 @@ class ComponentTest implements TestCase {
     });
   }
 
-  @test('Computed properties work')
+  @:test('Computed properties work')
   public function testComputedProps() {
     var context = TestHelpers.createContext();
     var node = context.engine.createNode('div');

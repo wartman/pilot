@@ -7,7 +7,7 @@ class MarkupTest implements TestCase {
 
   public function new() {}
 
-  @test('@if with no else works')
+  @:test('@if with no else works')
   public function testIf() {
     var tester = (ok:Bool) -> 
       Pilot.html(<>@if (ok) { 'Ok!'; }</>)
@@ -17,27 +17,27 @@ class MarkupTest implements TestCase {
     tester(true).equals('<div>Ok!</div>');
   }
 
-  @test('@if with else works')
+  @:test('@if with else works')
   public function testIfElse() {
     var tester = (ok:Bool) -> 
-      Pilot.html(<>@if (ok) { 'Ok!'; } else { 'Not ok.'; }</>)
+      Pilot.html(<>@if (ok) { 'Ok!'; } @else { 'Not ok.'; }</>)
         .render()
         .toString();
     tester(false).equals('<div>Not ok.</div>');
     tester(true).equals('<div>Ok!</div>');
   }
 
-  @test('@if works with bare nodes')
+  @:test('@if works with bare nodes')
   public function testIfNode() {
     var tester = (ok:Bool) -> 
-      Pilot.html(<>@if (ok) <p>Ok!</p> else <p>Not ok.</p></>)
+      Pilot.html(<>@if (ok) <p>Ok!</p> @else <p>Not ok.</p></>)
         .render()
         .toString();
     tester(false).equals('<div><p>Not ok.</p></div>');
     tester(true).equals('<div><p>Ok!</p></div>');
   }
 
-  @test('Special characters can be escaped')
+  @:test('Special characters can be escaped')
   public function testEscapeAt() {
     var out = Pilot.html(<span>\@\$\<</span>)
       .render()
@@ -45,7 +45,7 @@ class MarkupTest implements TestCase {
     out.equals('<div><span>@$&lt;</span></div>');
   }
 
-  @test('For loop works')
+  @:test('For loop works')
   public function testLoop() {
     var items = [ 'a', 'b', 'c' ];
     Pilot
@@ -57,7 +57,7 @@ class MarkupTest implements TestCase {
       .equals('<div>abc</div>');
   }
 
-  @test('For loop works with bare nodes')
+  @:test('For loop works with bare nodes')
   public function testLoopNode() {
     var items = [ 'a', 'b', 'c' ];
     Pilot
@@ -69,7 +69,7 @@ class MarkupTest implements TestCase {
       .equals('<div><ul><li>a</li><li>b</li><li>c</li></ul></div>');
   }
   
-  @test('Switch works')
+  @:test('Switch works')
   public function testReenterSwitch() {
     var tester = (value:String) ->
       Pilot.html(<>
@@ -86,7 +86,7 @@ class MarkupTest implements TestCase {
     tester('bax').equals('<div><span>Other bax</span></div>');
   }
 
-  @test('innerHTML')
+  @:test('innerHTML')
   public function testDangerousHTML() {
     Pilot.html(<div @dangerouslySetInnerHtml="<p>foo</p>"></div>)
       .render()
@@ -94,7 +94,7 @@ class MarkupTest implements TestCase {
       .equals('<div><div><p>foo</p></div></div>');
   }
 
-  @test('Keys preserve order')
+  @:test('Keys preserve order')
   public function testKeys() {
     var context = TestHelpers.createContext();
     var root = new Root(context.engine.createNode('div'), context);
@@ -124,7 +124,7 @@ class MarkupTest implements TestCase {
     root.toString().equals('<div><ul><li>bin</li><li>froob</li><li>after</li><li>Last</li></ul></div>');
   }
 
-  @test('Components render their children without loosing order')
+  @:test('Components render their children without loosing order')
   public function testOrder() {
     var context = TestHelpers.createContext();
     var root = new Root(context.engine.createNode('div'), context);

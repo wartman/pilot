@@ -6,7 +6,7 @@ class DifferTest implements TestCase {
 
   public function new() {}
 
-  @test('Replace works')
+  @:test('Replace works')
   public function testReplace() {
     var ctx = TestHelpers.createContext();
     var template = (foo:String) -> Html.create(
@@ -23,7 +23,7 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><div class="bar">foo</div></div>');
   }
 
-  @test('Hydration works')
+  @:test('Hydration works')
   public function testHydration() {
     var ctx = TestHelpers.createContext();
     var template = (foo:String) -> Html.create(
@@ -40,7 +40,7 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><div class="bar">foo</div></div>');
   }
 
-  @test('Hydration works with text')
+  @:test('Hydration works with text')
   public function testHydrateText() {
     var ctx = TestHelpers.createContext();
     var template = (foo:String) -> Html.h('div', {}, [
@@ -59,7 +59,7 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><div>before foo after</div></div>');
   }
 
-  @test('Hydration works with Components')
+  @:test('Hydration works with Components')
   public function testHydratedComponent() {
     var ctx = TestHelpers.createContext();
     var engine = ctx.engine;
@@ -79,7 +79,7 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><p>changed</p></div>');
   }
 
-  @test('Hydration works with nested Components')
+  @:test('Hydration works with nested Components')
   public function testHydratedNestedComponent() {
     var ctx = TestHelpers.createContext();
     var engine = ctx.engine;
@@ -111,7 +111,7 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><p>changed</p>bar</div>');
   }
 
-  @test('Hydration works with placeholders')
+  @:test('Hydration works with placeholders')
   public function testPlaceholders() {
     var ctx = TestHelpers.createContext();
     var engine = ctx.engine;
@@ -142,7 +142,7 @@ class DifferTest implements TestCase {
     root.toString().equals('<div><p>4</p></div>');
   }
 
-  @test('Hydration works with States')
+  @:test('Hydration works with States')
   public function testHydratedState() {
     var ctx = TestHelpers.createContext();
     var engine = ctx.engine;

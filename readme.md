@@ -187,7 +187,7 @@ var foos = [ 'a', 'b', 'c' ];
 Pilot.html(<>
   @if (foos.length == 0) {
     'No foos!';
-  } else {
+  } @else {
     // We can use markup inside conditionals:
     <ul>
 

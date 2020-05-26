@@ -9,7 +9,7 @@ class HtmlTest implements TestCase {
   
   public function new() {}
 
-  @test('Can build HTML without markup')
+  @:test('Can build HTML without markup')
   public function simple() {
     Html.h('div', { 'class': 'foo' }, [ Html.text('bar') ])
       .render()

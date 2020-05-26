@@ -75,16 +75,19 @@ class MarkupParser extends Parser<Array<MarkupNode>> {
       parseCodeBlockOrNode();
       whitespace();
 
-      if (match('else')) {
+      var code = source.substring(start, position);
+
+      if (match('@else')) {
         if (!isIf) {
-          throw errorAt('`else` is only allowed for @if blocks', 'else');
+          throw errorAt('`@else` is only allowed for @if blocks', '@else');
         }
+        var innerStart = position;
       
         hasElse = true;
         parseCodeBlockOrNode();
-      }
 
-      var code = source.substring(start, position);
+        code += ' else ' + source.substring(innerStart, position);
+      }
       
       if (isIf && !hasElse) {
         code += ' else null';
