@@ -20,7 +20,7 @@ class App extends Component {
   override function render() return html(<div>
     @if (shouldShowExample)
       <Example foo="Some Foo" />
-    else
+    @else
       <>Nothing to show here!</>
     <button onClick={_ -> shouldShowExample = !shouldShowExample}>
       Toggle
