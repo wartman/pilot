@@ -55,6 +55,11 @@ class CssGenerator {
       case CKeyframes(name, properties):
         var decl = generateKeyframes(name, properties);
         if (decl != null) decls.push(decl);
+      case CGlobal(props):
+        decls.push(generateDeclaration({
+          selector: [ [{}] ],
+          pos: prop.pos
+        }, props));
       default:
         throw new DslError('Not implented yet', prop.pos);
     }

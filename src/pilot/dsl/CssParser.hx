@@ -108,6 +108,10 @@ class CssParser extends Parser<Array<CssExpr>> {
       return parseDeclaration();
     }
 
+    if (match('@global')) {
+      return parseGlobal();
+    }
+
     if (match('@media')) {
       return parseMediaQuery();
     }
@@ -181,6 +185,16 @@ class CssParser extends Parser<Array<CssExpr>> {
     }
 
     return properties;
+  }
+
+  function parseGlobal():CssExpr {
+    var start = position;
+    var body = parseBody();
+
+    return {
+      pos: getPos(start, position),
+      expr: CGlobal(body)
+    };
   }
 
   function parseKeyframes():CssExpr {

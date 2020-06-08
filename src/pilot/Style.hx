@@ -1,6 +1,5 @@
 package pilot;
 
-
 using Lambda;
 
 abstract Style(String) to String {

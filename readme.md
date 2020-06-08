@@ -59,13 +59,16 @@ class Example extends Component {
 class Main {
 
   public static function main() {
-    // Define global styles:
+    // Define global styles with the special `@global`
+    // directive -- otherwise all styles are scoped:
     Pilot.css('
-      body {
-        background: black;
-        color: white;
+      @global {
+        body {
+          background: black;
+          color: white;
+        }
       }
-    ', { global: true });
+    ');
 
     Pilot.mount(
       // `Pilot.document` is an alias for `js.Browser.document` on

@@ -7,9 +7,9 @@
     "contributors": [
         "wartman"
     ],
-    "releasenote": "Use `@else` instead of `else` in inline control flow",
+    "releasenote": "Added @global directive to css",
     "classPath": "src",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "url": "https://github.com/wartman/pilot",
     "dependencies": {}
 }

@@ -17,30 +17,32 @@ class Run {
   static function main() {
     #if (js && !nodejs)
 
-      Pilot.css('
-        body {
-          display: flex;
-          font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
-        }
-        html {
-          box-sizing: border-box;
-        }
-        *, *:before, *:after {
-          box-sizing: inherit;
-        }
-        #example-root {
-          flex: 1;
-          margin-right: 10px;
-        }
-        #root {
-          flex: 1;
-        }
-        @media screen and (max-width: 750px) {
+      js.Browser.document.body.classList.add(Pilot.css('
+        @global {
           body {
-            flex-direction: column;
+            display: flex;
+            font: 14px "Helvetica Neue", Helvetica, Arial, sans-serif;
+          }
+          html {
+            box-sizing: border-box;
+          }
+          *, *:before, *:after {
+            box-sizing: inherit;
+          }
+          #example-root {
+            flex: 1;
+            margin-right: 10px;
+          }
+          #root {
+            flex: 1;
+          }
+          @media screen and (max-width: 750px) {
+            body {
+              flex-direction: column;
+            }
           }
         }
-      ', { global: true });
+      '));
 
       var exampleRoot = js.Browser.document.getElementById('example-root');
       Dom.mount(exampleRoot, ComponentExample.node({}));

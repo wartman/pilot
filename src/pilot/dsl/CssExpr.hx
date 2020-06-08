@@ -58,6 +58,7 @@ typedef Value = {
 
 enum CssExprDef {
   CNone;
+  CGlobal(decls:Array<CssExpr>);
   CDeclaration(selector:Selector, properties:Array<CssExpr>);
   CMediaQuery(conditions:Array<MediaCondition>, properties:Array<CssExpr>);
   CKeyframes(name:String, properties:Array<CssExpr>);
