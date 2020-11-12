@@ -15,6 +15,7 @@ class ComponentExample extends Component {
       <SvgExample />
       <EmbeddedCssExample />
       <KeyframesExample />
+      <FontFaceExample />
     </ul>
   </Container>);
 

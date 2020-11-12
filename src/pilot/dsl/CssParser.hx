@@ -116,8 +116,8 @@ class CssParser extends Parser<Array<CssExpr>> {
       return parseMediaQuery();
     }
 
-    if (match('@fontface')) {
-      throw errorAt('Not implemented yet', '@fontface');
+    if (match('@font-face')) {
+      return parseFontFace();
     }
 
     if (match('@keyframes')) {
@@ -248,6 +248,15 @@ class CssParser extends Parser<Array<CssExpr>> {
 
     return {
       expr: CKeyframes(name, frames),
+      pos: getPos(start, position)
+    };
+  }
+
+  function parseFontFace():CssExpr {
+    var start = position;
+    var properties = parseBody();
+    return {
+      expr: CFontFace(properties),
       pos: getPos(start, position)
     };
   }

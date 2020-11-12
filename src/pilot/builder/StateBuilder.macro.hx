@@ -1,4 +1,3 @@
-#if macro
 package pilot.builder;
 
 import haxe.macro.Context;
@@ -8,10 +7,8 @@ import pilot.builder.HookFieldBuilder;
 
 using haxe.macro.Tools;
 
-// Todo: currently, the way we check `__shouldRender` is really
-//       inconsitant and a bit hard to follow. Reconsider when
-//       it is called.
-class ComponentBuilder {
+// Todo: a lot of this could be unified with ComponentBuilder
+class StateBuilder {
 
   static final ATTRS = '__attrs';
   static final INCOMING_ATTRS = '__incomingAttrs';
@@ -22,16 +19,22 @@ class ComponentBuilder {
     var cls = Context.getLocalClass().get();
     var clsTp:TypePath = { pack: cls.pack, name: cls.name };
     var builder = new ClassBuilder(fields, cls);
+    var initializers:Array<ObjectField> = [];
     var props:Array<Field> = [];
     var updateProps:Array<Field> = [];
-    var updates:Array<Expr> = [];
     var attributeUpdates:Array<Expr> = [];
-    var initializers:Array<ObjectField> = [];
-    var guards:Array<Expr> = [];
-    var attrEffects:Array<Expr> = [];
     var initHooks:Array<Hook> = [];
-    var effectHooks:Array<Hook> = [];
     var disposeHooks:Array<Hook> = [];
+    
+
+    function prepareHooks(hooks:Array<Hook>):Array<Expr> {
+      hooks.sort((a, b) -> {
+        return if (a.priority < b.priority) -1
+        else if (a.priority > b.priority) 1
+        else 0;
+      });
+      return hooks.map(h -> h.expr);
+    }
 
     function addProp(name:String, type:ComplexType, isOptional:Bool) {
       props.push({
@@ -49,7 +52,7 @@ class ComponentBuilder {
         pos: (macro null).pos
       });
     }
-
+    
     builder.addFieldBuilder({
       name: ':attribute',
       hook: Normal,
@@ -59,17 +62,11 @@ class ComponentBuilder {
       multiple: false,
       options: [
         { name: 'optional', optional: true },
-        { name: 'state', optional: true },
-        { name: 'guard', optional: true, handleValue: expr -> expr },
-        { name: 'effect', optional: true, handleValue: expr -> expr },
-        { name: 'consume', optional: true }
+        { name: 'consume', optional: true },
       ],
       build: function (options:{
         ?optional:Bool, 
-        ?state:Bool,
-        ?guard:Expr,
-        ?effect:Expr,
-        ?consume:Bool
+        ?consume:Bool 
       }, builder, f) switch f.kind {
         case FVar(t, e):
           if (t == null) {
@@ -78,17 +75,11 @@ class ComponentBuilder {
 
           var name = f.name;
           var getName = 'get_${name}';
-          var setName = 'set_${name}';
-          var guardName = '__guard_${name}';
           var isOptional = e != null || options.optional == true;
+          var update = macro @:pos(f.pos) value;
           var init = e == null
             ? macro $i{INCOMING_ATTRS}.$name
             : macro $i{INCOMING_ATTRS}.$name == null ? ${e} : $i{INCOMING_ATTRS}.$name;
-          var effect:Expr = options.effect;
-          var update = macro @:pos(f.pos) value;
-          var guard:Expr = options.guard != null 
-            ? macro @:pos(f.pos) value != current && ${options.guard} 
-            : macro @:pos(f.pos) value != current;
 
           if (options.consume) {
             if (!Context.unify(t.toType(), Context.getType('pilot.State'))) {
@@ -97,44 +88,24 @@ class ComponentBuilder {
             isOptional = true;
             // todo: probably a cleaner way to get the path
             var path = t.toString();
-            var required = options.optional ? macro false : macro true;
             if (path.indexOf('<') >= 0) {
               path = path.substr(0, path.indexOf('<'));
             }
             var id = macro $p{path.split('.')}.__stateId;
-            init = macro @:pos(f.pos) __context.get(${id}, ${init}, ${required});
+            init = macro @:pos(f.pos) __context.get(${id}, ${init});
             update = macro @:pos(f.pos) {
-              value = __context.get(${id}, value, ${required});
+              value = __context.get(${id}, value);
               value;
             }
           }
 
-          if (effect != null) {
-            attrEffects.push(macro {
-              var value = $i{ATTRS}.$name;
-              ${effect};
-            });
+          f.kind = FProp('get', 'never', t, null);
+          if (f.access.indexOf(APublic) < 0) {
+            f.access.push(APublic);
           }
-          
-          f.kind = FProp('get', options.state ? 'set' : 'never', t, null);
 
           builder.add((macro class {
-
             function $getName() return $i{ATTRS}.$name;
-  
-            function $guardName(value, current):Bool return ${guard};
-  
-          }).fields);
-
-          if (options.state) builder.add((macro class {
-            function $setName(value) {
-              if (this.$guardName(value, $i{ATTRS}.$name)) {
-                var value = ${update};
-                __updateAttributes({ $name: value });
-                if (__shouldRender({ $name: value })) __requestUpdate();
-              }
-              return value;
-            }
           }).fields);
 
           addProp(name, t, isOptional);
@@ -168,15 +139,14 @@ class ComponentBuilder {
               }
             });
           }
-
+          
         default:
           Context.error('@:attribute can only be used on vars', f.pos);
       }
     });
-
     builder.addFieldBuilder({
-      name: ':update',
-      similarNames: [ 'update', ':udate', ':updat' ],
+      name: ':transition',
+      similarNames: [ 'transition', ':update', ':transtion' ],
       multiple: false,
       hook: After,
       options: [
@@ -187,93 +157,56 @@ class ComponentBuilder {
       }, builder, field) switch field.kind {
         case FFun(func):
           if (func.ret != null) {
-            Context.error('@:update functions should not define their return type manually', field.pos);
+            Context.error('@:transition functions should not define their return type manually', field.pos);
           }
           var updatePropsRet = TAnonymous(updateProps);
           var e = func.expr;
+          var silent = options.silent == true ? macro true : macro false;
           func.ret = macro:Void;
-          if (options.silent == true) {
-            func.expr = macro {
-              inline function closure():$updatePropsRet ${e};
-              var incoming = closure();
-              __updateAttributes(incoming);
-            }
-          } else {
-            func.expr = macro {
-              inline function closure():$updatePropsRet ${e};
-              var incoming = closure();
-              __updateAttributes(incoming);
-              if (__shouldRender(incoming)) {
-                __requestUpdate();
-              }
-            }
+          func.expr = macro {
+            inline function closure():$updatePropsRet ${e};
+            var incoming = closure();
+            update(incoming, ${silent});
           }
         default:
-          Context.error('@:update must be used on a method', field.pos);
+          Context.error('@:transition must be used on a method', field.pos);
       }
     });
-
-    builder.addFieldBuilder({
-      name: ':guard',
-      similarNames: [
-        'guard', ':gurad', ':gruad'
-      ],
-      multiple: false,
-      hook: After,
-      options: [],
-      build: function (options:{}, builder, field) switch field.kind {
-        case FFun(func):
-          var name = field.name;
-          if (func.args.length == 0) {
-            guards.push(macro @:pos(field.pos) this.$name());
-          } else if (func.args.length == 1) {
-            guards.push(macro @:pos(field.pos) this.$name($i{INCOMING_ATTRS}));
-          } else {
-            Context.error('`@:guard` methods must have one or no arguments', field.pos);
-          }
-        default:
-          Context.error('@:guard must be used on a method', field.pos);
-      }
-    });
+    builder.addFieldBuilder(
+      new ComputedFieldBuilder(expr -> attributeUpdates.push(expr), true)
+    );
     builder.addFieldBuilder(new HookFieldBuilder(
       ':init',
       [ 'init', ':initialize' ],
       hook -> initHooks.push(hook)
     ));
     builder.addFieldBuilder(new HookFieldBuilder(
-      ':effect',
-      [ 'effect', ':efect', ':effct' ],
-      hook -> effectHooks.push(hook)
-    ));
-    builder.addFieldBuilder(new HookFieldBuilder(
       ':dispose',
       [ 'dispose', ':dispse', ':dispos' ],
       hook -> disposeHooks.push(hook)
     ));
-    builder.addFieldBuilder(
-      new ComputedFieldBuilder(expr -> attributeUpdates.push(expr))
-    );
 
     builder.run();
-
-    function extractTypeParams(tp:haxe.macro.Type.TypeParameter) {
-      return switch tp.t {
-        case TInst(kind, _): switch kind.get().kind {
-          case KTypeParameter(constraints): constraints.map(t -> t.toComplexType());
-          default: [];
-        }
-        default: [];
+    
+    var initProps = props.concat([
+      {
+        name: 'children',
+        kind: FVar(macro:pilot.Children),
+        access: [ APublic ],
+        meta: [],
+        pos: (macro null).pos
       }
-    }
-
-    var propType = TAnonymous(props);
+    ]);
+    var initPropsType = TAnonymous(initProps);
+    var propsType = TAnonymous(props);
+    var updatePropsType = TAnonymous(updateProps);
     var createParams:Array<TypeParamDecl> = [
       { name: 'Node', constraints: [ macro:{} ] }
     ].concat(cls.params.length > 0
-      ? [ for (p in cls.params) { name: p.name, constraints: extractTypeParams(p) } ]
+      ? [ for (p in cls.params) { name: p.name, constraints: [] } ]
       : []
     );
-
+    
     builder.add([
 
       {
@@ -282,88 +215,70 @@ class ComponentBuilder {
         access: [ APublic, AStatic ],
         kind: FFun({
           params: createParams,
-          // Todo: figure out how we can NOT have to use `cast` here
-          expr: macro @:pos(cls.pos) return cast new $clsTp(props, context),
           args: [
-            { name: 'props', type: macro:$propType },
+            { name: 'props', type: macro:$initPropsType },
             { name: 'context', type: macro:pilot.Context<Node> }
           ],
-          ret: macro:pilot.Wire<Node, $propType>
+          // Todo: figure out how we can NOT have to use `cast` here
+          expr: macro @:pos(cls.pos) return cast new $clsTp(props, context),
+          ret: macro:pilot.Wire<Node, $initPropsType>
         })
       },
-      
+
       {
-        name: 'node',
-        access: [ AStatic, APublic ],
+        name: 'provide',
         pos: (macro null).pos,
+        access: [ APublic, AStatic ],
         kind: FFun({
-          ret: macro:pilot.VNode,
           params: createParams,
           args: [
-            { name: 'attrs', type: macro:$propType },
+            { name: 'attrs', type: macro:$initPropsType },
             { name: 'key', type: macro:Null<pilot.Key>, opt: true }
           ],
           expr: macro @:pos(cls.pos) return pilot.VNode.VComponent(
             $p{ cls.pack.concat([ cls.name ]) },
             attrs,
             key
-          )
+          ),
+          ret: macro:pilot.VNode
         })
       }
 
     ]);
 
-    var guardCheck = macro return true;
-    if (guards.length > 0) {
-      guardCheck = guards[0];
-      for (i in 1...guards.length) {
-        guardCheck = macro ${guardCheck} && ${guards[i]};
-      }
-      guardCheck = macro if (${guardCheck}) return true else return false;
-    }
-
-    function prepareHooks(hooks:Array<Hook>):Array<Expr> {
-      hooks.sort((a, b) -> {
-        return if (a.priority < b.priority) -1
-        else if (a.priority > b.priority) 1
-        else 0;
-      });
-      return hooks.map(h -> h.expr);
-    }
-
     builder.add((macro class {
 
-      var $ATTRS:$propType;
+      public static inline final __stateId:String = $v{cls.pack.concat([ cls.name ]).join('.')};
 
-      public function new($INCOMING_ATTRS:$propType, __context:pilot.Context<Dynamic>) {
-        this.__context = __context;
+      var $ATTRS:$propsType;
+
+      public function new($INCOMING_ATTRS:$initPropsType, __context:pilot.Context<Dynamic>) {
         this.$ATTRS = ${ {
           expr: EObjectDecl(initializers),
           pos: (macro null).pos
         } };
-        $b{attrEffects};
-      }
-
-      override function __updateAttributes($INCOMING_ATTRS:Dynamic) {
-        $b{attributeUpdates};
-        $b{attrEffects};
-      }
-
-      override function __shouldRender($INCOMING_ATTRS:Dynamic) {
-        return ${guardCheck};
-      }
-
-      override function __init() {
-        super.__init();
+        __component = new pilot.State.StateComponent({ 
+          children: $i{INCOMING_ATTRS}.children 
+        }, __setContext(__context));
         $b{prepareHooks(initHooks)}
       }
 
-      override function __effect() {
-        $b{prepareHooks(effectHooks)}
+      function update($INCOMING_ATTRS:$updatePropsType, silent:Bool = false) {
+        $b{attributeUpdates};
+        if (!silent) @:privateAccess __component.__requestUpdate();
+      }
+
+      override function __update(attrs:Dynamic, ?_, context, parent, effectQueue) {
+        update(attrs, true);
+        super.__update(attrs, _, context, parent, effectQueue);
+      }
+
+      override function __register() {
+        __context.set(__stateId, this);
       }
 
       override function __destroy() {
-        $b{prepareHooks(disposeHooks)}
+        $b{prepareHooks(disposeHooks)};
         super.__destroy();
       }
 
@@ -373,4 +288,3 @@ class ComponentBuilder {
   }
 
 }
-#end

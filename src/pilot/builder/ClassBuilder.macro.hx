@@ -1,4 +1,3 @@
-#if macro
 package pilot.builder;
 
 import haxe.macro.Context;
@@ -91,7 +90,6 @@ class ClassBuilder {
             }
         }
 
-        cls.meta.remove(builder.name);
       } else if (builder.required) {
         Context.error('The class meta @${builder.name} is required', cls.pos);
       }
@@ -104,7 +102,6 @@ class ClassBuilder {
       if (field.meta != null && field.meta.exists(match)) {
         function handle(meta:MetadataEntry) {
           var options = parseOptions(meta.params, builder.options, meta.pos);
-          field.meta.remove(meta);
           builder.build(options, this, field);
         }
 
@@ -209,5 +206,3 @@ class ClassBuilder {
   }
 
 }
-
-#end

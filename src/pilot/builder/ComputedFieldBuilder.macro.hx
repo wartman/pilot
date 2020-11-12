@@ -1,4 +1,3 @@
-#if macro
 package pilot.builder;
 
 import haxe.macro.Context;
@@ -64,4 +63,3 @@ class ComputedFieldBuilder {
   }
 
 }
-#end

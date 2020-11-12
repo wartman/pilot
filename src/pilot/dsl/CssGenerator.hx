@@ -60,6 +60,8 @@ class CssGenerator {
           selector: [ [{}] ],
           pos: prop.pos
         }, props));
+      case CFontFace(properties):
+        decls.push(generateFontFace(properties));
       default:
         throw new DslError('Not implented yet', prop.pos);
     }
@@ -165,6 +167,14 @@ class CssGenerator {
     }
     // If not found, assume local or full type path.
     return name;
+  }
+
+  function generateFontFace(properties:Array<CssExpr>) {
+    var out = '@font-face ' + generateDeclaration({
+      selector: [ [ {} ] ],
+      pos: { min: 0, max: 0 }
+    }, properties);
+    return out;
   }
 
   function generateKeyframes(name:String, properties:Array<CssExpr>) {

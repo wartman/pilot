@@ -1,4 +1,3 @@
-#if macro
 package pilot.builder;
 
 import haxe.macro.Expr;
@@ -46,4 +45,3 @@ class HookFieldBuilder {
   }
 
 }
-#end
